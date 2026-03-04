@@ -1,0 +1,172 @@
+---
+title: Changelog
+description: Notable changes and releases for Hiro CRM
+icon: clock-rotate-left
+---
+
+All notable changes to Hiro CRM are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
+
+## [1.0.0] - December 30, 2025
+
+### Initial Release
+
+First public release of Hiro CRM as an open-source platform for the hospitality industry.
+
+### Added
+
+#### Testing
+
+<AccordionGroup>
+  <Accordion title="Unit Tests (44 tests)" icon="flask">
+    - API type tests with Vitest
+    - Zod validation tests
+    - Custom hooks tests
+    - React Testing Library integration
+  </Accordion>
+  
+  <Accordion title="E2E Tests (58 tests)" icon="check-double">
+    - Authentication flows (login, signup, protected routes)
+    - Marketing pages (homepage, features, pricing, contact)
+    - Navigation and performance testing
+    - SEO and accessibility validation
+  </Accordion>
+</AccordionGroup>
+
+#### Performance & Monitoring
+
+- **Lighthouse CI** configured with performance budgets
+  - Performance >80%
+  - Accessibility >90%
+  - Best Practices >85%
+  - SEO >90%
+- **Sentry** integration for error tracking
+- **Vercel Analytics** and Speed Insights
+- **Service Worker v2.0** with advanced caching strategies
+  - Network First for API requests
+  - Cache First for static assets
+  - Stale-While-Revalidate for navigation
+  - Automatic cache size management
+
+#### Internationalization
+
+- i18n system with Spanish/English support
+- LanguageSelector component
+- I18nContext for translation management
+- JSON translation files
+
+#### Analytics
+
+- Custom event system (30+ event types)
+- `useAnalytics` hook for easy tracking
+- AnalyticsProvider for automatic tracking
+- Conversion tracking (trial, signup, upgrades)
+- Integration in key components (login, signup)
+
+#### Documentation
+
+- Complete OpenAPI 3.0 specification
+- Documentation endpoints (`/api/docs`)
+- Comprehensive README
+- Architecture documentation
+- Deployment and contribution guides
+
+#### CI/CD
+
+- **GitHub Actions** complete pipeline
+  - Quality checks (TypeScript, ESLint)
+  - Unit tests
+  - E2E tests
+  - Build verification
+  - Lighthouse CI
+  - Security audit
+- **Dependabot** configured for automatic updates
+
+#### Database
+
+- 32+ performance indexes on critical tables
+- Multi-level permission system
+  - Platform Admin
+  - Subscription Plan
+  - Organization Role
+- Multi-tenancy with Row Level Security (RLS)
+- Organized SQL migrations
+
+#### Optimizations
+
+- Optimized Next.js configuration
+  - Standalone output
+  - Import optimization
+  - Compression enabled
+- Security headers configured
+- Image optimization with AVIF/WebP
+
+### Changed
+
+- Service Worker refactored with advanced strategies
+- Middleware simplified and optimized
+- UI components improved with better accessibility
+- Input component with enhanced accessibility support
+
+### Fixed
+
+- React Hooks violations corrected
+- Inline components extracted to top level
+- TypeScript errors resolved
+- ESLint warnings cleaned up
+- Build errors related to client initialization
+
+### Security
+
+<AccordionGroup>
+  <Accordion title="Security Headers Implemented" icon="shield">
+    - X-Frame-Options
+    - X-Content-Type-Options
+    - X-XSS-Protection
+    - Referrer-Policy
+    - Permissions-Policy
+    - HSTS (production)
+  </Accordion>
+  
+  <Accordion title="Input Validation & RLS" icon="lock">
+    - Input validation with Zod in Server Actions
+    - Row Level Security on all Supabase tables
+  </Accordion>
+</AccordionGroup>
+
+### Metrics
+
+- **102 tests** passing (100%)
+- **0 TypeScript errors**
+- **0 ESLint errors**
+- **Performance Score**: >80%
+- **Accessibility Score**: >90%
+
+---
+
+## [Unreleased]
+
+### Planned
+
+- [ ] Complete i18n translations
+- [ ] Additional E2E tests for critical flows
+- [ ] Enhanced API documentation
+- [ ] UX/UI improvements
+- [ ] Additional bundle optimizations
+
+---
+
+## Change Types
+
+This changelog uses the following categories:
+
+- **Added** — New features and functionality
+- **Changed** — Changes to existing functionality
+- **Deprecated** — Features that will be removed
+- **Removed** — Removed features
+- **Fixed** — Bug fixes
+- **Security** — Security fixes and improvements
+- **Metrics** — Performance and metric changes
+
+<Info>
+  See the [Roadmap](/resources/roadmap) for upcoming features and planned releases.
+</Info>

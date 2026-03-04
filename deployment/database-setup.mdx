@@ -1,0 +1,484 @@
+---
+title: Database Setup
+description: Complete guide to setting up and configuring your Supabase database for Hiro CRM
+icon: database
+---
+
+Hiro CRM uses Supabase (PostgreSQL) as its database. This guide walks you through creating your Supabase project and running the necessary migrations.
+
+## Prerequisites
+
+<Check>
+  - Supabase account ([sign up free](https://supabase.com))
+  - Git access to Hiro CRM repository
+  - Basic familiarity with SQL (helpful but not required)
+</Check>
+
+---
+
+## Create Supabase Project
+
+<Steps>
+  <Step title="Create a new project">
+    1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
+    2. Click **New Project**
+    3. Fill in project details:
+       - **Name**: `hiro-crm-production` (or your preferred name)
+       - **Database Password**: Generate a strong password (save this!)
+       - **Region**: Choose closest to your users (e.g., `West EU (London)` for Spain)
+       - **Pricing Plan**: Free tier works for getting started
+    4. Click **Create new project**
+    
+    <Info>
+      Project creation takes 1-2 minutes. Supabase provisions a dedicated PostgreSQL database for you.
+    </Info>
+  </Step>
+  
+  <Step title="Get your connection details">
+    Once created, navigate to **Project Settings** → **API**:
+    
+    Save these values for your environment variables:
+    - **Project URL**: `NEXT_PUBLIC_SUPABASE_URL`
+    - **Anon/Public Key**: `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+    - **Service Role Key**: `SUPABASE_SERVICE_ROLE_KEY`
+    
+    <Warning>
+      Keep your Service Role Key secret! It bypasses Row Level Security.
+    </Warning>
+  </Step>
+  
+  <Step title="Optional: Install Supabase CLI">
+    The Supabase CLI makes it easier to manage migrations:
+    
+    ```bash
+    npm install -g supabase
+    ```
+    
+    Then link your project:
+    
+    ```bash
+    cd frontend
+    supabase link --project-ref your-project-ref
+    ```
+    
+    <Info>
+      Find your project ref in **Project Settings** → **General** → **Reference ID**
+    </Info>
+  </Step>
+</Steps>
+
+---
+
+## Database Architecture
+
+Hiro CRM uses a comprehensive database schema optimized for hospitality CRM:
+
+### Core Tables
+
+- **`profiles`** - User accounts and roles
+- **`brands`** - Restaurant brands (e.g., "La Tasca", "El Patio")
+- **`locations`** - Physical restaurant locations
+- **`customers`** - Customer profiles with full CRM data
+- **`reservations`** - Reservation history and tracking
+- **`campaigns`** - Marketing campaigns (email/SMS)
+- **`feedback_surveys`** - NPS and customer feedback
+
+### Feature Modules
+
+- **Loyalty**: `loyalty_program_config`, `loyalty_tier_config`, `loyalty_transactions`
+- **Calendar**: `calendar_events`, `calendar_notifications`
+- **Tickets**: `tickets`, `ticket_comments`, `ticket_notifications`
+- **Automations**: `automations`, `automation_logs`
+- **HR**: `employees`, `employee_assignments`
+- **Library**: `library_folders`, `library_files`
+
+### System Tables
+
+- **`subscription_plans`** - Available pricing plans
+- **`integration_configs`** - POS and third-party integrations
+- **`settings`** - Application settings
+
+<Info>
+  The schema is designed for **single-tenant** use with optional multi-location support.
+</Info>
+
+---
+
+## Running Migrations
+
+Hiro CRM includes migration files in two locations:
+
+1. **`/supabase/migrations/`** - Root migrations (older, legacy schema)
+2. **`/frontend/supabase/migrations/`** - Frontend migrations (current, recommended)
+
+<Warning>
+  Use the **frontend migrations** for new installations. They contain the complete, up-to-date schema.
+</Warning>
+
+### Method 1: Supabase CLI (Recommended)
+
+<Steps>
+  <Step title="Navigate to frontend directory">
+    ```bash
+    cd frontend
+    ```
+  </Step>
+  
+  <Step title="Run migrations">
+    ```bash
+    supabase db push
+    ```
+    
+    This applies all migrations in order from `supabase/migrations/`.
+  </Step>
+  
+  <Step title="Verify migration status">
+    ```bash
+    supabase migration list
+    ```
+    
+    All migrations should show as "Applied".
+  </Step>
+</Steps>
+
+### Method 2: SQL Editor (Manual)
+
+If you prefer to run migrations manually:
+
+<Steps>
+  <Step title="Open SQL Editor">
+    1. Go to Supabase Dashboard
+    2. Click **SQL Editor** in the sidebar
+    3. Click **New query**
+  </Step>
+  
+  <Step title="Run migrations in order">
+    Copy and paste the contents of each migration file in order:
+    
+    1. `001_optimizations_v1.sql`
+    2. `002_SEED_GRUPO_GASTRO_PORTAL.sql` (optional - includes sample org)
+    3. `003_UPDATE_COVERMANAGER_SLUGS.sql`
+    4. Continue through all numbered migrations...
+    5. `010_HIRO_COMPLETE_SCHEMA_FINAL.sql` (main schema)
+    6. Remaining migrations...
+    
+    <Warning>
+      Order matters! Run migrations sequentially by their numeric prefix.
+    </Warning>
+  </Step>
+  
+  <Step title="Execute each migration">
+    After pasting, click **Run** (or press `Cmd/Ctrl + Enter`).
+    
+    Look for "Success. No rows returned" or a success message.
+  </Step>
+</Steps>
+
+### Method 3: Database URL (Advanced)
+
+Connect directly to your database:
+
+```bash
+# Get connection string from Supabase Dashboard → Project Settings → Database
+psql "postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
+
+# Then run migrations
+\i supabase/migrations/010_HIRO_COMPLETE_SCHEMA_FINAL.sql
+```
+
+---
+
+## Key Migration Files
+
+### 010_HIRO_COMPLETE_SCHEMA_FINAL.sql
+
+The primary schema migration. Creates:
+
+- All core tables (users, customers, reservations, etc.)
+- Subscription plans (Free, Starter, Professional, Enterprise)
+- Indexes for performance
+- Row Level Security (RLS) policies
+- Database functions and triggers
+
+**Key Features:**
+- ✅ Idempotent (safe to run multiple times)
+- ✅ Uses `IF NOT EXISTS` for tables/indexes
+- ✅ Uses `ADD COLUMN IF NOT EXISTS` for columns
+- ✅ Compatible with new and existing databases
+
+### 015_RLS_DEFINITIVO_HIRO.sql
+
+Configures Row Level Security policies:
+
+- Single-tenant security model
+- User-based access control
+- Read/write policies for all tables
+
+<Info>
+  RLS ensures users can only access data they're authorized to see, even with direct database access.
+</Info>
+
+### 005_PERMISSIONS_SYSTEM.sql
+
+Sets up the role-based permission system:
+
+- Role definitions (super_admin, manager, staff, etc.)
+- Module-based permissions
+- Location-based access control
+
+---
+
+## Storage Buckets
+
+Hiro CRM uses Supabase Storage for file uploads.
+
+<Steps>
+  <Step title="Create storage buckets">
+    The migrations automatically create these buckets:
+    
+    - **`avatars`** - User profile photos
+    - **`logos`** - Brand/location logos
+    - **`library`** - Document library files
+    
+    Verify in **Storage** tab of Supabase Dashboard.
+  </Step>
+  
+  <Step title="Configure bucket policies">
+    Storage policies are created by migrations:
+    
+    - `008_CREATE_AVATARS_BUCKET_POLICIES.sql`
+    - `012_CREATE_LOGOS_BUCKET_POLICIES.sql`
+    
+    <Info>
+      Policies allow authenticated users to upload/read files in their organization.
+    </Info>
+  </Step>
+</Steps>
+
+---
+
+## Database Functions
+
+Hiro CRM includes several PostgreSQL functions for business logic:
+
+### Customer Management
+
+```sql
+recalculate_customer_stats(customer_uuid UUID)
+```
+Recalculates aggregate stats (total_spend, total_visits, etc.) for a customer.
+
+### User Management
+
+```sql
+handle_new_user()
+```
+Trigger function that creates a profile when a new user signs up.
+
+### Dashboard Stats
+
+```sql
+get_dashboard_stats(organization_uuid UUID)
+```
+Returns comprehensive dashboard metrics (revenue, customers, reservations).
+
+<Tip>
+  Functions are defined in migration files and automatically created when you run migrations.
+</Tip>
+
+---
+
+## Extensions
+
+Hiro CRM requires these PostgreSQL extensions (automatically enabled):
+
+- **`uuid-ossp`** - UUID generation
+- **`pg_trgm`** - Fuzzy text search (customer names, emails)
+- **`btree_gin`** - GIN indexes for array columns
+
+---
+
+## Indexes for Performance
+
+The schema includes 32+ indexes optimized for common queries:
+
+### Customer Indexes
+
+```sql
+CREATE INDEX idx_customers_email ON customers(email);
+CREATE INDEX idx_customers_phone ON customers(phone);
+CREATE INDEX idx_customers_loyalty_tier ON customers(loyalty_tier);
+CREATE INDEX idx_customers_last_visit ON customers(last_visit_at DESC);
+```
+
+### Reservation Indexes
+
+```sql
+CREATE INDEX idx_reservations_date ON reservations(reservation_date DESC);
+CREATE INDEX idx_reservations_customer ON reservations(customer_id);
+CREATE INDEX idx_reservations_location ON reservations(location_id);
+```
+
+<Info>
+  More indexes are added in `007_PERFORMANCE_INDEXES.sql` and `009_ADD_PERFORMANCE_INDEXES.sql`.
+</Info>
+
+---
+
+## Verification
+
+After running migrations, verify your database setup:
+
+<Steps>
+  <Step title="Check tables exist">
+    Run this query in SQL Editor:
+    
+    ```sql
+    SELECT table_name 
+    FROM information_schema.tables 
+    WHERE table_schema = 'public' 
+    ORDER BY table_name;
+    ```
+    
+    You should see 30+ tables including `customers`, `reservations`, `campaigns`, etc.
+  </Step>
+  
+  <Step title="Verify subscription plans">
+    ```sql
+    SELECT name, display_name, price_monthly 
+    FROM subscription_plans 
+    ORDER BY sort_order;
+    ```
+    
+    Should return:
+    - HIRO Free ($0)
+    - HIRO Starter ($49)
+    - HIRO Professional ($149)
+    - HIRO Enterprise ($499)
+  </Step>
+  
+  <Step title="Check RLS policies">
+    ```sql
+    SELECT tablename, policyname 
+    FROM pg_policies 
+    WHERE schemaname = 'public' 
+    ORDER BY tablename, policyname;
+    ```
+    
+    Should show policies for all major tables.
+  </Step>
+  
+  <Step title="Verify storage buckets">
+    Go to **Storage** tab in Supabase Dashboard.
+    
+    Confirm these buckets exist:
+    - avatars
+    - logos
+    - library
+  </Step>
+</Steps>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Migration fails with 'relation already exists'" icon="circle-exclamation">
+    **Cause:** Migrations already partially applied.
+    
+    **Solution:** The migrations are idempotent. Simply re-run them. They use `IF NOT EXISTS` checks.
+  </Accordion>
+  
+  <Accordion title="Permission denied errors" icon="lock">
+    **Cause:** Using anon key instead of service role key.
+    
+    **Solution:** 
+    - For migrations, use the service role key or database password
+    - For application, ensure RLS policies are correctly configured
+  </Accordion>
+  
+  <Accordion title="Function 'handle_new_user' not found" icon="function">
+    **Cause:** Migration not run or failed.
+    
+    **Solution:** Run `021_FIX_SIGNUP_TRIGGER.sql` which creates the user creation trigger.
+  </Accordion>
+  
+  <Accordion title="Slow queries" icon="gauge">
+    **Cause:** Missing indexes.
+    
+    **Solution:** 
+    1. Run `007_PERFORMANCE_INDEXES.sql`
+    2. Run `009_ADD_PERFORMANCE_INDEXES.sql`
+    3. Check query plans with `EXPLAIN ANALYZE`
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Backup & Restore
+
+### Automated Backups (Free Plan)
+
+Supabase automatically backs up your database daily.
+
+**Retention:**
+- Free: 7 days
+- Pro: 30 days
+- Enterprise: Custom
+
+### Manual Backup
+
+```bash
+# Using Supabase CLI
+supabase db dump -f backup.sql
+
+# Or using pg_dump directly
+pg_dump "postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres" > backup.sql
+```
+
+### Restore from Backup
+
+```bash
+supabase db reset
+psql "postgresql://..." < backup.sql
+```
+
+<Warning>
+  Test restores regularly to ensure your backups are valid!
+</Warning>
+
+---
+
+## Performance Monitoring
+
+Supabase provides built-in database monitoring:
+
+1. Go to **Database** → **Query Performance**
+2. View slow queries, most frequent queries
+3. Optimize based on insights
+
+<Tip>
+  Enable **Query Insights** in Project Settings for detailed query analytics.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Seeding Data" icon="seedling" href="/deployment/seeding-data">
+    Load demo data into your database
+  </Card>
+  
+  <Card title="Environment Variables" icon="key" href="/deployment/environment-variables">
+    Configure your application environment
+  </Card>
+  
+  <Card title="Vercel Deployment" icon="rocket" href="/deployment/vercel">
+    Deploy your application to Vercel
+  </Card>
+  
+  <Card title="Supabase Docs" icon="book" href="https://supabase.com/docs">
+    Official Supabase documentation
+  </Card>
+</CardGroup>

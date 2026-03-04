@@ -1,80 +1,278 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Get Hiro CRM running locally in under 10 minutes
 ---
 
-## Get started in three steps
+This quickstart guide will help you get Hiro CRM running on your local machine in under 10 minutes. You'll set up the development environment, configure the database, and start the application.
 
-Get your documentation site running locally and make your first customization.
+## Prerequisites
 
-### Step 1: Set up your local environment
+Before you begin, make sure you have:
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+- **Node.js 20 or higher** installed ([download here](https://nodejs.org/))
+- A **Supabase account** ([sign up free](https://supabase.com))
+- **Git** installed on your machine
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+Optional: OpenAI API key for the AI Assistant feature, and Brevo API key for email/SMS campaigns. You can add these later.
 </Note>
+
+## Step 1: Clone the repository
+
+Clone the Hiro CRM repository to your local machine:
+
+```bash
+git clone https://github.com/your-org/hiro-crm.git
+cd hiro-crm
+```
+
+## Step 2: Install dependencies
+
+Navigate to the frontend directory and install the required packages:
+
+```bash
+cd frontend
+npm install
+```
+
+This will install all dependencies including Next.js, React, Supabase client, and other required packages.
+
+## Step 3: Create a Supabase project
+
+You'll need a Supabase project to store your data:
+
+<Steps>
+  <Step title="Sign in to Supabase">
+    Go to [supabase.com](https://supabase.com) and sign in or create a free account
+  </Step>
+  
+  <Step title="Create a new project">
+    Click "New Project" and choose your organization. Give your project a name like "hiro-crm-dev"
+  </Step>
+  
+  <Step title="Set a database password">
+    Choose a strong database password and save it securely. Select a region close to you (e.g., "West EU" for Spain)
+  </Step>
+  
+  <Step title="Wait for setup">
+    Your project will take 1-2 minutes to provision. Grab a coffee while you wait!
+  </Step>
+</Steps>
+
+## Step 4: Configure environment variables
+
+Copy the environment template and add your Supabase credentials:
+
+```bash
+cp .env.example .env.local
+```
+
+Open `.env.local` in your editor and fill in the required values:
+
+<CodeGroup>
+```bash Required Variables
+# Get these from your Supabase project settings > API
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+
+# Your app URL (use localhost for development)
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+```bash Optional Variables
+# AI Assistant (optional)
+OPENAI_API_KEY=sk-your-openai-key
+
+# Email & SMS campaigns (optional)
+BREVO_API_KEY=your-brevo-api-key
+BREVO_SENDER_EMAIL=noreply@your-domain.com
+BREVO_SENDER_NAME=Hiro CRM
+
+# POS integrations (optional)
+COVERMANAGER_API_KEY=your-covermanager-key
+REVO_ACCESS_TOKEN=your-revo-access-token
+```
+</CodeGroup>
+
+<Warning>
+Never commit your `.env.local` file to version control. It's already included in `.gitignore`.
+</Warning>
+
+## Step 5: Set up the database
+
+Run the database migrations to create all required tables and functions:
+
+<Tip>
+You can apply migrations using either the Supabase CLI or the Supabase Dashboard SQL Editor.
+</Tip>
+
+### Option A: Using Supabase CLI (recommended)
+
+If you have the Supabase CLI installed:
+
+```bash
+# Link to your project
+supabase link --project-ref your-project-ref
+
+# Push all migrations
+supabase db push
+```
+
+### Option B: Using Supabase Dashboard
+
+<Steps>
+  <Step title="Open SQL Editor">
+    Go to your Supabase project dashboard and click on "SQL Editor" in the sidebar
+  </Step>
+  
+  <Step title="Run migrations">
+    Copy the content of each migration file from `supabase/migrations/` (starting with `000_MARKETING_HUB_GGP_COMPLETE_SCHEMA.sql`) and run them in order
+  </Step>
+  
+  <Step title="Verify setup">
+    Check the "Table Editor" to confirm tables like `customers`, `locations`, `campaigns`, etc. were created
+  </Step>
+</Steps>
+
+## Step 6: Seed demo data (optional)
+
+To explore Hiro CRM with realistic demo data:
+
+### Option A: Basic seed (locations only)
+
+Seed basic brand and location data via the API:
+
+```bash
+# Start the dev server first
+npm run dev
+
+# In another terminal, seed locations
+curl http://localhost:3000/api/admin/seed-locations
+```
+
+### Option B: Full demo dataset
+
+For a complete demo with 5,000 customers, reservations, and campaigns:
+
+<Steps>
+  <Step title="Open SQL Editor">
+    Go to your Supabase dashboard > SQL Editor
+  </Step>
+  
+  <Step title="Run demo seed">
+    Copy the entire content of `supabase/seeds/demo.sql` and execute it
+  </Step>
+  
+  <Step title="Wait for completion">
+    This will create demo data for La Tasca, El Patio, and La Brisa restaurant groups with realistic Spanish customer data
+  </Step>
+</Steps>
+
+<Note>
+The demo dataset includes:
+- 3 brands (La Tasca, El Patio, La Brisa)
+- 5 locations across Madrid and Barcelona
+- 5,000 customer profiles
+- ~25,000 reservation records
+- 12 marketing campaigns with metrics
+- Configured loyalty program with 6 tiers
+</Note>
+
+## Step 7: Start the development server
+
+Start the Next.js development server:
+
+```bash
+npm run dev
+```
+
+You should see output like:
+
+```
+▲ Next.js 16.1.1
+- Local:        http://localhost:3000
+- Network:      http://192.168.1.X:3000
+
+✓ Ready in 2.3s
+```
+
+## Step 8: Access the application
+
+Open your browser and navigate to [http://localhost:3000](http://localhost:3000).
+
+You'll see the Hiro CRM landing page. Click **"Acceder al Portal"** to access the login page.
+
+<Steps>
+  <Step title="Sign up">
+    Create your first user account using the sign-up form
+  </Step>
+  
+  <Step title="Verify email">
+    Check your email for the verification link from Supabase (it might be in spam)
+  </Step>
+  
+  <Step title="Sign in">
+    After verification, sign in with your credentials
+  </Step>
+  
+  <Step title="Explore">
+    You're in! Start exploring the dashboard, customers, campaigns, and more
+  </Step>
+</Steps>
+
+## What's next?
+
+Now that you have Hiro CRM running locally, you can:
+
+<CardGroup cols={2}>
+  <Card title="Explore the Dashboard" icon="chart-line">
+    Check out the executive analytics dashboard with KPIs and charts
+  </Card>
+  
+  <Card title="Create a Customer" icon="user-plus">
+    Add your first customer profile and see the CRM in action
+  </Card>
+  
+  <Card title="Set Up Integrations" icon="plug">
+    Connect CoverManager, Revo POS, or configure email/SMS with Brevo
+  </Card>
+  
+  <Card title="Deploy to Production" icon="rocket" href="/installation#deployment">
+    Deploy your instance to Vercel for production use
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+### Port already in use
+
+If port 3000 is already taken:
+
+```bash
+npm run dev -- -p 3001
+```
+
+### Database connection errors
+
+Verify your Supabase credentials in `.env.local` are correct. You can find them in your Supabase project settings > API.
+
+### Migration errors
+
+If migrations fail, ensure you're running them in order starting from `000_MARKETING_HUB_GGP_COMPLETE_SCHEMA.sql`.
+
+### Type check errors
+
+Run a type check to identify TypeScript issues:
+
+```bash
+npm run type-check
+```
+
+## Getting help
+
+If you run into issues:
+
+- Check the [Installation Guide](/installation) for detailed setup instructions
+- Open an issue on [GitHub](https://github.com/your-org/hiro-crm/issues)
+- Review the [Contributing Guide](https://github.com/your-org/hiro-crm/blob/main/CONTRIBUTING.md)

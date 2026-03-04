@@ -1,0 +1,530 @@
+---
+title: 'Loyalty Program'
+description: 'Configure and manage a multi-tier loyalty program with automatic point calculation and tier assignments'
+icon: 'award'
+---
+
+## Overview
+
+Hiro's Loyalty Program module enables hospitality businesses to reward repeat customers with a fully customizable tier system. Customers are automatically assigned to tiers based on spending and visit patterns, with real-time calculations and visual badges throughout the system.
+
+<Note>
+**Ideal for:** Restaurant groups and hotels wanting to incentivize repeat visits, increase customer lifetime value, and provide VIP experiences.
+</Note>
+
+## Program Configuration
+
+### General Settings
+
+Configure your loyalty program foundation:
+
+<Tabs>
+  <Tab title="Program Identity">
+    **Program Name**
+    - Default: "[Your Brand] Loyalty Club"
+    - Appears in customer communications
+    - Customizable per brand
+    
+    **Description**
+    - Internal notes about program goals
+    - Customer-facing description (optional)
+  </Tab>
+  <Tab title="Calculation Method">
+    **Period Options:**
+    - **Lifetime**: All-time spending and visits
+    - **Last Year**: Rolling 12-month window
+    - **Last 6 Months**: Short-term frequency focus
+    - **Last 3 Months**: High-frequency businesses
+    
+    Choose based on your business model and customer visit frequency.
+  </Tab>
+  <Tab title="Point System">
+    **Points per Euro**: Default 1.0
+    - Every €1 spent = X points
+    - Fractional values supported (0.5, 1.5, 2.0)
+    
+    **Points per Visit**: Default 10
+    - Bonus points just for visiting
+    - Encourages frequency over spend
+    
+    <Note>
+    **Example:** Customer spends €50 on a visit:
+    - Spend points: 50 × 1.0 = 50 points
+    - Visit bonus: 10 points
+    - **Total: 60 points**
+    </Note>
+  </Tab>
+  <Tab title="Auto-Recalculation">
+    **Automatic Updates**
+    - Recalculate all customers daily (recommended)
+    - Or manual recalculation only
+    - Runs at 2 AM local time
+    
+    Enable for hands-free tier management.
+  </Tab>
+</Tabs>
+
+## Tier Management
+
+### Creating Tiers
+
+Define tiers that match your business:
+
+<Steps>
+  <Step title="Add Tier">
+    Click "Add Tier" button in Loyalty Program settings
+  </Step>
+  <Step title="Configure Criteria">
+    Set thresholds for automatic assignment:
+    - **Minimum Visits**: Total visits required
+    - **Minimum Spend**: Total spending required
+    - **Visits Last Year**: Recent activity requirement
+    - **Spend Last Year**: Recent spending requirement
+    - **Average Ticket**: Minimum per-visit spend
+    
+    All criteria are optional; use what fits your goals.
+  </Step>
+  <Step title="Visual Design">
+    Customize appearance:
+    - **Tier Name**: Founders, VIP, Oro, Plata, etc.
+    - **Color**: Hex color for badges (#d4af37 for gold)
+    - **Icon**: Crown, Star, Award, etc.
+    - **Rank**: Order (1 = highest, higher numbers = lower)
+  </Step>
+  <Step title="Activate">
+    Save tier and run recalculation to assign customers
+  </Step>
+</Steps>
+
+### Pre-configured Tier Examples
+
+<Accordion title="Founders (Exclusive VIP)">
+**Suggested Criteria:**
+- Minimum Visits: 50 lifetime
+- Minimum Spend: €5,000 lifetime
+- Visits Last Year: 12+ (monthly)
+- Average Ticket: €80+
+
+**Visual:**
+- Color: Gold gradient (#d4af37)
+- Icon: Crown
+- Rank: 1
+
+**Benefits:**
+- Reserved tables
+- Priority reservations
+- Exclusive events
+- Complimentary wine
+</Accordion>
+
+<Accordion title="VIP">
+**Suggested Criteria:**
+- Minimum Visits: 20 lifetime
+- Minimum Spend: €2,000 lifetime
+- Visits Last Year: 6+
+
+**Visual:**
+- Color: Gold (#E6D4A3)
+- Icon: Star
+- Rank: 2
+
+**Benefits:**
+- Skip waitlist
+- Birthday treats
+- Special menu previews
+- 10% off special events
+</Accordion>
+
+<Accordion title="Oro (Gold)">
+**Suggested Criteria:**
+- Minimum Visits: 10 lifetime
+- Minimum Spend: €1,000 lifetime
+- Visits Last Year: 4+
+
+**Visual:**
+- Color: Light gold (#E6D4A3)
+- Icon: Star
+- Rank: 3
+
+**Benefits:**
+- Priority reservations (weekdays)
+- 5% off wine list
+- Monthly newsletter with recipes
+</Accordion>
+
+<Accordion title="Plata (Silver)">
+**Suggested Criteria:**
+- Minimum Visits: 5 lifetime
+- Minimum Spend: €500 lifetime
+
+**Visual:**
+- Color: Silver (#8B949E)
+- Icon: None
+- Rank: 4
+
+**Benefits:**
+- Birthday discount (20% off)
+- Early access to reservations
+</Accordion>
+
+<Accordion title="Bronce (Bronze)">
+**Suggested Criteria:**
+- Minimum Visits: 2 lifetime
+- Minimum Spend: €100 lifetime
+
+**Visual:**
+- Color: Bronze (#CD7F32)
+- Icon: None
+- Rank: 5
+
+**Benefits:**
+- Loyalty program enrollment
+- Email updates
+- Second visit discount
+</Accordion>
+
+<Accordion title="Nuevo (New)">
+**Suggested Criteria:**
+- (Default tier for customers not matching any other tier)
+
+**Visual:**
+- Color: Gray
+- Icon: None
+- Rank: 6
+
+**Benefits:**
+- Welcome email
+- First-time visitor perks
+</Accordion>
+
+### Tier Assignment Logic
+
+Customers are assigned to the **highest tier they qualify for**:
+
+1. System evaluates all tiers from rank 1 (highest) to lowest
+2. For each tier, checks if customer meets **all** specified criteria
+3. Assigns customer to first tier where all criteria are met
+4. If no tiers match, assigns default tier ("Nuevo" or create one)
+
+<Note type="warning">
+**Important:** If a tier has no criteria set (all fields null), it will never be automatically assigned. Set at least one criterion per tier.
+</Note>
+
+## Tier Calculation Rules
+
+### Scenario Examples
+
+<CardGroup cols={2}>
+  <Card title="Example 1: VIP Customer" icon="crown">
+    **Customer Profile:**
+    - 25 total visits
+    - €3,200 total spend
+    - 8 visits last year
+    - €1,800 spend last year
+    
+    **Calculation:**
+    - Meets VIP criteria (20 visits, €2,000, 6/year)
+    - Does NOT meet Founders (needs 50 visits)
+    - **Assigned: VIP**
+  </Card>
+  <Card title="Example 2: Downgrade" icon="trending-down">
+    **Customer Profile:**
+    - 30 total visits (was VIP)
+    - €2,500 total spend
+    - 2 visits last year ❌
+    
+    **Calculation:**
+    - No longer meets VIP (needs 6 visits/year)
+    - Meets Oro criteria (10 visits, €1,000)
+    - **Assigned: Oro** (downgraded)
+  </Card>
+</CardGroup>
+
+### Handling Edge Cases
+
+**What if customer meets multiple tier criteria?**
+- Assigned to highest rank (lowest rank number)
+
+**What if spending increases but visits decrease?**
+- Evaluated independently; both matter
+- Consider average ticket criterion if high-spenders visit less
+
+**What if using "Last Year" period and customer was inactive?**
+- Falls to lower tier until reactivation
+- Lifetime criteria can prevent full drop if set
+
+## Customer Experience
+
+### Tier Visibility
+
+Customers see their tier throughout Hiro:
+
+<Tabs>
+  <Tab title="Customer Profile">
+    - Large tier badge at top
+    - Color-coded with tier color
+    - Icon displayed (if set)
+    - Point balance shown
+  </Tab>
+  <Tab title="Reservation System">
+    - Tier badge next to customer name
+    - VIP/Founders flagged for special attention
+    - Visible to all staff
+  </Tab>
+  <Tab title="Customer Lists">
+    - Sortable by tier
+    - Filterable by tier
+    - Color-coded badges in list view
+  </Tab>
+  <Tab title="Reports & Analytics">
+    - Tier distribution charts
+    - Revenue by tier
+    - Average spend by tier
+  </Tab>
+</Tabs>
+
+### Tier Progression Communication
+
+Inform customers of tier changes:
+
+**Upgrade Notification (Recommended):**
+```
+¡Felicidades, [nombre]!
+
+Has alcanzado el nivel [NUEVO_TIER] en [Programa].
+
+Tus nuevos beneficios incluyen:
+- [Beneficio 1]
+- [Beneficio 2]
+- [Beneficio 3]
+
+Gracias por tu lealtad. ¡Te esperamos!
+```
+
+**Downgrade Handling:**
+- Consider NOT notifying (avoid negative message)
+- Or frame as "Your tier is changing" with re-engagement offer
+
+## Benefits Management
+
+Define benefits per tier (stored in tier configuration):
+
+### Benefit Types
+
+<CardGroup cols={2}>
+  <Card title="Reservation Priority" icon="calendar">
+    - Skip general waitlist
+    - Extended booking window
+    - Preferred table assignment
+    - Last-minute flexibility
+  </Card>
+  <Card title="Discounts" icon="percent">
+    - Percentage off total bill
+    - Specific menu items free
+    - Wine list discounts
+    - Special event pricing
+  </Card>
+  <Card title="Exclusive Access" icon="lock">
+    - Private events invitations
+    - Menu previews
+    - Chef's table reservations
+    - New location openings
+  </Card>
+  <Card title="Complimentary Items" icon="gift">
+    - Welcome drink
+    - Birthday dessert
+    - Amuse-bouche
+    - Digestif
+  </Card>
+</CardGroup>
+
+### Communicating Benefits
+
+Make benefits clear:
+
+1. **On Tier Badge Hover**: Show tooltip with benefits list
+2. **Welcome Email**: Send tier benefits on upgrade
+3. **Reservation Confirmation**: Remind of applicable benefits
+4. **Table Cards**: Physical card at table for VIP/Founders
+
+## Analytics & Reporting
+
+### Tier Distribution
+
+View customer breakdown by tier:
+
+- **Chart View**: Pie or bar chart
+- **Table View**: Count and percentage per tier
+- **Trend**: Month-over-month changes
+- **Revenue**: Spend by tier
+
+**Ideal Distribution (Guidelines):**
+- Founders/VIP: 5-10% (your most valuable)
+- Oro: 15-20% (core loyalists)
+- Plata: 25-30% (engaged regulars)
+- Bronce/Nuevo: 40-50% (building loyalty)
+
+### Revenue Analysis
+
+**Key Metrics per Tier:**
+- Total customers in tier
+- Total revenue contributed
+- Average revenue per customer
+- Percentage of total revenue
+- Visit frequency
+
+<Accordion title="Example Analysis">
+**Scenario:** 1000 total customers, €500,000 annual revenue
+
+| Tier | Customers | % | Revenue | % Revenue | Avg/Customer |
+|------|-----------|---|---------|-----------|-------------|
+| Founders | 20 | 2% | €100,000 | 20% | €5,000 |
+| VIP | 50 | 5% | €125,000 | 25% | €2,500 |
+| Oro | 150 | 15% | €150,000 | 30% | €1,000 |
+| Plata | 280 | 28% | €84,000 | 17% | €300 |
+| Bronce | 500 | 50% | €41,000 | 8% | €82 |
+
+**Insight:** Top 7% of customers (Founders + VIP) drive 45% of revenue.
+</Accordion>
+
+## Manual Adjustments
+
+### Override Tier Assignment
+
+Manually assign tiers when needed:
+
+**Use Cases:**
+- VIP guest referral
+- Celebrity/influencer
+- Business partnership
+- Recovery gesture after service issue
+
+**How to:**
+1. Open customer profile
+2. Click tier badge
+3. Select "Override Tier"
+4. Choose new tier
+5. Add reason note
+6. Save
+
+<Note type="warning">
+**Note:** Manual overrides are preserved during auto-recalculation. To remove, click "Reset to Auto" on customer profile.
+</Note>
+
+### Bulk Tier Updates
+
+Update multiple customers at once:
+
+1. Filter customers (e.g., "Total Spend > €2000 AND Tier = Oro")
+2. Select all visible
+3. Click "Bulk Actions" → "Update Tier"
+4. Choose new tier
+5. Confirm
+
+## Recalculation Process
+
+### Automatic Recalculation
+
+Runs daily (if enabled):
+
+**Process:**
+1. Runs at 2:00 AM local time
+2. Fetches all customers
+3. Calculates spending/visits per calculation period
+4. Evaluates tier criteria for each customer
+5. Updates tier assignments
+6. Logs changes to history
+7. Sends notifications (if configured)
+
+**Performance:**
+- Handles 10,000+ customers in ~2 minutes
+- No impact on live system
+- Rollback available if needed
+
+### Manual Recalculation
+
+Recalculate on demand:
+
+1. Navigate to Loyalty Program settings
+2. Click "Recalculate All Customers"
+3. Confirm action
+4. View results summary:
+   - Customers updated
+   - Tier distribution
+   - Upgrade/downgrade counts
+
+<Note type="tip">
+**When to use:** After changing tier criteria, after bulk data import, or to verify automatic calculation results.
+</Note>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Start Simple" icon="rocket">
+    Begin with 3-4 tiers. Add more complexity as program matures. Too many tiers dilutes exclusivity.
+  </Card>
+  <Card title="Make Top Tiers Exclusive" icon="crown">
+    Founders/VIP should be &lt;10% of customers. Scarcity increases value perception.
+  </Card>
+  <Card title="Communicate Benefits Clearly" icon="megaphone">
+    Staff must know tier benefits. Print reference cards for hosts and servers.
+  </Card>
+  <Card title="Review Quarterly" icon="calendar">
+    Analyze tier distribution and revenue. Adjust criteria if too many/few in top tiers.
+  </Card>
+  <Card title="Prevent Downgrade Shock" icon="trending-down">
+    Consider grace periods. E.g., maintain VIP for 3 months after falling below threshold.
+  </Card>
+  <Card title="Reward Frequency Over Spend" icon="repeat">
+    Weight visit count heavily. Frequent visitors are more valuable than one-time high spenders.
+  </Card>
+</CardGroup>
+
+## Integration with Marketing
+
+Loyalty tiers power marketing campaigns:
+
+### Segment by Tier
+
+Create tier-specific campaigns:
+- "Founders Exclusive Event"
+- "VIP Wine Pairing Dinner"
+- "Oro Member New Menu Preview"
+
+### Personalization
+
+Use tier in messaging:
+```
+Hola [nombre],
+
+Como miembro [tier] del [Programa], te invitamos...
+```
+
+### Upgrade Campaigns
+
+Encourage tier progression:
+```
+¡Estás cerca de VIP!
+
+Te faltan solo [X] visitas o €[Y] para alcanzar
+el nivel VIP y desbloquear beneficios exclusivos.
+
+Reserva ahora: [link]
+```
+
+## Technical Details
+
+**Calculation Performance:**
+- Individual customer: &lt;50ms
+- 1,000 customers: ~30 seconds
+- 10,000 customers: ~3 minutes
+
+**Data Storage:**
+- Tier assignments stored on customer record
+- Calculation history logged for auditing
+- Point balances updated real-time
+
+**Concurrency:**
+- Recalculation runs in background job
+- Does not lock customer records
+- Safe to run during business hours (but scheduled for 2 AM)

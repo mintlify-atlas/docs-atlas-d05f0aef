@@ -1,0 +1,216 @@
+---
+title: Import CSV
+api: POST /api/admin/import-csv
+description: Bulk import customers from CSV files and link them to locations
+---
+
+# Import CSV
+
+Bulk import customer data from predefined CSV files. This endpoint processes multiple CSV files, creates/updates customers, and links them to their respective locations.
+
+## Endpoint
+
+```
+POST /api/admin/import-csv
+```
+
+## Authentication
+
+Requires `canViewSettings` permission (admin or super_admin only).
+
+```typescript
+await requirePermission("canViewSettings");
+```
+
+## CSV File Mapping
+
+The endpoint processes these predefined CSV files from the project root:
+
+| Filename | Location |
+|----------|----------|
+| `molla-clientes.csv` | La Tasca Alicante · Centro |
+| `balmis-clientes.csv` | La Tasca Alicante · Puerto |
+| `marques-cubas-clientes.csv` | La Tasca Madrid · Centro |
+| `claudio-coello-clientes.csv` | La Tasca Madrid · Salamanca |
+| `el-patio-clientes.csv` | El Patio Alicante |
+
+## CSV Format
+
+Supported CSV columns (auto-detected, semicolon-separated):
+
+<ParamField body="email" type="string">
+  Customer email address
+</ParamField>
+
+<ParamField body="phone" type="string">
+  Phone number (will be combined with country code)
+</ParamField>
+
+<ParamField body="código país" type="string">
+  Country code (e.g., 34 for Spain)
+</ParamField>
+
+<ParamField body="nombre" type="string">
+  First name
+</ParamField>
+
+<ParamField body="apellido" type="string">
+  Last name
+</ParamField>
+
+<ParamField body="cumpleaños" type="string">
+  Birth date (DD/MM/YYYY or YYYY-MM-DD)
+</ParamField>
+
+<ParamField body="empresa" type="string">
+  Company name
+</ParamField>
+
+<ParamField body="cargo" type="string">
+  Job title
+</ParamField>
+
+<ParamField body="dirección" type="string">
+  Address
+</ParamField>
+
+<ParamField body="etiquetas" type="string">
+  Tags (comma-separated)
+</ParamField>
+
+<Note>
+  At least **email** or **phone** is required for each customer.
+</Note>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Whether the import completed successfully
+</ResponseField>
+
+<ResponseField name="report" type="object">
+  Import summary report
+  
+  <Expandable title="Report Properties">
+    <ResponseField name="details" type="array">
+      Per-file import results
+      
+      <Expandable title="File Result">
+        <ResponseField name="file" type="string">
+          CSV filename
+        </ResponseField>
+        
+        <ResponseField name="location" type="string">
+          Location name
+        </ResponseField>
+        
+        <ResponseField name="imported" type="number">
+          Number of customers imported successfully
+        </ResponseField>
+        
+        <ResponseField name="errors" type="number">
+          Number of errors encountered
+        </ResponseField>
+        
+        <ResponseField name="status" type="string">
+          Status message (e.g., "Skipped - Not Found")
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    
+    <ResponseField name="totalSuccess" type="number">
+      Total customers imported across all files
+    </ResponseField>
+    
+    <ResponseField name="totalErrors" type="number">
+      Total errors across all files
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Request
+
+```bash
+curl -X POST https://your-domain.com/api/admin/import-csv \
+  -H "Cookie: your-session-cookie"
+```
+
+## Example Response
+
+```json
+{
+  "success": true,
+  "report": {
+    "details": [
+      {
+        "file": "molla-clientes.csv",
+        "location": "La Tasca Alicante · Centro",
+        "imported": 243,
+        "errors": 5
+      },
+      {
+        "file": "balmis-clientes.csv",
+        "status": "Skipped - Not Found"
+      }
+    ],
+    "totalSuccess": 243,
+    "totalErrors": 5
+  }
+}
+```
+
+## Error Response
+
+```json
+{
+  "error": "Error message",
+  "stack": "Error stack trace",
+  "status": 500
+}
+```
+
+## Import Process
+
+For each CSV file:
+
+1. **Read File** - Load CSV from project root
+2. **Detect Headers** - Auto-map columns (supports Spanish and English headers)
+3. **Parse Rows** - Process up to 5,000 rows per file
+4. **Upsert Customer** - Create or update customer in global `customers` table
+5. **Link to Location** - Create reservation record to link customer to location
+
+### Customer Matching Logic
+
+- If `email` provided, match by email
+- Otherwise, match by `phone`
+- If customer exists, merge new data (update birth date, company, job title, address)
+- If new customer, create with `source: 'Bulk Import'`
+
+### Phone Number Formatting
+
+```typescript
+let phone = phoneVal;
+if (phone && countryCode) {
+  phone = `+${countryCode.replace('+', '')}${phone}`;
+}
+```
+
+### Birth Date Parsing
+
+Supports two formats:
+- `DD/MM/YYYY` → converted to `YYYY-MM-DD`
+- `YYYY-MM-DD` → used as-is
+
+## Limitations
+
+- Maximum 5,000 rows per CSV file
+- CSV files must be in project root directory
+- Only predefined location mappings are supported
+- Processes files sequentially (not parallel)
+
+## Use Cases
+
+- Initial CRM setup with existing customer data
+- Migrate from CoverManager or other PMS systems
+- Bulk import from marketing campaigns
+- Restore customer data after system migration

@@ -1,0 +1,470 @@
+---
+title: 'Hotel CRM'
+description: 'Specialized CRM features for hotels including concierge management, guest tracking, and multi-property coordination'
+icon: 'building-2'
+---
+
+## Overview
+
+Hiro's Hotel CRM module extends the core CRM with hotel-specific features designed for concierge teams, hotel managers, and multi-property groups. It manages hotel partnerships, guest referrals, and coordination between hotels and restaurants.
+
+<Note>
+**Perfect for:** Hotel groups referring guests to partner restaurants, restaurant groups working with hotel concierges, and integrated hospitality operations.
+</Note>
+
+## Hotel Management
+
+### Hotel Database
+
+Centralized database of hotel partners:
+
+<Tabs>
+  <Tab title="Hotel Profiles">
+    **Core Information:**
+    - Hotel name and brand
+    - Star rating (3-5 stars)
+    - Classification (Luxury, Boutique, Business, Standard)
+    - Complete address
+    - Zone/neighborhood
+    - Multiple phone numbers (reception, concierge, manager)
+    - Email addresses (general, concierge-specific)
+    
+    **Relationship Data:**
+    - Manager name and contact
+    - Concierge team contact
+    - Partnership status (prospect, active, inactive)
+    - Contract details
+    - Commission structure
+  </Tab>
+  <Tab title="Guest Tracking">
+    **Referral Metrics:**
+    - Total reservations from hotel
+    - Guest count (pax)
+    - Total revenue attributed
+    - Average party size
+    - Conversion rate
+    
+    **Guest Experience:**
+    - Special requests from concierge
+    - VIP treatment notes
+    - Feedback from hotel guests
+    - Service recovery incidents
+  </Tab>
+  <Tab title="Communication History">
+    **Interaction Log:**
+    - Email communications
+    - Phone call notes
+    - Meeting summaries
+    - Partnership updates
+    - Issue resolution
+  </Tab>
+</Tabs>
+
+### Hotel Classification System
+
+Categorize hotels by partnership level:
+
+<CardGroup cols={2}>
+  <Card title="Premium" icon="crown">
+    5-star luxury hotels
+    - High guest volume
+    - VIP treatment standard
+    - Preferred table assignments
+    - Dedicated account manager
+  </Card>
+  <Card title="Gold" icon="star">
+    4-5 star hotels
+    - Regular referrals
+    - Priority reservations
+    - Monthly reporting
+  </Card>
+  <Card title="Standard" icon="building">
+    3-4 star hotels
+    - Occasional referrals
+    - Standard service
+    - Quarterly check-ins
+  </Card>
+  <Card title="Prospect" icon="target">
+    Not yet active partners
+    - Outreach pipeline
+    - Relationship building
+    - Trial partnerships
+  </Card>
+</CardGroup>
+
+## Guest Referral Workflow
+
+### Concierge Referral Process
+
+<Steps>
+  <Step title="Guest Requests Restaurant">
+    Hotel guest asks concierge for dining recommendation
+  </Step>
+  <Step title="Concierge Makes Reservation">
+    Concierge books table at partner restaurant:
+    - Via phone or direct booking system
+    - Specifies guest name and hotel
+    - Notes any special requests or VIP status
+  </Step>
+  <Step title="Restaurant Receives Booking">
+    Reservation syncs to Hiro:
+    - Automatically tagged with hotel source
+    - Flagged for special attention
+    - Guest preferences noted
+  </Step>
+  <Step title="Pre-Service Preparation">
+    Restaurant prepares:
+    - Reviews guest profile (if returning)
+    - Confirms table assignment
+    - Prepares welcome amenity (if VIP)
+    - Notifies staff of VIP/hotel guest
+  </Step>
+  <Step title="Service & Follow-up">
+    During and after visit:
+    - Exceptional service delivery
+    - Manager table visit
+    - Feedback collection
+    - Thank you to concierge
+  </Step>
+  <Step title="Reporting Back">
+    Restaurant reports to hotel:
+    - Confirmation of visit
+    - Guest satisfaction
+    - Any issues or highlights
+    - Revenue attribution
+  </Step>
+</Steps>
+
+### Special Handling for Hotel Guests
+
+Automatic VIP treatment triggers:
+
+- **Table Assignment**: Best available table, preferably window/terrace
+- **Welcome Amenity**: Complimentary amuse-bouche or aperitif
+- **Service Priority**: Expedited seating, attentive service
+- **Manager Visit**: Table visit to ensure satisfaction
+- **Feedback Request**: Post-meal survey (high priority)
+
+<Note type="tip">
+**Pro Tip:** Train staff to ask "Are you staying at [Hotel Name]?" to catch referrals not explicitly noted by concierge.
+</Note>
+
+## Multi-Property Coordination
+
+### Hotel Group Management
+
+For hotel groups with multiple properties:
+
+<Accordion title="Group-Level Tracking">
+**Consolidated Reporting:**
+- Total referrals across all properties
+- Revenue by property
+- Top-performing locations
+- Guest satisfaction by property
+- Commission calculations
+
+**Example:**
+```
+Gran Hotel Group (5 properties)
+
+• Gran Hotel Centro: 45 reservations, €8,920 revenue
+• Gran Hotel Aeropuerto: 32 reservations, €5,840 revenue
+• Gran Hotel Playa: 28 reservations, €6,120 revenue
+• Gran Hotel Norte: 18 reservations, €3,240 revenue
+• Gran Hotel Sur: 22 reservations, €4,180 revenue
+
+Total: 145 reservations, €28,300 revenue
+Commission (10%): €2,830
+```
+</Accordion>
+
+<Accordion title="Cross-Promotion">
+**Coordinated Marketing:**
+- Joint promotional campaigns
+- Package deals (room + dining)
+- Event partnerships
+- Seasonal collaborations
+
+**Example Package:**
+```
+Romantic Weekend Package
+
+• 2 nights at Gran Hotel Centro
+• Welcome bottle of cava
+• Private dinner at La Tasca (partner restaurant)
+• Rooftop terrace table
+• Chef's tasting menu
+• Total: €599 (Save €150)
+```
+</Accordion>
+
+## Import & Export Tools
+
+### Bulk Hotel Import
+
+Import hotels from Excel:
+
+<Steps>
+  <Step title="Prepare Spreadsheet">
+    Required columns:
+    - Hotel Name
+    - Address
+    - Zone
+    - Phone
+    - Email
+    - Stars (rating)
+    - Classification
+    - Manager Name
+    - Status
+  </Step>
+  <Step title="Upload File">
+    Navigate to Hotels → Import
+    Upload .xlsx or .csv file
+  </Step>
+  <Step title="Map Columns">
+    Hiro auto-detects columns
+    Manually adjust if needed
+  </Step>
+  <Step title="Preview & Import">
+    Review sample rows
+    Click "Import All"
+    Duplicate detection runs automatically
+  </Step>
+</Steps>
+
+### Export Options
+
+<CardGroup cols={2}>
+  <Card title="PDF Report" icon="file-text">
+    Professional hotel directory:
+    - Complete contact information
+    - Referral statistics
+    - Formatted for printing
+    - Use for sales team reference
+  </Card>
+  <Card title="CSV Export" icon="table">
+    Spreadsheet with all data:
+    - All hotel fields
+    - Custom field selection
+    - Reservation counts
+    - Revenue attribution
+    - Use for analysis or CRM import
+  </Card>
+</CardGroup>
+
+## Analytics & Reporting
+
+### Hotel Performance Dashboard
+
+Key metrics per hotel:
+
+- **Referral Volume**: Total reservations this month/year
+- **Guest Count**: Total pax referred
+- **Revenue Attribution**: Total spend from hotel guests
+- **Average Party Size**: Mean pax per reservation
+- **Conversion Rate**: Reservations / Total guests at hotel
+- **Guest Satisfaction**: Average NPS from hotel guests
+
+### Top Hotels Report
+
+Identify best-performing partners:
+
+| Hotel | Reservations | Revenue | Avg/Reservation | Satisfaction |
+|-------|--------------|---------|-----------------|-------------|
+| Gran Hotel Centro | 45 | €8,920 | €198 | 9.2 |
+| Boutique Palace | 38 | €9,500 | €250 | 9.5 |
+| Hotel Excellence | 34 | €7,140 | €210 | 8.8 |
+| Urban Hotel | 32 | €5,840 | €182 | 8.5 |
+
+<Note type="tip">
+Use this report to prioritize relationship management. High-revenue, high-satisfaction hotels deserve VIP partner treatment.
+</Note>
+
+### Commission Tracking
+
+Calculate commissions owed to hotels:
+
+**Configuration:**
+- Set commission % per hotel (typically 10-15%)
+- Calculate on confirmed visit revenue
+- Exclude no-shows and cancellations
+- Generate monthly commission reports
+
+**Example Calculation:**
+```
+Gran Hotel Centro - September 2024
+
+45 reservations completed
+€8,920 total revenue
+Commission rate: 10%
+
+Total Commission: €892
+
+Payment due: October 15, 2024
+```
+
+## Integration Features
+
+### CoverManager Hotel Sync
+
+Integrate hotel bookings:
+
+- Hotels using CoverManager sync automatically
+- Reservations tagged with hotel source
+- Guest information pre-populated
+- Special requests flow through
+
+### Direct Booking Widget
+
+Embed booking widget on hotel website:
+
+```html
+<iframe src="https://hiro.app/book/[restaurant-id]?hotel=[hotel-id]"
+        width="100%" height="600px">
+</iframe>
+```
+
+**Features:**
+- Hotel guests see partner restaurants
+- Automatic hotel attribution
+- Real-time availability
+- Mobile-responsive
+
+## Concierge Portal (Coming Soon)
+
+Dedicated portal for hotel concierges:
+
+### Features
+
+<CardGroup cols={2}>
+  <Card title="Quick Booking" icon="calendar">
+    - One-click reservation creation
+    - No login required (magic link)
+    - Pre-filled hotel information
+    - Instant confirmation
+  </Card>
+  <Card title="Guest Tracking" icon="users">
+    - See all guests referred
+    - Track visit completion
+    - View guest feedback
+    - Performance stats
+  </Card>
+  <Card title="Communication" icon="message-circle">
+    - Direct messaging with restaurant
+    - Special request submission
+    - Booking modifications
+    - Issue reporting
+  </Card>
+  <Card title="Reporting" icon="bar-chart">
+    - Monthly referral summary
+    - Commission statements
+    - Guest satisfaction scores
+    - Partnership performance
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Relationship Management" icon="handshake">
+    - Visit hotel partners monthly
+    - Meet concierge teams in person
+    - Provide menus and training
+    - Host concierge appreciation events
+  </Card>
+  <Card title="Service Excellence" icon="star">
+    - Always honor special requests
+    - Manager must visit table
+    - Send thank you to concierge after each visit
+    - Handle issues with urgency
+  </Card>
+  <Card title="Clear Communication" icon="message-circle">
+    - Confirm reservations immediately
+    - Update on any changes
+    - Report any guest issues
+    - Share positive feedback
+  </Card>
+  <Card title="Data Hygiene" icon="database">
+    - Update contact information quarterly
+    - Remove inactive hotels
+    - Track staff changes at hotels
+    - Maintain accurate commission records
+  </Card>
+</CardGroup>
+
+## Operational Workflows
+
+### New Hotel Partner Setup
+
+<Steps>
+  <Step title="Initial Meeting">
+    - Meet hotel manager and concierge team
+    - Present restaurant and menu
+    - Discuss partnership terms
+    - Set commission structure
+  </Step>
+  <Step title="System Configuration">
+    - Add hotel to Hiro database
+    - Set classification level
+    - Configure commission rate
+    - Create custom tags for tracking
+  </Step>
+  <Step title="Training">
+    - Provide reservation process training
+    - Share menu and wine list
+    - Demonstrate booking system (if integrated)
+    - Provide direct contact numbers
+  </Step>
+  <Step title="Launch">
+    - Send welcome package
+    - Activate partnership status
+    - Schedule first follow-up (30 days)
+    - Begin referral tracking
+  </Step>
+</Steps>
+
+### Monthly Partnership Review
+
+1. **Generate Performance Report**
+   - Referrals this month
+   - Revenue attributed
+   - Guest satisfaction scores
+   - Any service issues
+
+2. **Review with Hotel**
+   - Share report with hotel manager
+   - Discuss opportunities
+   - Address any concerns
+   - Plan upcoming promotions
+
+3. **Process Commission**
+   - Calculate commission owed
+   - Generate invoice/statement
+   - Submit for payment
+   - Confirm receipt with hotel
+
+4. **Plan Next Month**
+   - Set referral goals
+   - Schedule events or promotions
+   - Update menus if changed
+   - Confirm contact information
+
+## Technical Specifications
+
+**Data Storage:**
+- Hotel profiles: Unlimited
+- Referral history: 5 years retention
+- Contact history: Complete log
+- Commission records: 7 years (tax compliance)
+
+**Performance:**
+- Hotel list loads 500+ properties instantly
+- Search results in &lt;50ms
+- Export handles 1,000+ hotels
+- Commission calculations real-time
+
+**Customization:**
+- Custom fields per hotel
+- Configurable commission structures
+- Custom tags and categories
+- Flexible classification schemes

@@ -1,0 +1,230 @@
+---
+title: AI Chat
+api: POST /api/ai/chat
+description: OpenAI-powered conversational assistant for restaurant operations
+---
+
+# AI Chat
+
+Interact with HIRO AI, an OpenAI-powered assistant that provides intelligent insights about your restaurant operations, reservations, and customers.
+
+## Endpoint
+
+```
+POST /api/ai/chat
+```
+
+## Authentication
+
+Requires authenticated user session. The endpoint automatically retrieves the user's organization from their profile.
+
+## Request Body
+
+<ParamField body="message" type="string" required>
+  User's message to the AI assistant
+</ParamField>
+
+<ParamField body="history" type="array" default="[]">
+  Conversation history (last 10 messages kept)
+  
+  <Expandable title="Message Object">
+    <ParamField body="role" type="string">
+      Message role: `user`, `assistant`, or `system`
+    </ParamField>
+    
+    <ParamField body="content" type="string">
+      Message content
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Whether the request was successful
+</ResponseField>
+
+<ResponseField name="content" type="string">
+  AI assistant's response message
+</ResponseField>
+
+<ResponseField name="usage" type="object">
+  OpenAI token usage statistics
+  
+  <Expandable title="Usage Properties">
+    <ResponseField name="prompt_tokens" type="number">
+      Tokens used in prompt
+    </ResponseField>
+    
+    <ResponseField name="completion_tokens" type="number">
+      Tokens used in completion
+    </ResponseField>
+    
+    <ResponseField name="total_tokens" type="number">
+      Total tokens used
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="fallback" type="boolean">
+  True if OpenAI is not configured (fallback message shown)
+</ResponseField>
+
+## Example Request
+
+```bash
+curl -X POST https://your-domain.com/api/ai/chat \
+  -H "Content-Type: application/json" \
+  -H "Cookie: your-session-cookie" \
+  -d '{
+    "message": "¿Cuántas reservas tengo hoy?",
+    "history": []
+  }'
+```
+
+## Example Response
+
+```json
+{
+  "success": true,
+  "content": "Hoy tienes **15 reservas** confirmadas:\n\n- 12 confirmadas\n- 3 pendientes\n- 2 VIP\n\nLas próximas reservas son:\n- 19:30 - María García (4 pax) ⭐VIP\n- 20:00 - Juan López (2 pax)\n- 20:30 - Ana Martínez (6 pax)",
+  "usage": {
+    "prompt_tokens": 450,
+    "completion_tokens": 120,
+    "total_tokens": 570
+  }
+}
+```
+
+## Fallback Response (No OpenAI Config)
+
+```json
+{
+  "success": false,
+  "content": "⚠️ **OpenAI no está configurado**\n\nPara activar HIRO AI con inteligencia artificial, ve a:\n\n📍 **Configuración → Integraciones → OpenAI**\n\nAgrega tu API Key de OpenAI para obtener respuestas inteligentes.\n\nMientras tanto, puedo responder preguntas básicas sobre tus datos.",
+  "fallback": true
+}
+```
+
+## Error Responses
+
+### 400 Bad Request
+
+```json
+{
+  "error": "Mensaje requerido"
+}
+```
+
+### 401 Unauthorized
+
+```json
+{
+  "error": "No autenticado"
+}
+```
+
+### 500 OpenAI Error
+
+```json
+{
+  "success": false,
+  "content": "❌ Error de OpenAI: Invalid API key",
+  "error": true
+}
+```
+
+## AI Context
+
+The AI assistant has access to real-time restaurant data:
+
+### Current Data Context
+
+- **Today's reservations** (total, confirmed, pending, VIP)
+- **Upcoming reservations** (next 5, sorted by time)
+- **Customer statistics** (total customers, loyalty tiers)
+- **Weekly revenue** estimates
+- **Inactive VIP customers** (3+ months without visit)
+
+### System Prompt
+
+The AI uses `HIRO_SYSTEM_PROMPT` (defined in `/lib/ai/openai.ts`) which instructs it to:
+- Respond in Spanish
+- Focus on hospitality operations
+- Provide actionable insights
+- Use restaurant industry terminology
+
+## OpenAI Configuration
+
+The endpoint retrieves OpenAI configuration from the `integration_configs` table:
+
+```typescript
+const { data } = await supabase
+  .from('integration_configs')
+  .select('config')
+  .eq('integration_type', 'openai')
+  .eq('organization_id', organizationId)
+  .eq('is_enabled', true)
+  .single();
+
+const config = {
+  api_key: data.config.api_key,
+  model: data.config.model || 'gpt-4-turbo',
+  temperature: data.config.temperature ?? 0.7,
+  max_tokens: data.config.max_tokens ?? 1000
+};
+```
+
+## Implementation Details
+
+### Context Building
+
+The endpoint constructs a rich context string with:
+
+```typescript
+const context = `
+FECHA Y HORA ACTUAL: ${new Date().toLocaleString('es-ES')}
+
+RESERVAS DE HOY:
+- Total: 15
+- Confirmadas: 12
+- Pendientes: 3
+- VIP: 2
+
+PRÓXIMAS RESERVAS:
+- 19:30 - María García (4 pax) ⭐VIP
+...
+
+ESTADÍSTICAS:
+- Clientes totales: 1,243
+- Revenue semanal estimado: €45,230
+- Reservas esta semana: 87
+
+CLIENTES VIP INACTIVOS:
+- Juan Pérez - Última visita: 15/12/2025
+...
+`;
+```
+
+### Message Flow
+
+1. **System Prompt** - HIRO AI instructions
+2. **Context Injection** - Current restaurant data
+3. **History** - Last 10 conversation messages
+4. **User Message** - Current user query
+
+### Source Code Reference
+
+See `/app/api/ai/chat/route.ts` for full implementation.
+
+## Use Cases
+
+- "¿Cuántas reservas tengo hoy?"
+- "¿Qué clientes VIP no han venido en 3 meses?"
+- "¿Cuál es el revenue estimado de esta semana?"
+- "Muéstrame las próximas reservas VIP"
+- "¿Cuántos clientes tengo en total?"
+
+<Note>
+  The AI assistant requires OpenAI API key configuration in **Settings → Integrations → OpenAI**.
+</Note>

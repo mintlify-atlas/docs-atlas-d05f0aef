@@ -1,0 +1,554 @@
+---
+title: Installation
+description: Complete installation guide for Hiro CRM - from local development to production deployment
+---
+
+This guide covers everything you need to install and deploy Hiro CRM, from setting up a local development environment to deploying to production on Vercel.
+
+## System requirements
+
+Before installing Hiro CRM, ensure your system meets these requirements:
+
+- **Node.js** 20.0.0 or higher
+- **npm** 10.0.0 or higher (comes with Node.js)
+- **Git** for cloning the repository
+- **Modern browser** (Chrome, Firefox, Safari, or Edge)
+- **Supabase account** (free tier available)
+
+<Note>
+Hiro CRM is tested on macOS, Linux, and Windows (via WSL2). For Windows users, we recommend using Windows Subsystem for Linux (WSL2) for the best experience.
+</Note>
+
+## Local development setup
+
+### Step 1: Clone the repository
+
+Clone the Hiro CRM repository and navigate to the project directory:
+
+```bash
+git clone https://github.com/your-org/hiro-crm.git
+cd hiro-crm
+```
+
+The project structure looks like this:
+
+```
+hiro-crm/
+├── frontend/              # Next.js application
+│   ├── app/               # App Router pages & API routes
+│   ├── components/        # Reusable UI components
+│   ├── lib/               # Services, utilities, integrations
+│   └── public/            # Static assets
+├── supabase/
+│   ├── migrations/        # Database schema migrations
+│   └── seeds/             # Demo data seeds
+├── docs/                  # Documentation
+└── scripts/               # Utility scripts
+```
+
+### Step 2: Install dependencies
+
+Navigate to the frontend directory and install all required packages:
+
+```bash
+cd frontend
+npm install
+```
+
+This installs all dependencies defined in `package.json`, including:
+
+- **Next.js 16** - React framework
+- **@supabase/supabase-js** - Supabase client
+- **@supabase/ssr** - Server-side rendering support
+- **Tailwind CSS v4** - Utility-first CSS
+- **Framer Motion** - Animation library
+- **OpenAI SDK** - AI Assistant integration
+- **Brevo SDK** - Email/SMS campaigns
+- **Inngest** - Background job processing
+
+### Step 3: Set up Supabase
+
+#### Create a new project
+
+<Steps>
+  <Step title="Sign in to Supabase">
+    Visit [supabase.com](https://supabase.com) and sign in or create an account
+  </Step>
+  
+  <Step title="Create project">
+    Click "New Project" and fill in:
+    - **Name**: `hiro-crm` (or your preferred name)
+    - **Database Password**: Choose a strong password
+    - **Region**: Select closest to your location (e.g., "West EU (Ireland)" for Spain)
+  </Step>
+  
+  <Step title="Wait for provisioning">
+    Project creation takes 1-2 minutes. Wait for the "Project is ready" notification
+  </Step>
+  
+  <Step title="Get API credentials">
+    Navigate to **Settings** > **API** and copy:
+    - Project URL
+    - `anon` `public` key
+    - `service_role` `secret` key (click "Reveal" to see it)
+  </Step>
+</Steps>
+
+#### Apply database migrations
+
+Hiro CRM uses PostgreSQL migrations to create the database schema. You'll need to run these in order.
+
+<Tabs>
+  <Tab title="Supabase CLI (Recommended)">
+    Install the Supabase CLI if you haven't already:
+    
+    ```bash
+    npm install -g supabase
+    ```
+    
+    Link your project and push migrations:
+    
+    ```bash
+    # From the project root directory
+    supabase link --project-ref your-project-ref
+    supabase db push
+    ```
+    
+    <Tip>
+    Find your project ref in the Supabase dashboard URL: `https://supabase.com/dashboard/project/YOUR-PROJECT-REF`
+    </Tip>
+  </Tab>
+  
+  <Tab title="Supabase Dashboard">
+    <Steps>
+      <Step title="Open SQL Editor">
+        In your Supabase dashboard, navigate to **SQL Editor**
+      </Step>
+      
+      <Step title="Run migrations sequentially">
+        Execute each migration file from `supabase/migrations/` in numerical order:
+        
+        1. `000_MARKETING_HUB_GGP_COMPLETE_SCHEMA.sql` - Core schema
+        2. `001_MARKETING_HUB_GGP_HELPER_FUNCTIONS.sql` - Helper functions
+        3. `002_MARKETING_HUB_GGP_ENHANCEMENTS.sql` - Enhancements
+        4. Continue through all numbered migrations...
+        
+        Copy each file's content, paste into the SQL editor, and click "Run"
+      </Step>
+      
+      <Step title="Verify tables created">
+        Go to **Table Editor** and confirm tables exist:
+        - `profiles`
+        - `brands`
+        - `locations`
+        - `customers`
+        - `reservations`
+        - `campaigns`
+        - `loyalty_members`
+        - And more...
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+<Warning>
+Migrations must be run in numerical order. Running them out of order may cause errors due to missing dependencies.
+</Warning>
+
+### Step 4: Configure environment variables
+
+Create your local environment file:
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` and configure the required variables:
+
+<CodeGroup>
+```bash Required
+# =============================================================================
+# REQUIRED: Supabase
+# =============================================================================
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# =============================================================================
+# REQUIRED: App URL
+# =============================================================================
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+```bash AI Assistant
+# =============================================================================
+# OPTIONAL: OpenAI (for AI Assistant)
+# =============================================================================
+OPENAI_API_KEY=sk-your-openai-key
+```
+
+```bash Email & SMS
+# =============================================================================
+# OPTIONAL: Brevo (for Email & SMS campaigns)
+# =============================================================================
+BREVO_API_KEY=your-brevo-api-key
+BREVO_SENDER_EMAIL=noreply@your-domain.com
+BREVO_SENDER_NAME=Hiro CRM
+BREVO_SMS_SENDER=HiroCRM
+```
+
+```bash Integrations
+# =============================================================================
+# OPTIONAL: POS Integrations
+# =============================================================================
+COVERMANAGER_API_KEY=your-covermanager-key
+REVO_ACCESS_TOKEN=your-revo-access-token
+
+# =============================================================================
+# OPTIONAL: Inngest (for background workflows)
+# =============================================================================
+INNGEST_EVENT_KEY=your-inngest-event-key
+INNGEST_SIGNING_KEY=your-inngest-signing-key
+
+# =============================================================================
+# OPTIONAL: Google Drive Integration (document library)
+# =============================================================================
+GOOGLE_DRIVE_CLIENT_ID=your-google-client-id
+GOOGLE_DRIVE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_DRIVE_REFRESH_TOKEN=your-refresh-token
+```
+
+```bash Monitoring
+# =============================================================================
+# OPTIONAL: Sentry (error tracking)
+# =============================================================================
+SENTRY_DSN=your-sentry-dsn
+NEXT_PUBLIC_SENTRY_DSN=your-sentry-dsn
+```
+</CodeGroup>
+
+### Step 5: Seed demo data (optional)
+
+To test Hiro CRM with realistic data, you can seed the database:
+
+<CodeGroup>
+```bash Basic Seed
+# Start the dev server
+npm run dev
+
+# In another terminal, seed basic data
+curl http://localhost:3000/api/admin/seed-locations
+```
+
+```sql Full Demo Dataset
+-- In Supabase SQL Editor, run:
+-- supabase/seeds/demo.sql
+
+-- This creates:
+-- • 3 brands (La Tasca, El Patio, La Brisa)
+-- • 5 locations (Madrid & Barcelona)
+-- • 5,000 customer profiles
+-- • ~25,000 reservation records
+-- • 12 marketing campaigns
+-- • Loyalty program configuration
+```
+</CodeGroup>
+
+### Step 6: Start development server
+
+Start the Next.js development server:
+
+```bash
+npm run dev
+```
+
+The application will be available at [http://localhost:3000](http://localhost:3000).
+
+<Tip>
+Use `npm run dev:webpack` if you experience issues with Turbopack (Next.js 16's default bundler).
+</Tip>
+
+## Production deployment
+
+### Deploy to Vercel
+
+Hiro CRM is optimized for deployment on Vercel:
+
+<Steps>
+  <Step title="Push to GitHub">
+    Push your Hiro CRM fork to GitHub:
+    
+    ```bash
+    git remote set-url origin https://github.com/your-username/hiro-crm.git
+    git push -u origin main
+    ```
+  </Step>
+  
+  <Step title="Import to Vercel">
+    - Go to [vercel.com](https://vercel.com) and sign in
+    - Click "Add New" > "Project"
+    - Import your GitHub repository
+    - Select the `frontend` directory as the root
+  </Step>
+  
+  <Step title="Configure environment variables">
+    Add all required environment variables from your `.env.local` file:
+    
+    - `NEXT_PUBLIC_SUPABASE_URL`
+    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+    - `SUPABASE_SERVICE_ROLE_KEY`
+    - `NEXT_PUBLIC_APP_URL` (set to your Vercel domain)
+    - Add optional variables for features you want to enable
+  </Step>
+  
+  <Step title="Deploy">
+    Click "Deploy" and wait for the build to complete (typically 2-3 minutes)
+  </Step>
+  
+  <Step title="Update Supabase settings">
+    In your Supabase project dashboard:
+    - Go to **Authentication** > **URL Configuration**
+    - Add your Vercel domain to **Site URL** and **Redirect URLs**
+  </Step>
+</Steps>
+
+<Note>
+The `vercel.json` file in the root directory configures cron jobs for automated tasks:
+- Daily reservation sync (8:00 AM)
+- Calendar notifications (9:00 AM)
+- Ticket reminders (8:00 AM)
+- Marketing automations (every 30 minutes)
+</Note>
+
+### Custom domain
+
+To use a custom domain:
+
+<Steps>
+  <Step title="Add domain in Vercel">
+    In your Vercel project settings, go to **Domains** and add your custom domain
+  </Step>
+  
+  <Step title="Configure DNS">
+    Add the DNS records provided by Vercel to your domain registrar
+  </Step>
+  
+  <Step title="Update environment variables">
+    Change `NEXT_PUBLIC_APP_URL` to your custom domain and redeploy
+  </Step>
+  
+  <Step title="Update Supabase">
+    Add your custom domain to Supabase **Authentication** > **URL Configuration**
+  </Step>
+</Steps>
+
+## Additional configuration
+
+### Set up first admin user
+
+After deployment, create your first user through the sign-up flow. Then, grant super admin permissions:
+
+```sql
+-- Run in Supabase SQL Editor
+UPDATE profiles 
+SET role = 'super_admin', 
+    permissions = '{"super_admin": true}'::jsonb
+WHERE email = 'your-email@example.com';
+```
+
+### Configure Supabase storage
+
+For customer avatars and document uploads, ensure storage is configured:
+
+<Steps>
+  <Step title="Create avatars bucket">
+    Migration `120_CREATE_AVATARS_BUCKET.sql` creates this automatically
+  </Step>
+  
+  <Step title="Verify storage policies">
+    Check that Row Level Security policies allow authenticated users to upload
+  </Step>
+</Steps>
+
+### Enable integrations
+
+<Tabs>
+  <Tab title="Brevo (Email/SMS)">
+    <Steps>
+      <Step title="Create Brevo account">
+        Sign up at [brevo.com](https://www.brevo.com) (free tier available)
+      </Step>
+      
+      <Step title="Generate API key">
+        Go to **Settings** > **API Keys** and create a new key
+      </Step>
+      
+      <Step title="Add to environment">
+        Set `BREVO_API_KEY` and related variables in Vercel environment settings
+      </Step>
+      
+      <Step title="Verify sender email">
+        Verify your sender email in Brevo to enable sending
+      </Step>
+    </Steps>
+  </Tab>
+  
+  <Tab title="CoverManager POS">
+    <Steps>
+      <Step title="Get API credentials">
+        Contact CoverManager support to obtain your API key
+      </Step>
+      
+      <Step title="Configure in settings">
+        Add `COVERMANAGER_API_KEY` to your environment variables
+      </Step>
+      
+      <Step title="Sync reservations">
+        Use the sync endpoint at `/api/cron/sync` or run manually from the admin panel
+      </Step>
+    </Steps>
+  </Tab>
+  
+  <Tab title="OpenAI (AI Assistant)">
+    <Steps>
+      <Step title="Create OpenAI account">
+        Sign up at [platform.openai.com](https://platform.openai.com)
+      </Step>
+      
+      <Step title="Generate API key">
+        Go to **API keys** and create a new secret key
+      </Step>
+      
+      <Step title="Add to environment">
+        Set `OPENAI_API_KEY` in your environment variables
+      </Step>
+      
+      <Step title="Monitor usage">
+        The AI Assistant uses GPT-4 by default. Monitor your usage in the OpenAI dashboard
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Development tools
+
+### Available scripts
+
+Hiro CRM includes several npm scripts for development:
+
+```bash
+# Development
+npm run dev                  # Start dev server with Turbopack
+npm run dev:webpack          # Start dev server with Webpack
+npm run build                # Build for production
+npm run start                # Start production server
+
+# Quality checks
+npm run lint                 # Run ESLint
+npm run type-check           # Check TypeScript types
+npm run clean                # Clean build artifacts
+
+# Testing
+npm run test                 # Run unit tests (watch mode)
+npm run test:run             # Run unit tests once
+npm run test:coverage        # Generate coverage report
+npm run test:e2e             # Run E2E tests with Playwright
+npm run test:e2e:ui          # Run E2E tests in UI mode
+
+# Utilities
+npm run verify:schema        # Verify database schema
+npm run create:user          # Create test user
+```
+
+### Database tools
+
+For database management:
+
+```bash
+# Using Supabase CLI
+supabase db diff             # Show local schema changes
+supabase db push             # Push migrations to remote
+supabase db pull             # Pull remote schema changes
+supabase db reset            # Reset local database
+```
+
+## Troubleshooting
+
+### Build errors
+
+If you encounter build errors:
+
+```bash
+# Clear cache and rebuild
+npm run clean
+rm -rf node_modules package-lock.json
+npm install
+npm run build
+```
+
+### Database connection issues
+
+<Steps>
+  <Step title="Verify credentials">
+    Double-check your Supabase URL and keys in `.env.local`
+  </Step>
+  
+  <Step title="Check Supabase status">
+    Visit [status.supabase.com](https://status.supabase.com) to check for outages
+  </Step>
+  
+  <Step title="Test connection">
+    Use the Supabase dashboard to run a simple query: `SELECT 1;`
+  </Step>
+</Steps>
+
+### Type errors
+
+Run the type checker to identify TypeScript issues:
+
+```bash
+npm run type-check
+```
+
+Common fixes:
+- Update `@types/node` and `@types/react` packages
+- Ensure all environment variables are properly typed in `lib/env.ts`
+
+### Performance issues
+
+<Tip>
+For production performance optimization:
+- Enable Vercel Analytics to monitor Core Web Vitals
+- Review database query performance in Supabase dashboard
+- Check for missing indexes on frequently queried columns
+</Tip>
+
+## Next steps
+
+Now that Hiro CRM is installed and running:
+
+<CardGroup cols={2}>
+  <Card title="Configure your brand" icon="palette">
+    Set up your restaurant/hotel brands and locations in the Settings panel
+  </Card>
+  
+  <Card title="Import customers" icon="upload">
+    Import existing customer data via CSV upload
+  </Card>
+  
+  <Card title="Create campaigns" icon="envelope">
+    Set up your first email or SMS marketing campaign
+  </Card>
+  
+  <Card title="Set up loyalty program" icon="star">
+    Configure loyalty tiers and point rewards
+  </Card>
+</CardGroup>
+
+## Getting help
+
+If you need assistance:
+
+- Check the [GitHub Issues](https://github.com/your-org/hiro-crm/issues) for known problems
+- Review the [Contributing Guide](https://github.com/your-org/hiro-crm/blob/main/CONTRIBUTING.md)
+- Open a new issue with detailed information about your problem

@@ -1,0 +1,224 @@
+---
+title: Loyalty Rules
+api: POST /api/loyalty/rules
+description: Update loyalty tier rules for a specific location
+---
+
+# Loyalty Rules
+
+Update or create loyalty tier rules for a specific location. Rules define the minimum spend and visit requirements for each tier.
+
+## Endpoint
+
+```
+POST /api/loyalty/rules
+```
+
+## Authentication
+
+Requires authenticated user session. The endpoint verifies that the location belongs to the user's organization.
+
+## Request Body
+
+<ParamField body="locationId" type="string" required>
+  Location UUID to update rules for
+</ParamField>
+
+<ParamField body="rules" type="array" required>
+  Array of loyalty rules to upsert
+  
+  <Expandable title="Rule Object">
+    <ParamField body="tier_id" type="string" required>
+      Tier UUID (e.g., Bronce, Plata, Oro, VIP)
+    </ParamField>
+    
+    <ParamField body="min_spend" type="number" default="0">
+      Minimum total spend required (in euros)
+    </ParamField>
+    
+    <ParamField body="min_visits" type="number" default="0">
+      Minimum number of visits required
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Whether the rules were updated successfully
+</ResponseField>
+
+## Example Request
+
+```bash
+curl -X POST https://your-domain.com/api/loyalty/rules \
+  -H "Content-Type: application/json" \
+  -H "Cookie: your-session-cookie" \
+  -d '{
+    "locationId": "location-madrid-centro-uuid",
+    "rules": [
+      {
+        "tier_id": "tier-bronce-uuid",
+        "min_spend": 0,
+        "min_visits": 0
+      },
+      {
+        "tier_id": "tier-plata-uuid",
+        "min_spend": 500,
+        "min_visits": 5
+      },
+      {
+        "tier_id": "tier-oro-uuid",
+        "min_spend": 1500,
+        "min_visits": 12
+      },
+      {
+        "tier_id": "tier-vip-uuid",
+        "min_spend": 3000,
+        "min_visits": 25
+      }
+    ]
+  }'
+```
+
+## Example Response
+
+```json
+{
+  "success": true
+}
+```
+
+## Error Responses
+
+### 401 Unauthorized
+
+```json
+{
+  "error": "No autorizado"
+}
+```
+
+### 400 Bad Request
+
+```json
+{
+  "error": "Datos incompletos"
+}
+```
+
+### 403 Forbidden
+
+```json
+{
+  "error": "No autorizado para esta ubicación"
+}
+```
+
+User's organization does not own the specified location.
+
+### 500 Internal Server Error
+
+```json
+{
+  "error": "Database error message"
+}
+```
+
+## Implementation Details
+
+### Authorization Check
+
+The endpoint verifies location ownership:
+
+```typescript
+const { data: profile } = await supabase
+  .from('profiles')
+  .select('organization_id')
+  .eq('id', user.id)
+  .single();
+
+const { data: location } = await supabase
+  .from('locations')
+  .select('organization_id')
+  .eq('id', locationId)
+  .single();
+
+if (location?.organization_id !== profile?.organization_id) {
+  return NextResponse.json(
+    { error: "No autorizado para esta ubicación" },
+    { status: 403 }
+  );
+}
+```
+
+### Upsert Logic
+
+Rules are upserted using a composite conflict resolution:
+
+```typescript
+for (const rule of rules) {
+  await supabase
+    .from('loyalty_rules')
+    .upsert({
+      location_id: locationId,
+      tier_id: rule.tier_id,
+      min_spend: rule.min_spend || 0,
+      min_visits: rule.min_visits || 0
+    }, { 
+      onConflict: 'location_id,tier_id'
+    });
+}
+```
+
+This ensures:
+- If a rule exists for the location + tier combination, it's **updated**
+- If no rule exists, a **new rule is created**
+- Each location can have only one rule per tier
+
+## Tier Progression Example
+
+| Tier | Min Spend | Min Visits |
+|------|-----------|------------|
+| Bronce | €0 | 0 |
+| Plata | €500 | 5 |
+| Oro | €1,500 | 12 |
+| VIP | €3,000 | 25 |
+
+## Business Logic
+
+Customers are automatically promoted to higher tiers when they meet **both** criteria:
+- `total_spend >= min_spend`
+- `total_visits >= min_visits`
+
+Tier evaluation typically happens:
+- After each reservation is marked as completed
+- During nightly batch processing
+- When manually triggering tier recalculation
+
+## Use Cases
+
+- Configure loyalty program for new locations
+- Adjust tier requirements based on location performance
+- Run promotional campaigns (lower thresholds temporarily)
+- A/B test different tier structures across locations
+
+## Location-Specific Configuration
+
+Different locations can have different tier requirements:
+
+**Madrid Centro** (high-end):
+- VIP: €5,000 / 30 visits
+
+**Barcelona Eixample** (casual):
+- VIP: €2,000 / 20 visits
+
+This allows for flexible loyalty programs that match each location's business model.
+
+<Note>
+  Changes to loyalty rules **do not retroactively** update customer tiers. Run a tier recalculation job to apply new rules to existing customers.
+</Note>
+
+<Warning>
+  Lowering tier requirements may trigger mass tier upgrades, potentially affecting benefit costs.
+</Warning>

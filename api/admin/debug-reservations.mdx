@@ -1,0 +1,166 @@
+---
+title: Debug Reservations
+api: GET /api/admin/debug-reservations
+description: Retrieve today's reservations for debugging and monitoring purposes
+---
+
+# Debug Reservations
+
+Retrieve today's reservations with customer and location details for debugging operations.
+
+## Endpoint
+
+```
+GET /api/admin/debug-reservations
+```
+
+## Authentication
+
+Requires `canAccessOperaciones` permission.
+
+```typescript
+await requirePermission("canAccessOperaciones");
+```
+
+## Response
+
+<ResponseField name="count" type="number">
+  Number of reservations found for today
+</ResponseField>
+
+<ResponseField name="today" type="string">
+  Today's date in ISO format (YYYY-MM-DD)
+</ResponseField>
+
+<ResponseField name="reservations" type="array">
+  Array of reservation objects with expanded relations
+  
+  <Expandable title="Reservation Object">
+    <ResponseField name="id" type="string">
+      Reservation UUID
+    </ResponseField>
+    
+    <ResponseField name="reservation_date" type="string">
+      Date and time of reservation (ISO 8601)
+    </ResponseField>
+    
+    <ResponseField name="status" type="string">
+      Reservation status: `pending`, `confirmed`, `seated`, `completed`, `cancelled`
+    </ResponseField>
+    
+    <ResponseField name="locations" type="object">
+      Location details
+      
+      <Expandable title="Location Properties">
+        <ResponseField name="name" type="string">
+          Location name
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    
+    <ResponseField name="customers" type="object">
+      Customer details
+      
+      <Expandable title="Customer Properties">
+        <ResponseField name="first_name" type="string">
+          Customer first name
+        </ResponseField>
+        
+        <ResponseField name="last_name" type="string">
+          Customer last name
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Request
+
+```bash
+curl -X GET https://your-domain.com/api/admin/debug-reservations \
+  -H "Cookie: your-session-cookie"
+```
+
+## Example Response
+
+```json
+{
+  "count": 3,
+  "today": "2026-03-04",
+  "reservations": [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "reservation_date": "2026-03-04T19:30:00Z",
+      "status": "confirmed",
+      "pax": 4,
+      "locations": {
+        "name": "La Tasca Madrid · Centro"
+      },
+      "customers": {
+        "first_name": "María",
+        "last_name": "García"
+      }
+    }
+  ]
+}
+```
+
+## Error Response
+
+```json
+{
+  "error": "Database error message",
+  "status": 500
+}
+```
+
+## Implementation Details
+
+The endpoint:
+1. Validates user has `canAccessOperaciones` permission
+2. Uses **service role key** to bypass RLS
+3. Filters reservations for today (00:00:00 to 23:59:59)
+4. Expands `locations` and `customers` relations
+5. Limits results to 10 reservations
+
+### Source Code Reference
+
+```typescript app/api/admin/debug-reservations/route.ts
+import { createClient } from '@supabase/supabase-js';
+import { requirePermission } from "@/lib/authz";
+
+export async function GET() {
+    await requirePermission("canAccessOperaciones");
+
+    const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data: reservations, error } = await supabase
+        .from('reservations')
+        .select('*, locations(name), customers(first_name, last_name)')
+        .gte('reservation_date', `${today}T00:00:00`)
+        .lte('reservation_date', `${today}T23:59:59`)
+        .limit(10);
+
+    if (error) {
+        return Response.json({ error: error.message }, { status: 500 });
+    }
+
+    return Response.json({
+        count: reservations?.length || 0,
+        today,
+        reservations
+    });
+}
+```
+
+## Use Cases
+
+- Monitor today's reservation activity
+- Debug reservation sync issues
+- Verify customer data integrity
+- Test location relationships

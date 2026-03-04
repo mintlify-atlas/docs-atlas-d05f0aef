@@ -1,0 +1,420 @@
+---
+title: 'Google Drive Integration'
+description: 'Access menus, contracts, and marketing materials from Google Drive'
+icon: 'google-drive'
+---
+
+The Google Drive integration allows you to link folders containing restaurant documents, menus, press kits, contracts, and other business files directly into Hiro CRM's document library.
+
+## What You Can Do
+
+- Access shared Google Drive folders without leaving Hiro CRM
+- Organize documents by location, category, or type
+- Preview files (PDFs, images, videos) in-app
+- Share links to menus and marketing materials with staff
+- Keep documents synced automatically (changes in Drive appear in Hiro)
+- Perfect for multi-location businesses with centralized assets
+
+## Use Cases
+
+- **Menus**: Current food and beverage menus by season
+- **Press Kits**: Photos, logos, and media resources
+- **Contracts**: Supplier agreements, rental contracts
+- **Training Manuals**: Staff onboarding documents
+- **Dossiers**: Hotel property information, event spaces
+- **Marketing Collateral**: Flyers, social media graphics
+
+## Prerequisites
+
+<Steps>
+  <Step title="Google Cloud Project">
+    Create a project in Google Cloud Console
+  </Step>
+  <Step title="Enable Drive API">
+    Enable the Google Drive API for your project
+  </Step>
+  <Step title="API Key or OAuth">
+    Generate an API key (for public folders) or OAuth credentials (for private folders)
+  </Step>
+  <Step title="Shared Folders">
+    Ensure your Drive folders are shared with appropriate permissions
+  </Step>
+</Steps>
+
+## Setup
+
+### Option 1: API Key (Public Folders - Recommended)
+
+Best for folders shared with "Anyone with the link" (no sign-in required).
+
+<Steps>
+  <Step title="Create Google Cloud Project">
+    1. Go to [Google Cloud Console](https://console.cloud.google.com)
+    2. Create a new project (e.g., "Hiro CRM Docs")
+  </Step>
+  
+  <Step title="Enable Drive API">
+    1. Go to **APIs & Services** > **Library**
+    2. Search for "Google Drive API"
+    3. Click **Enable**
+  </Step>
+  
+  <Step title="Create API Key">
+    1. Go to **APIs & Services** > **Credentials**
+    2. Click **Create Credentials** > **API Key**
+    3. Copy the key
+    4. (Optional) Restrict the key to Google Drive API only
+  </Step>
+  
+  <Step title="Share Your Folders">
+    1. In Google Drive, right-click your folder
+    2. Click **Share** > **Get link**
+    3. Set to **Anyone with the link** > **Viewer**
+    4. Copy the folder ID from the URL
+  </Step>
+</Steps>
+
+### Option 2: OAuth (Private Folders)
+
+Required for folders that aren't publicly shared.
+
+<Steps>
+  <Step title="Create OAuth Client">
+    1. Go to **APIs & Services** > **Credentials**
+    2. Click **Create Credentials** > **OAuth client ID**
+    3. Choose **Web application**
+    4. Add authorized redirect URI: `https://yourdomain.com/api/auth/google/callback`
+    5. Download the JSON credentials
+  </Step>
+  
+  <Step title="Get Refresh Token">
+    1. Use Google OAuth Playground or your app's OAuth flow
+    2. Request scope: `https://www.googleapis.com/auth/drive.readonly`
+    3. Exchange authorization code for refresh token
+  </Step>
+</Steps>
+
+### 3. Configure Environment Variables
+
+<CodeGroup>
+
+```bash .env.local (API Key Method)
+# Google Drive Integration (Public Folders)
+GOOGLE_DRIVE_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
+
+```bash .env.local (OAuth Method)
+# Google Drive Integration (Private Folders)
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_DRIVE_REFRESH_TOKEN=your-refresh-token
+```
+
+```bash .env.example
+# OPTIONAL: Google Drive Integration (document library)
+GOOGLE_DRIVE_CLIENT_ID=your-google-client-id
+GOOGLE_DRIVE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_DRIVE_REFRESH_TOKEN=your-refresh-token
+```
+
+</CodeGroup>
+
+<Warning>
+  If using OAuth, never commit `GOOGLE_CLIENT_SECRET` or `GOOGLE_DRIVE_REFRESH_TOKEN` to version control.
+</Warning>
+
+## API Reference
+
+### List Folder Contents
+
+```typescript
+import { listDriveFolderContent } from '@/app/actions/google-drive-api';
+
+const result = await listDriveFolderContent(
+  '1aBcDeFgHiJkLmNoPqRsTuVwXyZ', // Folder ID
+  accessToken // Optional: for private folders
+);
+
+if (result.success) {
+  console.log('Files:', result.data?.files);
+  console.log('Folders:', result.data?.folders);
+} else {
+  console.error('Error:', result.error);
+}
+```
+
+### Get File Metadata
+
+```typescript
+import { getDriveFileMetadata } from '@/app/actions/google-drive-api';
+
+const result = await getDriveFileMetadata('file-id-here');
+
+if (result.success) {
+  console.log('File:', result.data?.name);
+  console.log('Size:', result.data?.size);
+  console.log('Modified:', result.data?.modifiedTime);
+}
+```
+
+### Get Download URL
+
+```typescript
+import { getDriveFileDownloadUrl } from '@/app/actions/google-drive-api';
+
+const downloadUrl = await getDriveFileDownloadUrl('file-id-here');
+// Returns: https://drive.google.com/uc?export=download&id=file-id-here
+```
+
+## Configure Folders in Hiro CRM
+
+After setting up the API, add folders to your document library:
+
+```typescript
+import { createGoogleDriveFolder } from '@/app/actions/google-drive-config';
+
+const result = await createGoogleDriveFolder({
+  title: 'Current Menus',
+  description: 'Food and beverage menus for all locations',
+  google_drive_folder_id: '1aBcDeFgHiJkLmNoPqRsTuVwXyZ',
+  folder_type: 'document',
+  location_id: 'location-uuid', // Optional: link to specific location
+  is_active: true,
+  is_pinned: true,
+  tags: ['menus', 'current']
+});
+```
+
+### Folder Types
+
+- `general` - Miscellaneous documents
+- `photos` - Image galleries
+- `dossier` - Hotel/venue information packs
+- `manual` - Training and operational manuals
+- `document` - Contracts, legal files
+- `video` - Video content
+- `press_kit` - Marketing and media resources
+
+## Data Structures
+
+### DriveFile
+
+```typescript
+interface DriveFile {
+    id: string;                      // Google Drive file ID
+    name: string;                    // File name
+    mimeType: string;                // e.g., 'application/pdf'
+    kind: 'file' | 'folder';         // Type
+    webViewLink?: string;            // View in browser
+    webContentLink?: string;         // Direct download link
+    thumbnailLink?: string;          // Preview thumbnail
+    size?: string;                   // File size in bytes
+    modifiedTime?: string;           // ISO timestamp
+    iconLink?: string;               // Google's file icon
+}
+```
+
+### GoogleDriveFolderConfig
+
+```typescript
+interface GoogleDriveFolderConfig {
+    id: string;
+    title: string;
+    description?: string;
+    google_drive_folder_id: string;  // The actual Drive folder ID
+    google_drive_url?: string;
+    location_id?: string;            // Link to specific restaurant/hotel
+    folder_type: 'general' | 'photos' | 'dossier' | 'manual' | 'document' | 'video' | 'press_kit';
+    display_order: number;
+    is_active: boolean;
+    is_pinned: boolean;
+    tags?: string[];
+}
+```
+
+## How It Works
+
+<Steps>
+  <Step title="Folder Configuration">
+    Admin adds Drive folder ID to Hiro CRM library
+  </Step>
+  <Step title="Permission Check">
+    Hiro verifies it can access the folder (public link or OAuth)
+  </Step>
+  <Step title="API Request">
+    When user opens library, Hiro fetches folder contents via Drive API
+  </Step>
+  <Step title="Display Files">
+    Files and subfolders are rendered in Hiro's UI
+  </Step>
+  <Step title="Preview/Download">
+    Users can preview or download files using Google's hosted links
+  </Step>
+</Steps>
+
+## Finding Your Folder ID
+
+1. Open the folder in Google Drive
+2. Look at the URL in your browser:
+
+```
+https://drive.google.com/drive/folders/1aBcDeFgHiJkLmNoPqRsTuVwXyZ
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                        This is your folder ID
+```
+
+3. Copy the ID after `/folders/`
+
+## Troubleshooting
+
+### Error 403: Access Denied
+
+**Causes:**
+
+1. Folder is not shared publicly (if using API key method)
+2. API key doesn't have Drive API enabled
+3. OAuth token expired or doesn't have `drive.readonly` scope
+
+**Solutions:**
+
+- For public folders: Set sharing to "Anyone with the link" > "Viewer"
+- Verify Drive API is enabled in Google Cloud Console
+- Check API key restrictions (IP, HTTP referrer)
+- For OAuth: Regenerate refresh token with correct scopes
+
+### Error 404: Folder Not Found
+
+- Double-check the folder ID is correct
+- Ensure folder wasn't deleted or moved
+- Verify you're using the right Google account
+
+### Files Not Appearing
+
+- Folder may be empty
+- Files might be in trash
+- Check file permissions (need at least "Viewer" access)
+
+### Quota Exceeded
+
+Google Drive API has usage limits:
+
+- **Free tier**: 20,000 requests/day
+- **Paid tier**: Higher limits available
+
+**Solutions:**
+
+- Cache folder contents (don't fetch on every page load)
+- Use pagination for large folders
+- Request quota increase in Google Cloud Console
+
+## Example Use Cases
+
+### Display Current Menu
+
+```typescript
+const menuFolder = await getGoogleDriveFolders(
+  undefined, // All locations
+  undefined, // All categories
+  'document'  // Type: document
+);
+
+const menuContents = await listDriveFolderContent(
+  menuFolder[0].google_drive_folder_id
+);
+
+if (menuContents.success) {
+  const pdfMenus = menuContents.data?.files.filter(f => 
+    f.mimeType === 'application/pdf'
+  );
+  
+  console.log('Available menus:', pdfMenus?.map(m => m.name));
+}
+```
+
+### Link to Location-Specific Press Kit
+
+```typescript
+const pressKits = await getGoogleDriveFolders(
+  'alicante-puerto-location-id',
+  undefined,
+  'press_kit'
+);
+
+if (pressKits.length > 0) {
+  const pressKitUrl = pressKits[0].google_drive_url;
+  console.log('Press kit:', pressKitUrl);
+}
+```
+
+### Create Hierarchical Library
+
+```typescript
+// Main documents folder
+await createGoogleDriveFolder({
+  title: 'Corporate Documents',
+  google_drive_folder_id: 'main-folder-id',
+  folder_type: 'general',
+  display_order: 1,
+  is_pinned: true
+});
+
+// Location-specific menus
+await createGoogleDriveFolder({
+  title: 'Alicante Puerto - Menus',
+  google_drive_folder_id: 'location-menus-id',
+  folder_type: 'document',
+  location_id: 'alicante-puerto-uuid',
+  display_order: 2
+});
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Folder Organization">
+    - Use descriptive folder names
+    - Organize by location, category, and date
+    - Keep folder structure shallow (max 2-3 levels)
+    - Archive old content regularly
+  </Accordion>
+  
+  <Accordion title="Performance">
+    - Cache folder listings (refresh every 1-24 hours)
+    - Use pagination for folders with 100+ files
+    - Don't fetch Drive API on every page load
+    - Store folder metadata in your database
+  </Accordion>
+  
+  <Accordion title="Security">
+    - For sensitive files, use OAuth (private folders)
+    - Review folder sharing settings regularly
+    - Revoke access for former employees
+    - Use short-lived access tokens, not permanent API keys
+  </Accordion>
+  
+  <Accordion title="File Management">
+    - Use consistent file naming (e.g., "Menu_Summer_2026.pdf")
+    - Include dates in filenames for versioning
+    - Remove outdated files from Drive
+    - Use Google Drive's version history
+  </Accordion>
+</AccordionGroup>
+
+## API Limitations
+
+| Limit | Free Tier | Paid Tier |
+|-------|-----------|----------|
+| Requests/day | 20,000 | Higher (request increase) |
+| Requests/100 seconds | 1,000 | Higher |
+| Storage | 15 GB | Up to 30 TB (Workspace) |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Document Library" icon="folder-open" href="/essentials/library">
+    Learn how to use the document library in Hiro
+  </Card>
+  <Card title="Staff Permissions" icon="user-lock" href="/essentials/permissions">
+    Control who can access which documents
+  </Card>
+</CardGroup>

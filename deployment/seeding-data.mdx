@@ -1,0 +1,486 @@
+---
+title: Seeding Data
+description: Load demo and test data into your Hiro CRM database
+icon: seedling
+---
+
+Seeding your database with demo data helps you test Hiro CRM's features and understand how the system works before adding real customer data.
+
+## Overview
+
+Hiro CRM provides two seeding options:
+
+1. **Simple Seed** - Basic brands, locations, and sample customers (JavaScript)
+2. **Full Demo Dataset** - Complete restaurant scenario with 5,000 customers and realistic data (SQL)
+
+---
+
+## Simple Seed (Quick Start)
+
+The simple seed script creates minimal test data to get started quickly.
+
+### What's Included
+
+- **3 Brands**: Manero, El Portal, MarMía
+- **2 Locations**: Manero Madrid, Manero Alicante
+- **3 Sample Customers**: With realistic Spanish names and data
+
+### Running the Simple Seed
+
+<Steps>
+  <Step title="Configure environment">
+    Ensure your `.env.local` has valid Supabase credentials:
+    
+    ```env
+    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+    SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+    ```
+  </Step>
+  
+  <Step title="Run the seed script">
+    ```bash
+    cd frontend
+    node scripts/seed.js
+    ```
+    
+    You should see:
+    ```
+    🌱 Starting seed...
+    ✅ Brand seeded: Manero
+    ✅ Brand seeded: El Portal
+    ✅ Brand seeded: MarMía
+    ✅ Location seeded: Manero Madrid
+    ✅ Location seeded: Manero Alicante
+    ✅ Customer seeded: Alejandro
+    ✅ Customer seeded: Maria
+    ✅ Customer seeded: John
+    ✨ Seed completed!
+    ```
+  </Step>
+  
+  <Step title="Verify data">
+    Log into your Hiro CRM and check:
+    - Dashboard shows 3 customers
+    - Locations dropdown shows 2 locations
+    - Customer list displays seeded customers
+  </Step>
+</Steps>
+
+<Info>
+  The simple seed is idempotent - you can run it multiple times safely. It uses `upsert` to avoid duplicates.
+</Info>
+
+---
+
+## Full Demo Dataset (Realistic Testing)
+
+The full demo dataset creates a complete restaurant group scenario ideal for testing and demos.
+
+### What's Included
+
+<CardGroup cols={2}>
+  <Card title="3 Restaurant Brands" icon="utensils">
+    La Tasca, El Patio, La Brisa
+  </Card>
+  
+  <Card title="5 Physical Locations" icon="location-dot">
+    Madrid and Barcelona restaurants
+  </Card>
+  
+  <Card title="5,000 Customers" icon="users">
+    Realistic Spanish customer data with loyalty tiers
+  </Card>
+  
+  <Card title="~25,000 Reservations" icon="calendar-check">
+    2 years of reservation history
+  </Card>
+  
+  <Card title="12 Marketing Campaigns" icon="envelope">
+    Email and SMS campaigns with metrics
+  </Card>
+  
+  <Card title="~800 NPS Surveys" icon="star">
+    Customer feedback and ratings
+  </Card>
+</CardGroup>
+
+### Customer Distribution
+
+The demo data includes realistic loyalty tier distribution:
+
+- **45%** Nuevo (1-2 visits, €35-110 spend)
+- **25%** Bronze (3-10 visits, €110-350 spend)
+- **15%** Silver (10-22 visits, €380-800 spend)
+- **10%** Gold (20-35 visits, €850-1,550 spend)
+- **4%** Platinum (30-55 visits, €1,600-3,000 spend)
+- **1%** Founders (50-100 visits, €3,500-8,000 spend)
+
+### Running the Full Demo Seed
+
+<Steps>
+  <Step title="Locate the seed file">
+    The SQL file is at:
+    ```
+    supabase/seeds/demo.sql
+    ```
+  </Step>
+  
+  <Step title="Open Supabase SQL Editor">
+    1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
+    2. Select your project
+    3. Click **SQL Editor** in the sidebar
+    4. Click **New query**
+  </Step>
+  
+  <Step title="Copy and run the seed">
+    1. Open `supabase/seeds/demo.sql` in your code editor
+    2. Copy the entire file contents (475 lines)
+    3. Paste into the SQL Editor
+    4. Click **Run** (or press `Cmd/Ctrl + Enter`)
+    
+    <Warning>
+      This query takes 30-60 seconds to complete. Don't interrupt it!
+    </Warning>
+  </Step>
+  
+  <Step title="Review the summary">
+    After completion, scroll to the bottom of the results to see the summary:
+    
+    ```sql
+    brands_creadas    | 3
+    locales_creados   | 5
+    clientes_totales  | 5000
+    reservas_totales  | ~25000
+    campanas_totales  | 12
+    encuestas_nps     | 800
+    gasto_medio       | ~450.00
+    founders          | 50
+    platinum          | 200
+    gold              | 500
+    clientes_vip      | 250
+    ```
+  </Step>
+</Steps>
+
+### Alternative: Supabase CLI
+
+If you have the Supabase CLI installed:
+
+```bash
+cd frontend
+supabase db seed demo
+```
+
+<Info>
+  This assumes the seed file is in `supabase/seeds/demo.sql` in your linked project.
+</Info>
+
+---
+
+## Demo Data Details
+
+### Brands & Locations
+
+#### La Tasca (3 locations)
+- **La Tasca Madrid · Centro** - Gran Vía, 25
+- **La Tasca Madrid · Salamanca** - Calle Serrano, 3
+- **La Tasca Barcelona · Eixample** - Carrer de Provença, 230
+
+#### El Patio (1 location)
+- **El Patio Barcelona** - Carrer del Consell de Cent, 302
+
+#### La Brisa (1 location)
+- **La Brisa Madrid** - Paseo de la Castellana, 200
+
+### Loyalty Program
+
+Pre-configured loyalty program with 6 tiers:
+
+| Tier | Min Visits | Min Spend | Benefits |
+|------|-----------|-----------|----------|
+| Nuevo | 0 | €0 | 5% discount next visit |
+| Bronze | 3 | €100 | 10% discount, priority booking |
+| Silver | 10 | €300 | 15% discount, preferred table, free dessert |
+| Gold | 20 | €800 | 20% discount, exclusive events, personal sommelier |
+| Platinum | 30 | €1,500 | 25% discount, annual tasting menu, VIP parking |
+| Founders | 50 | €3,000 | Unlimited access, private chef, unique experiences |
+
+### Marketing Campaigns
+
+12 realistic campaigns with actual metrics:
+
+**Email Campaigns:**
+1. Welcome email (1,198 sent, 45% open rate)
+2. Valentine's Day special (2,043 sent, 54% open rate)
+3. Easter menu (1,791 sent, 47% open rate)
+4. 1-year anniversary (3,118 sent, 58% open rate)
+5. Win-back campaign (756 sent, 38% open rate)
+6. Fall menu launch (2,801 sent, 50% open rate)
+7. Christmas reservations (3,412 sent, 60% open rate)
+8. VIP exclusive dinner (318 sent, 84% open rate)
+9. Spring menu (3,021 sent, 53% open rate)
+10. Birthday automation (372 sent, 80% open rate)
+
+**SMS Campaigns:**
+11. Wednesday flash sale (1,189 sent, 75% open rate)
+12. Summer terrace opening (2,367 sent, 80% open rate)
+
+### Customer Data
+
+All 5,000 customers have:
+
+- **Realistic Spanish names** - Common first and last names from Spain
+- **Valid email addresses** - Format: `nombre.apellido123@domain.com`
+- **Spanish phone numbers** - Format: `+346xxxxxxxx`
+- **Geographic distribution** - Primarily Madrid and Barcelona
+- **Visit history** - Realistic first visit and last visit dates over 2 years
+- **Spending patterns** - Correlated with loyalty tier
+- **Marketing consent** - ~72% opted in
+- **Preferences** - Seating preferences, tags, notes
+
+### Reservations
+
+Reservations are generated based on each customer's visit count:
+
+- **Status distribution**: Mostly "completed", some "no_show" and "cancelled"
+- **Party sizes**: 2-6 people (realistic distribution)
+- **Time slots**: Lunch (13:30-14:30) and dinner (21:00-22:00)
+- **Source**: 65% from CoverManager, 35% manual
+- **Date range**: Distributed over 2 years from first visit to last visit
+
+### NPS Surveys
+
+800 feedback surveys with realistic distribution:
+
+- **65% Promoters** (4-5 stars) - Positive comments
+- **20% Passives** (3 stars) - Neutral comments
+- **15% Detractors** (1-2 stars) - Constructive criticism
+
+Each survey includes:
+- Overall rating (1-5)
+- Food rating (1-5)
+- Service rating (1-5)
+- Ambiance rating (1-5)
+- Optional text comments
+
+---
+
+## Resetting Demo Data
+
+To clear demo data and start fresh:
+
+<Warning>
+  This will delete ALL data in your database. Only do this in development/testing environments!
+</Warning>
+
+<Steps>
+  <Step title="Delete customers and related data">
+    ```sql
+    -- Delete in order to respect foreign key constraints
+    DELETE FROM feedback_surveys;
+    DELETE FROM reservations;
+    DELETE FROM loyalty_transactions;
+    DELETE FROM customers;
+    DELETE FROM campaigns;
+    DELETE FROM locations;
+    DELETE FROM brands;
+    ```
+  </Step>
+  
+  <Step title="Re-run migrations (optional)">
+    If you want to completely reset:
+    ```bash
+    supabase db reset
+    supabase db push
+    ```
+  </Step>
+  
+  <Step title="Re-seed">
+    Run the demo seed script again to populate fresh data.
+  </Step>
+</Steps>
+
+---
+
+## Custom Seed Data
+
+Create your own seed script for specific testing scenarios:
+
+### Example: Seed Your Own Restaurant
+
+```javascript
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config({ path: '.env.local' });
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+async function seedMyRestaurant() {
+  // Create your brand
+  const { data: brand } = await supabase
+    .from('brands')
+    .insert({
+      name: 'My Restaurant',
+      slug: 'my-restaurant',
+      description: 'Fine dining in Barcelona'
+    })
+    .select()
+    .single();
+
+  // Create your location
+  await supabase
+    .from('locations')
+    .insert({
+      brand_id: brand.id,
+      name: 'My Restaurant Barcelona',
+      slug: 'my-restaurant-barcelona',
+      address: 'Carrer de Provença, 123',
+      city: 'Barcelona',
+      postal_code: '08008',
+      phone: '+34 932 123 456',
+      email: 'info@myrestaurant.com'
+    });
+
+  console.log('✅ Your restaurant seeded!');
+}
+
+seedMyRestaurant();
+```
+
+---
+
+## Using Seed Data
+
+### Testing Features
+
+With demo data loaded, you can test:
+
+<CardGroup cols={2}>
+  <Card title="Dashboard Analytics" icon="chart-line">
+    View realistic revenue charts, customer stats, and trends
+  </Card>
+  
+  <Card title="Customer Segmentation" icon="filter">
+    Create segments based on loyalty tier, spend, visits
+  </Card>
+  
+  <Card title="Marketing Campaigns" icon="bullhorn">
+    Test campaign creation, audience selection, preview
+  </Card>
+  
+  <Card title="Reservation Management" icon="calendar">
+    View reservation history, analytics, patterns
+  </Card>
+  
+  <Card title="Loyalty Program" icon="trophy">
+    See tier distribution, points tracking, rewards
+  </Card>
+  
+  <Card title="NPS Analysis" icon="face-smile">
+    Analyze feedback trends, sentiment, improvements
+  </Card>
+</CardGroup>
+
+### Demo Scenarios
+
+Use seed data to demonstrate:
+
+1. **Customer Lifecycle**: See customers progress through loyalty tiers
+2. **Campaign ROI**: View campaign metrics and engagement rates
+3. **Location Comparison**: Compare performance across 5 locations
+4. **Seasonal Trends**: Analyze reservation patterns over 2 years
+5. **VIP Management**: Identify and track top 1% customers
+
+---
+
+## Production Considerations
+
+<Warning>
+  Never run seed scripts in production! They're designed for development and demo environments only.
+</Warning>
+
+### Migrating from Demo to Production
+
+When you're ready to go live:
+
+<Steps>
+  <Step title="Backup your schema">
+    ```bash
+    supabase db dump -f schema.sql --schema public
+    ```
+  </Step>
+  
+  <Step title="Create a new production project">
+    Set up a separate Supabase project for production.
+  </Step>
+  
+  <Step title="Run migrations only">
+    Apply migrations WITHOUT seed data:
+    ```bash
+    supabase db push
+    # Do NOT run seed scripts!
+    ```
+  </Step>
+  
+  <Step title="Import real data">
+    Use the CSV import features or API to add your actual customer data.
+  </Step>
+</Steps>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Seed script fails with 'permission denied'" icon="lock">
+    **Cause:** Using anon key instead of service role key.
+    
+    **Solution:** Ensure `SUPABASE_SERVICE_ROLE_KEY` is set in `.env.local`.
+  </Accordion>
+  
+  <Accordion title="Duplicate key errors" icon="copy">
+    **Cause:** Seed data already exists.
+    
+    **Solution:** 
+    - Simple seed uses `upsert`, so this shouldn't happen
+    - For demo seed, delete existing data first (see "Resetting Demo Data" above)
+  </Accordion>
+  
+  <Accordion title="Seed takes too long" icon="clock">
+    **Cause:** Generating 5,000+ customers and 25,000+ reservations takes time.
+    
+    **Solution:** 
+    - Wait patiently (30-60 seconds is normal for full demo seed)
+    - For faster testing, use the simple seed instead
+  </Accordion>
+  
+  <Accordion title="Foreign key violations" icon="link-slash">
+    **Cause:** Migrations not run or tables don't exist.
+    
+    **Solution:** Run all migrations before seeding (see [Database Setup](/deployment/database-setup)).
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Vercel Deployment" icon="rocket" href="/deployment/vercel">
+    Deploy your seeded application to Vercel
+  </Card>
+  
+  <Card title="Environment Variables" icon="key" href="/deployment/environment-variables">
+    Configure production environment variables
+  </Card>
+  
+  <Card title="Customer Import" icon="file-import" href="/features/customers">
+    Import your real customer data
+  </Card>
+  
+  <Card title="Database Setup" icon="database" href="/deployment/database-setup">
+    Learn more about the database schema
+  </Card>
+</CardGroup>

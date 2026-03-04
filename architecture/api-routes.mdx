@@ -1,0 +1,693 @@
+---
+title: API Routes
+description: Understanding the API architecture and available endpoints
+---
+
+# API Routes
+
+Hiro CRM provides a robust API layer built with Next.js Route Handlers. The API supports both internal application needs and external integrations.
+
+## API Structure
+
+All API routes are located in the `app/api/` directory:
+
+```
+app/api/
+├── health/              # Health check endpoint
+├── sync/                # Data synchronization
+├── cron/                # Scheduled jobs
+│   ├── automations/
+│   ├── calendar-notifications/
+│   ├── calendar-reminders/
+│   ├── master/
+│   ├── sync/
+│   ├── ticket-notifications/
+│   └── ticket-reminders/
+├── admin/               # Admin utilities
+│   ├── debug-reservations/
+│   ├── import-csv/
+│   └── seed-locations/
+├── ai/                  # AI-powered features
+│   └── chat/
+├── automations/         # Marketing automation
+│   └── [id]/run/
+├── loyalty/             # Loyalty program
+│   ├── config/
+│   └── rules/
+├── organization/        # Organization context
+│   └── context/
+└── docs/                # API documentation
+    ├── route.ts
+    └── openapi.yaml/
+```
+
+## Route Handler Pattern
+
+Next.js Route Handlers use standard Web APIs:
+
+```tsx
+// app/api/health/route.ts
+import { NextResponse } from 'next/server'
+
+export async function GET() {
+  return NextResponse.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0',
+  })
+}
+```
+
+## Core Endpoints
+
+### Health Check
+
+**Endpoint:** `GET /api/health`
+
+**Purpose:** Verify API availability and system status
+
+```tsx
+// app/api/health/route.ts
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+
+export async function GET() {
+  try {
+    const supabase = await createClient()
+    
+    // Test database connection
+    const { error } = await supabase
+      .from('profiles')
+      .select('id')
+      .limit(1)
+    
+    if (error) throw error
+    
+    return NextResponse.json({
+      status: 'healthy',
+      database: 'connected',
+      timestamp: new Date().toISOString(),
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { status: 'unhealthy', error: error.message },
+      { status: 503 }
+    )
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "status": "healthy",
+  "database": "connected",
+  "timestamp": "2026-03-04T10:30:00.000Z"
+}
+```
+
+### Data Synchronization
+
+**Endpoint:** `POST /api/sync`
+
+**Purpose:** Sync data from external systems (CoverManager, Airtable)
+
+```tsx
+// app/api/sync/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { syncCoverManager } from '@/lib/integrations/covermanager'
+
+export async function POST(request: NextRequest) {
+  const supabase = await createClient()
+  
+  // Verify authentication
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+  
+  try {
+    const { source } = await request.json()
+    
+    let result
+    switch (source) {
+      case 'covermanager':
+        result = await syncCoverManager()
+        break
+      default:
+        return NextResponse.json(
+          { error: 'Invalid sync source' },
+          { status: 400 }
+        )
+    }
+    
+    return NextResponse.json({
+      success: true,
+      ...result,
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    )
+  }
+}
+```
+
+**Request:**
+
+```json
+{
+  "source": "covermanager"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "synced_reservations": 45,
+  "synced_customers": 23,
+  "errors": []
+}
+```
+
+### Organization Context
+
+**Endpoint:** `GET /api/organization/context`
+
+**Purpose:** Retrieve current user's organization context (brands, locations)
+
+```tsx
+// app/api/organization/context/route.ts
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+
+export async function GET() {
+  const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+  
+  // Get user's assigned locations
+  const { data: assignments } = await supabase
+    .from('user_location_assignments')
+    .select('location_id')
+    .eq('user_id', user.id)
+  
+  const locationIds = assignments?.map(a => a.location_id) || []
+  
+  // Get locations with brands
+  const { data: locations } = await supabase
+    .from('locations')
+    .select('*, brand:brands(*)')
+    .in('id', locationIds)
+  
+  return NextResponse.json({
+    user_id: user.id,
+    locations,
+    brand_ids: [...new Set(locations?.map(l => l.brand_id))],
+  })
+}
+```
+
+## Cron Jobs
+
+Scheduled background tasks triggered by Vercel Cron:
+
+### Master Cron
+
+**Endpoint:** `GET /api/cron/master`
+
+**Schedule:** Every hour
+
+**Purpose:** Orchestrate all scheduled tasks
+
+```tsx
+// app/api/cron/master/route.ts
+import { NextResponse } from 'next/server'
+import { verifyAuth } from '@/lib/rate-limit'
+
+export async function GET(request: Request) {
+  // Verify cron secret
+  const authHeader = request.headers.get('authorization')
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+  
+  const tasks = [
+    { name: 'sync', url: '/api/cron/sync' },
+    { name: 'automations', url: '/api/cron/automations' },
+    { name: 'notifications', url: '/api/cron/calendar-notifications' },
+  ]
+  
+  const results = await Promise.allSettled(
+    tasks.map(task => 
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL}${task.url}`, {
+        headers: { authorization: authHeader },
+      })
+    )
+  )
+  
+  return NextResponse.json({
+    executed_at: new Date().toISOString(),
+    tasks: results.map((result, i) => ({
+      name: tasks[i].name,
+      status: result.status,
+    })),
+  })
+}
+```
+
+### Calendar Notifications
+
+**Endpoint:** `GET /api/cron/calendar-notifications`
+
+**Purpose:** Send upcoming event reminders
+
+```tsx
+// app/api/cron/calendar-notifications/route.ts
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { sendEmail } from '@/lib/email'
+
+export async function GET(request: Request) {
+  const supabase = await createClient()
+  
+  // Get events happening in the next 24 hours
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  
+  const { data: events } = await supabase
+    .from('calendar_events')
+    .select('*, customer:customers(*)')
+    .gte('event_datetime', new Date().toISOString())
+    .lte('event_datetime', tomorrow.toISOString())
+    .eq('notification_sent', false)
+  
+  const results = await Promise.all(
+    events?.map(async (event) => {
+      if (!event.customer?.email) return null
+      
+      await sendEmail({
+        to: event.customer.email,
+        subject: 'Recordatorio: Evento próximo',
+        template: 'event-reminder',
+        data: { event },
+      })
+      
+      // Mark as sent
+      await supabase
+        .from('calendar_events')
+        .update({ notification_sent: true })
+        .eq('id', event.id)
+      
+      return event.id
+    }) || []
+  )
+  
+  return NextResponse.json({
+    notifications_sent: results.filter(Boolean).length,
+  })
+}
+```
+
+## Admin Endpoints
+
+### Import CSV
+
+**Endpoint:** `POST /api/admin/import-csv`
+
+**Purpose:** Bulk import customers from CSV files
+
+```tsx
+// app/api/admin/import-csv/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { parseCSV } from '@/lib/csv-parser'
+import { validateCustomerData } from '@/lib/validations/customer'
+
+export async function POST(request: NextRequest) {
+  const supabase = await createClient()
+  
+  // Check admin permissions
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user?.id)
+    .single()
+  
+  if (profile?.role !== 'super_admin') {
+    return NextResponse.json(
+      { error: 'Forbidden' },
+      { status: 403 }
+    )
+  }
+  
+  try {
+    const formData = await request.formData()
+    const file = formData.get('file') as File
+    
+    if (!file) {
+      return NextResponse.json(
+        { error: 'No file provided' },
+        { status: 400 }
+      )
+    }
+    
+    const text = await file.text()
+    const rows = parseCSV(text)
+    
+    const results = {
+      total: rows.length,
+      imported: 0,
+      errors: [] as string[],
+    }
+    
+    for (const row of rows) {
+      try {
+        const customer = validateCustomerData(row)
+        
+        const { error } = await supabase
+          .from('customers')
+          .insert(customer)
+        
+        if (error) throw error
+        results.imported++
+      } catch (error) {
+        results.errors.push(`Row ${row.index}: ${error.message}`)
+      }
+    }
+    
+    return NextResponse.json(results)
+  } catch (error) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    )
+  }
+}
+```
+
+## AI Endpoints
+
+### AI Chat
+
+**Endpoint:** `POST /api/ai/chat`
+
+**Purpose:** AI-powered customer insights and queries
+
+```tsx
+// app/api/ai/chat/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { getAIResponse } from '@/lib/ai/amanda-ai'
+
+export async function POST(request: NextRequest) {
+  const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+  
+  try {
+    const { message, context } = await request.json()
+    
+    const response = await getAIResponse({
+      message,
+      context,
+      userId: user.id,
+    })
+    
+    return NextResponse.json({
+      response: response.text,
+      sources: response.sources,
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    )
+  }
+}
+```
+
+## Loyalty Program Endpoints
+
+### Loyalty Configuration
+
+**Endpoint:** `GET /api/loyalty/config`
+
+**Purpose:** Retrieve loyalty program configuration
+
+```tsx
+// app/api/loyalty/config/route.ts
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+
+export async function GET() {
+  const supabase = await createClient()
+  
+  const { data: config } = await supabase
+    .from('loyalty_program_config')
+    .select('*')
+    .single()
+  
+  return NextResponse.json(config || {
+    tiers: [
+      { name: 'Bronce', min_spend: 0, points_multiplier: 1 },
+      { name: 'Plata', min_spend: 1000, points_multiplier: 1.2 },
+      { name: 'Oro', min_spend: 2500, points_multiplier: 1.5 },
+      { name: 'Platino', min_spend: 5000, points_multiplier: 2 },
+    ],
+  })
+}
+
+export async function PUT(request: Request) {
+  const supabase = await createClient()
+  
+  // Check admin permissions
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user?.id)
+    .single()
+  
+  if (profile?.role !== 'super_admin') {
+    return NextResponse.json(
+      { error: 'Forbidden' },
+      { status: 403 }
+    )
+  }
+  
+  const config = await request.json()
+  
+  const { data, error } = await supabase
+    .from('loyalty_program_config')
+    .upsert(config)
+    .select()
+    .single()
+  
+  if (error) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    )
+  }
+  
+  return NextResponse.json(data)
+}
+```
+
+## Automation Endpoints
+
+### Run Automation
+
+**Endpoint:** `POST /api/automations/[id]/run`
+
+**Purpose:** Manually trigger a marketing automation
+
+```tsx
+// app/api/automations/[id]/run/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { inngest } from '@/lib/inngest/client'
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const supabase = await createClient()
+  
+  const { data: automation } = await supabase
+    .from('automations')
+    .select('*')
+    .eq('id', params.id)
+    .single()
+  
+  if (!automation) {
+    return NextResponse.json(
+      { error: 'Automation not found' },
+      { status: 404 }
+    )
+  }
+  
+  // Trigger Inngest function
+  await inngest.send({
+    name: 'automation/run',
+    data: {
+      automation_id: automation.id,
+      triggered_by: 'manual',
+    },
+  })
+  
+  return NextResponse.json({
+    success: true,
+    automation_id: automation.id,
+  })
+}
+```
+
+## API Documentation
+
+### OpenAPI Specification
+
+**Endpoint:** `GET /api/docs/openapi.yaml`
+
+**Purpose:** Generate OpenAPI 3.0 specification
+
+```tsx
+// app/api/docs/openapi.yaml/route.ts
+import { NextResponse } from 'next/server'
+import yaml from 'yaml'
+
+export async function GET() {
+  const spec = {
+    openapi: '3.0.0',
+    info: {
+      title: 'Hiro CRM API',
+      version: '1.0.0',
+      description: 'API for Hiro CRM platform',
+    },
+    servers: [
+      { url: process.env.NEXT_PUBLIC_APP_URL },
+    ],
+    paths: {
+      '/api/health': {
+        get: {
+          summary: 'Health check',
+          responses: {
+            200: {
+              description: 'System is healthy',
+            },
+          },
+        },
+      },
+      // ... more endpoints
+    },
+  }
+  
+  return new NextResponse(yaml.stringify(spec), {
+    headers: {
+      'Content-Type': 'application/x-yaml',
+    },
+  })
+}
+```
+
+## Authentication
+
+All API routes use Supabase authentication:
+
+```tsx
+import { createClient } from '@/lib/supabase/server'
+
+// Verify user authentication
+const supabase = await createClient()
+const { data: { user }, error } = await supabase.auth.getUser()
+
+if (error || !user) {
+  return NextResponse.json(
+    { error: 'Unauthorized' },
+    { status: 401 }
+  )
+}
+```
+
+## Rate Limiting
+
+Rate limiting for API endpoints:
+
+```tsx
+import { rateLimit } from '@/lib/rate-limit'
+
+const limiter = rateLimit({
+  interval: 60 * 1000, // 1 minute
+  uniqueTokenPerInterval: 500,
+})
+
+export async function POST(request: NextRequest) {
+  try {
+    await limiter.check(10, 'API_POST') // 10 requests per minute
+  } catch {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+  
+  // Continue with request...
+}
+```
+
+## Error Handling
+
+Consistent error responses:
+
+```tsx
+try {
+  // API logic
+} catch (error) {
+  console.error('API Error:', error)
+  
+  return NextResponse.json(
+    {
+      error: error.message,
+      code: error.code || 'INTERNAL_ERROR',
+      timestamp: new Date().toISOString(),
+    },
+    { status: error.status || 500 }
+  )
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Database Schema" icon="database" href="/architecture/database-schema">
+    Understand the data models behind the API
+  </Card>
+  <Card title="Developer Guide" icon="book" href="/developer-guide/getting-started">
+    Start building with the API
+  </Card>
+</CardGroup>

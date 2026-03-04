@@ -1,0 +1,347 @@
+---
+title: 'Revo POS Integration'
+description: 'Sync orders, revenue, and product data from Revo XEF'
+icon: 'cash-register'
+---
+
+Revo is a cloud-based point-of-sale system popular in Spanish restaurants and hotels. The Hiro CRM integration imports orders, customer transactions, and product catalog data to build comprehensive customer profiles.
+
+## What You Can Do
+
+- Import order history with line-item details
+- Track customer spending and product preferences
+- Sync your product catalog for campaign personalization
+- Calculate customer lifetime value (CLV)
+- Link POS transactions to CoverManager reservations
+- Analyze menu performance and bestsellers
+
+## Prerequisites
+
+<Steps>
+  <Step title="Revo XEF Account">
+    You need an active Revo XEF account with API access
+  </Step>
+  <Step title="Access Token">
+    Generate an API access token from your Revo dashboard
+  </Step>
+  <Step title="Tenant Identifier">
+    Know your Revo tenant/account username
+  </Step>
+  <Step title="Integrator Token (Optional)">
+    If you're a Revo partner, you may have an integrator token
+  </Step>
+</Steps>
+
+## Setup
+
+### 1. Get Your Revo Access Token
+
+1. Log in to your Revo XEF dashboard
+2. Go to **Settings** > **Integrations** > **API Access**
+3. Generate a new access token
+4. Copy the token (it won't be shown again)
+
+### 2. Find Your Tenant Identifier
+
+Your tenant is your Revo account username. You can find it in your Revo dashboard URL:
+
+```
+https://your-tenant.revoxef.works
+       ^^^^^^^^^^^
+       This is your tenant
+```
+
+### 3. Configure Environment Variables
+
+Add your Revo credentials to `frontend/.env.local`:
+
+<CodeGroup>
+
+```bash .env.local
+# Revo POS Integration
+REVO_ACCESS_TOKEN=your-revo-access-token
+REVO_TENANT=your-tenant-username
+
+# Optional: if you're a Revo partner
+REVO_INTEGRATOR_TOKEN=your-integrator-token
+```
+
+```bash .env.example
+# OPTIONAL: Revo POS Integration
+REVO_ACCESS_TOKEN=your-revo-access-token
+```
+
+</CodeGroup>
+
+<Warning>
+  Store your access token securely. Never commit it to version control. Revo tokens typically don't expire, but can be revoked from your dashboard.
+</Warning>
+
+## API Reference
+
+Hiro CRM uses the **Revo XEF API v3** for reports and **Catalog API v1** for products.
+
+### Initialize the Client
+
+```typescript
+import { RevoAPI } from '@/lib/services/revo';
+
+const revoClient = new RevoAPI({
+  tenant: process.env.REVO_TENANT!,
+  accessToken: process.env.REVO_ACCESS_TOKEN!,
+  integratorToken: process.env.REVO_INTEGRATOR_TOKEN, // optional
+});
+```
+
+### Fetch Orders
+
+```typescript
+// Get orders for a specific date
+const orders = await revoClient.getOrdersByDate('2026-03-04');
+
+// Get orders for a date range
+const orders = await revoClient.getOrdersByDateRange(
+  '2026-03-01',
+  '2026-03-31'
+);
+
+// Get a specific order by ID
+const order = await revoClient.getOrder(12345);
+```
+
+### Fetch Product Catalog
+
+```typescript
+// Get all products (handles pagination automatically)
+const products = await revoClient.getAllProducts();
+
+// Get products page by page
+const page1 = await revoClient.getCatalog(1, 50);
+const page2 = await revoClient.getCatalog(2, 50);
+
+// Get product groups/categories
+const groups = await revoClient.getCatalogGroups();
+```
+
+### Link to Reservations
+
+```typescript
+// Find order linked to a CoverManager reservation
+const order = await revoClient.getOrderByReservationToken(
+  'CM123456',
+  '2026-03-04'
+);
+```
+
+## Data Structures
+
+### Order Object
+
+```typescript
+interface RevoOrder {
+    id: number;
+    table_id?: number;
+    table_name?: string;
+    room_name?: string;
+    reservation_token?: string;   // Link to CoverManager
+    date: string;                 // 'YYYY-MM-DD'
+    time: string;                 // 'HH:mm'
+    status: string;               // 'open', 'closed', 'cancelled'
+    total: number;                // Final amount paid
+    subtotal?: number;
+    taxes?: number;
+    tips?: number;
+    discount_amount?: number;
+    items?: RevoOrderItem[];      // Products ordered
+    payments?: any[];             // Payment methods
+    customer_id?: number;
+    customer_name?: string;
+    customer_email?: string;
+    customer_phone?: string;
+    closed_at?: string;
+    notes?: string;
+}
+```
+
+### Product Object
+
+```typescript
+interface RevoProduct {
+    id: number;
+    name: string;
+    price: number;
+    category: string;
+    external_reference?: string;
+    general_group?: { name: string };
+    active?: boolean;
+    image?: string;
+    modifier_group?: { name: string };
+}
+```
+
+## How It Works
+
+<Steps>
+  <Step title="Authentication">
+    Hiro sends your tenant and access token in request headers
+  </Step>
+  <Step title="API Request">
+    GET/POST requests to Revo's catalog and reports endpoints
+  </Step>
+  <Step title="Data Parsing">
+    Order and product data is parsed into Hiro's data models
+  </Step>
+  <Step title="Customer Matching">
+    Orders are matched to customers by email, phone, or reservation token
+  </Step>
+  <Step title="Profile Update">
+    Customer spending, preferences, and RFM scores are recalculated
+  </Step>
+</Steps>
+
+## API Endpoints
+
+Revo uses two base URLs:
+
+**Catalog API:**
+```
+https://api.revoxef.works/catalog/v1
+```
+
+**Reports API:**
+```
+https://revoxef.works/api/external/v3
+```
+
+**Headers Required:**
+```json
+{
+  "Tenant": "your-tenant",
+  "Authorization": "Bearer your-access-token",
+  "Accept": "application/json",
+  "Content-Type": "application/json"
+}
+```
+
+## Troubleshooting
+
+### Authentication Failed (401)
+
+- Verify your `REVO_ACCESS_TOKEN` is correct
+- Check that `REVO_TENANT` matches your account username
+- Ensure the token hasn't been revoked in Revo dashboard
+- Remove any "Bearer " prefix (Hiro adds it automatically)
+
+### Empty Results
+
+- Confirm orders exist for the date range you're querying
+- Check that `status` filter isn't excluding your orders
+- Verify the location/room is configured correctly in Revo
+
+### Rate Limits
+
+Revo may throttle requests if you make too many in a short time:
+
+- Add delays between bulk sync operations
+- Use date ranges instead of querying day-by-day
+- Cache product catalog (it doesn't change often)
+
+### Missing Customer Data
+
+If `customer_email` or `customer_phone` are null:
+
+- Customers may not be registered in Revo
+- Anonymous walk-in orders won't have contact info
+- Ensure staff capture customer details at checkout
+
+## Example Use Cases
+
+### Daily Revenue Sync
+
+```typescript
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+const dateStr = yesterday.toISOString().split('T')[0];
+
+const orders = await revoClient.getOrdersByDate(dateStr);
+
+const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+console.log(`Yesterday's revenue: €${totalRevenue.toFixed(2)}`);
+```
+
+### Product Performance Analysis
+
+```typescript
+const orders = await revoClient.getOrdersByDateRange('2026-03-01', '2026-03-31');
+
+const productSales = new Map();
+
+orders.forEach(order => {
+  order.items?.forEach(item => {
+    const current = productSales.get(item.name) || { quantity: 0, revenue: 0 };
+    productSales.set(item.name, {
+      quantity: current.quantity + item.quantity,
+      revenue: current.revenue + item.total_price
+    });
+  });
+});
+
+// Find bestsellers
+const bestsellers = Array.from(productSales.entries())
+  .sort((a, b) => b[1].quantity - a[1].quantity)
+  .slice(0, 10);
+```
+
+### Link Reservations to Orders
+
+```typescript
+import { fetchCoverReservations } from '@/lib/covermanager';
+
+// Get reservations from CoverManager
+const reservations = await fetchCoverReservations('restaurante-slug', '2026-03-04');
+
+// Find matching orders in Revo
+for (const reservation of reservations) {
+  const order = await revoClient.getOrderByReservationToken(
+    reservation.reservation_id,
+    reservation.date
+  );
+  
+  if (order) {
+    console.log(`Reservation ${reservation.id} -> Order ${order.id} - €${order.total}`);
+  }
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Sync Frequency">
+    - Sync orders **daily** (not real-time) to avoid rate limits
+    - Run syncs during off-peak hours (2-6 AM)
+    - Sync product catalog **weekly** (it changes infrequently)
+  </Accordion>
+  
+  <Accordion title="Error Handling">
+    - Log failed API requests for debugging
+    - Implement retry logic with exponential backoff
+    - Alert admins if sync fails for 2+ consecutive days
+  </Accordion>
+  
+  <Accordion title="Data Privacy">
+    - Only sync customer data you're legally allowed to store
+    - Comply with GDPR and Spanish data protection laws
+    - Allow customers to request deletion of their data
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Customer Analytics" icon="chart-line" href="/essentials/analytics">
+    Analyze spending patterns and RFM scores
+  </Card>
+  <Card title="CoverManager" icon="calendar-check" href="/integrations/covermanager">
+    Link reservations with transaction data
+  </Card>
+</CardGroup>

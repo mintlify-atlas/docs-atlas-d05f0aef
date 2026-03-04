@@ -1,0 +1,203 @@
+---
+title: Run Automation
+api: POST /api/automations/{id}/run
+description: Execute a marketing automation manually
+---
+
+# Run Automation
+
+Manually execute a specific marketing automation. This endpoint is useful for testing automations or triggering them on-demand outside of scheduled cron jobs.
+
+## Endpoint
+
+```
+POST /api/automations/{id}/run
+```
+
+## Authentication
+
+Requires authenticated user session (no specific permission check).
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  Automation ID (UUID)
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Whether the automation executed successfully
+</ResponseField>
+
+<ResponseField name="processed" type="number">
+  Number of customers processed
+</ResponseField>
+
+<ResponseField name="sent" type="number">
+  Number of messages sent successfully
+</ResponseField>
+
+<ResponseField name="skipped" type="number">
+  Number of customers skipped (e.g., already contacted)
+</ResponseField>
+
+<ResponseField name="failed" type="number">
+  Number of failed message attempts
+</ResponseField>
+
+<ResponseField name="errors" type="array">
+  Array of error messages (if any)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Status message (e.g., "Automation is not active")
+</ResponseField>
+
+<ResponseField name="timestamp" type="string">
+  Execution timestamp (ISO 8601)
+</ResponseField>
+
+## Example Request
+
+```bash
+curl -X POST https://your-domain.com/api/automations/123e4567-e89b-12d3-a456-426614174000/run \
+  -H "Cookie: your-session-cookie"
+```
+
+## Example Response (Success)
+
+```json
+{
+  "success": true,
+  "processed": 45,
+  "sent": 42,
+  "skipped": 2,
+  "failed": 1,
+  "errors": [
+    "Failed to send to +34612345678: Invalid phone number"
+  ],
+  "timestamp": "2026-03-04T10:30:00.000Z"
+}
+```
+
+## Example Response (Inactive Automation)
+
+```json
+{
+  "success": true,
+  "message": "Automation is not active",
+  "processed": 0,
+  "sent": 0,
+  "skipped": 0,
+  "failed": 0,
+  "timestamp": "2026-03-04T10:30:00.000Z"
+}
+```
+
+## Error Response
+
+```json
+{
+  "success": false,
+  "error": "Automation not found",
+  "timestamp": "2026-03-04T10:30:00.000Z"
+}
+```
+
+### 400 Bad Request
+
+```json
+{
+  "error": "Automation ID is required",
+  "timestamp": "2026-03-04T10:30:00.000Z"
+}
+```
+
+## Configuration
+
+### Timeout
+
+The endpoint has an extended timeout for long-running automations:
+
+```typescript
+export const maxDuration = 300; // 5 minutes
+```
+
+## Implementation Details
+
+The endpoint calls the `runAutomationCheck()` server action:
+
+```typescript
+import { runAutomationCheck } from '@/app/actions/automations';
+
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id: automationId } = await params;
+    const result = await runAutomationCheck(automationId);
+    
+    if (result.error) {
+        return NextResponse.json({
+            success: false,
+            error: result.error,
+            timestamp: new Date().toISOString()
+        }, { status: 500 });
+    }
+    
+    return NextResponse.json({
+        success: true,
+        processed: result.processed || 0,
+        sent: result.sent || 0,
+        skipped: result.skipped || 0,
+        failed: result.failed || 0,
+        errors: result.errors || [],
+        timestamp: new Date().toISOString()
+    });
+}
+```
+
+### Automation Execution Flow
+
+1. **Validate Automation** - Check if automation exists and is active
+2. **Query Customers** - Find customers matching automation criteria (e.g., inactive VIPs, birthdays)
+3. **Filter Recipients** - Skip customers recently contacted
+4. **Send Messages** - Send WhatsApp/SMS/Email via configured provider
+5. **Log Results** - Record execution results in `automation_logs`
+
+## Automation Types
+
+Common automation triggers:
+
+- **Inactive Customers** - Re-engage customers who haven't visited in X days
+- **Birthday Campaigns** - Send birthday messages and offers
+- **VIP Rewards** - Exclusive offers for VIP tier customers
+- **Post-Visit Follow-up** - Thank you messages after visits
+- **Reservation Confirmations** - Automated booking confirmations
+
+## Use Cases
+
+- Test automation logic before scheduling
+- Manually trigger campaign for immediate send
+- Re-run failed automation
+- Execute one-time campaigns
+
+## Logging
+
+All executions are logged using the Logger service:
+
+```typescript
+logger.info("Automation executed successfully", "AutomationsAPI", {
+    automationId,
+    processed: result.processed,
+    sent: result.sent,
+    skipped: result.skipped,
+    failed: result.failed
+});
+```
+
+<Note>
+  For scheduled automation execution, see [Cron: Automations](/api/cron/overview#automations).
+</Note>
+
+<Warning>
+  Manually running automations may send messages to customers. Use with caution in production environments.
+</Warning>

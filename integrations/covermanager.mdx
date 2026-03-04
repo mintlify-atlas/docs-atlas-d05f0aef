@@ -1,0 +1,238 @@
+---
+title: 'CoverManager Integration'
+description: 'Sync reservations from CoverManager to Hiro CRM'
+icon: 'calendar-check'
+---
+
+CoverManager is a popular reservation and table management platform used by restaurants across Spain. The Hiro CRM integration automatically syncs reservations, guest information, and revenue data.
+
+## What You Can Do
+
+- Automatically import reservations with guest details
+- Track revenue per reservation
+- Identify VIP customers and frequent guests
+- Analyze table turnover and zone performance
+- Build customer profiles from reservation history
+
+## Prerequisites
+
+<Steps>
+  <Step title="CoverManager Account">
+    You need an active CoverManager account with API access
+  </Step>
+  <Step title="API Key">
+    Request an API key from CoverManager support
+  </Step>
+  <Step title="Restaurant Slugs">
+    Know the CoverManager slug for each of your restaurant locations
+  </Step>
+</Steps>
+
+## Setup
+
+### 1. Get Your CoverManager API Key
+
+Contact CoverManager support to request API access. You'll receive a single API key that works across all your restaurant locations.
+
+### 2. Find Your Restaurant Slugs
+
+Each restaurant in CoverManager has a unique slug (URL identifier). You can find this in your CoverManager dashboard URL:
+
+```
+https://www.covermanager.com/reserve/restaurante-latascapuerto
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+                                         This is your slug
+```
+
+### 3. Configure Environment Variables
+
+Add your CoverManager API key to `frontend/.env.local`:
+
+<CodeGroup>
+
+```bash .env.local
+# CoverManager POS Integration
+COVERMANAGER_API_KEY=your-covermanager-api-key
+```
+
+```bash .env.example
+# OPTIONAL: CoverManager POS Integration
+COVERMANAGER_API_KEY=your-covermanager-key
+```
+
+</CodeGroup>
+
+<Warning>
+  Keep your API key secure. Never commit it to version control or share it publicly.
+</Warning>
+
+### 4. Map Restaurant Locations
+
+In the Hiro CRM source code, update the `COVER_SLUGS` mapping in `frontend/lib/covermanager.ts` to match your restaurants:
+
+```typescript frontend/lib/covermanager.ts
+export const COVER_SLUGS: Record<string, string> = {
+    "Your Restaurant Name": "restaurante-yourslug",
+    "Another Location": "restaurante-anotherslug",
+    // Add all your locations here
+};
+```
+
+## API Reference
+
+### Fetch Reservations
+
+The integration uses the CoverManager `get_reservs` API endpoint:
+
+```typescript
+import { fetchCoverReservations } from '@/lib/covermanager';
+
+// Fetch reservations for a single day
+const reservations = await fetchCoverReservations(
+  'restaurante-latascapuerto',
+  '2026-03-04'
+);
+
+// Fetch reservations for a date range
+const reservations = await fetchCoverReservations(
+  'restaurante-latascapuerto',
+  '2026-03-01',
+  '2026-03-31'
+);
+```
+
+### Reservation Data Structure
+
+Each reservation includes:
+
+```typescript
+interface CoverReservation {
+    id: string;                // CoverManager reservation ID
+    reservation_id: string;    // Alternative ID
+    restaurante_id: string;    // Restaurant slug
+    date: string;              // 'YYYY-MM-DD'
+    time: string;              // 'HH:mm'
+    client_name: string;
+    client_surname: string;
+    client_email: string;
+    client_phone: string;
+    pax: number;               // Number of guests
+    state: string;             // '1' = confirmed
+    notes?: string;            // Special requests
+    zone_name: string;         // e.g., "Terraza"
+    table_name: string;        // e.g., "Mesa 12"
+}
+```
+
+## How It Works
+
+<Steps>
+  <Step title="Sync Trigger">
+    Hiro CRM can be configured to sync reservations daily or on-demand
+  </Step>
+  <Step title="API Request">
+    The system makes a POST request to CoverManager's API with your date range
+  </Step>
+  <Step title="Data Mapping">
+    Reservation data is mapped to Hiro's customer and reservation tables
+  </Step>
+  <Step title="Customer Matching">
+    Hiro attempts to match reservations to existing customers by email or phone
+  </Step>
+  <Step title="Profile Update">
+    Customer profiles are updated with the latest reservation and spend data
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+### API Key Invalid
+
+If you see authentication errors:
+
+1. Verify your API key is correct in `.env.local`
+2. Ensure there are no extra spaces or line breaks
+3. Confirm your API key is still active with CoverManager support
+
+### No Reservations Returned
+
+1. Check that the restaurant slug is correct
+2. Verify reservations exist for the date range you're querying
+3. Ensure the slug is configured in `COVER_SLUGS`
+
+### Rate Limits
+
+CoverManager may have rate limits on their API. If you're syncing multiple locations:
+
+- Space out API requests by a few seconds
+- Sync locations sequentially rather than in parallel
+- Consider caching recent results
+
+## Example Use Cases
+
+### Daily Reservation Sync
+
+Automatically import today's reservations every morning:
+
+```typescript
+const today = new Date().toISOString().split('T')[0];
+
+for (const [name, slug] of Object.entries(COVER_SLUGS)) {
+  const reservations = await fetchCoverReservations(slug, today);
+  console.log(`${name}: ${reservations.length} reservations`);
+  // Process and save to database
+}
+```
+
+### VIP Guest Detection
+
+Identify high-value customers from reservation history:
+
+```typescript
+// After syncing, analyze customer data
+const vipCustomers = customers.filter(c => 
+  c.total_reservations > 10 && c.average_spend > 150
+);
+```
+
+## API Endpoint
+
+CoverManager API URL structure:
+
+```
+POST https://www.covermanager.com/api/restaurant/get_reservs/{API_KEY}/{SLUG}/{DATE_START}/{DATE_END}/0
+```
+
+**Headers:**
+```
+Content-Type: application/x-www-form-urlencoded
+```
+
+**Response:**
+```json
+{
+  "reservs": [
+    {
+      "id": "12345",
+      "date": "2026-03-04",
+      "time": "20:30",
+      "client_name": "María",
+      "client_surname": "García",
+      "client_email": "maria@example.com",
+      "pax": 4,
+      "table_name": "Mesa 8"
+    }
+  ]
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Customer Management" icon="users" href="/essentials/customers">
+    Learn how to manage synced customer profiles
+  </Card>
+  <Card title="Revo POS" icon="cash-register" href="/integrations/revo-pos">
+    Add transaction data from Revo POS
+  </Card>
+</CardGroup>

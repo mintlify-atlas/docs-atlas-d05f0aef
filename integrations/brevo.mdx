@@ -1,0 +1,386 @@
+---
+title: 'Brevo Integration'
+description: 'Send email and SMS campaigns via Brevo (formerly Sendinblue)'
+icon: 'envelope'
+---
+
+Brevo (formerly Sendinblue) is an all-in-one marketing platform for email, SMS, and WhatsApp campaigns. Hiro CRM uses Brevo to send targeted communications to customer segments.
+
+## What You Can Do
+
+- Send personalized email campaigns to customer segments
+- Send SMS notifications for reservations and promotions
+- Track email open rates and click-through rates
+- Use templates with dynamic content (customer name, loyalty points, etc.)
+- Schedule campaigns for optimal send times
+- Compliance-ready for GDPR and Spanish marketing laws
+
+## Why Brevo?
+
+Hiro CRM migrated from Resend to Brevo for:
+
+- **Multi-channel support** - Email, SMS, and WhatsApp in one platform
+- **Spanish market focus** - Excellent deliverability in Spain
+- **Competitive pricing** - Pay only for what you send
+- **No daily limits** - Unlike some competitors
+- **Advanced segmentation** - Perfect for hospitality CRM
+
+## Prerequisites
+
+<Steps>
+  <Step title="Brevo Account">
+    Sign up for a free or paid Brevo account at [brevo.com](https://www.brevo.com)
+  </Step>
+  <Step title="Verify Domain">
+    Add and verify your sending domain (e.g., `@yourrestaurant.com`)
+  </Step>
+  <Step title="API Key">
+    Generate an API key with transactional email and SMS permissions
+  </Step>
+  <Step title="Sender Identity">
+    Configure your sender name and email address
+  </Step>
+</Steps>
+
+## Setup
+
+### 1. Create a Brevo Account
+
+1. Go to [brevo.com](https://www.brevo.com) and sign up
+2. Choose a plan based on your email volume:
+   - **Free**: 300 emails/day
+   - **Lite**: 10,000 emails/month starting at €25/month
+   - **Premium**: Unlimited contacts, advanced features
+
+### 2. Verify Your Sending Domain
+
+<Steps>
+  <Step title="Add Domain">
+    In Brevo dashboard, go to **Senders & IP** > **Domains**
+  </Step>
+  <Step title="Add DNS Records">
+    Copy the SPF, DKIM, and DMARC records
+  </Step>
+  <Step title="Update DNS">
+    Add records to your domain's DNS settings (via your domain provider)
+  </Step>
+  <Step title="Verify">
+    Click "Verify" in Brevo (may take 24-48 hours)
+  </Step>
+</Steps>
+
+<Warning>
+  Domain verification is **required** for email delivery. Without it, your emails will be rejected or marked as spam.
+</Warning>
+
+### 3. Generate API Key
+
+1. Go to **Settings** > **API Keys**
+2. Click **Create a new API key**
+3. Give it a name like "Hiro CRM Production"
+4. Copy the key immediately (you won't see it again)
+
+### 4. Configure Environment Variables
+
+Add your Brevo settings to `frontend/.env.local`:
+
+<CodeGroup>
+
+```bash .env.local
+# Brevo Email & SMS
+BREVO_API_KEY=xkeysib-your-api-key-here
+BREVO_SENDER_EMAIL=noreply@yourrestaurant.com
+BREVO_SENDER_NAME=Your Restaurant Name
+BREVO_SMS_SENDER=YourBrand
+```
+
+```bash .env.example
+# OPTIONAL: Brevo (for Email & SMS campaigns)
+BREVO_API_KEY=your-brevo-api-key
+BREVO_SENDER_EMAIL=noreply@your-domain.com
+BREVO_SENDER_NAME=Hiro CRM
+BREVO_SMS_SENDER=HiroCRM
+```
+
+</CodeGroup>
+
+**Configuration Notes:**
+
+- `BREVO_SENDER_EMAIL`: Must be from your verified domain
+- `BREVO_SENDER_NAME`: Appears as "From" name (e.g., "La Tasca Alicante")
+- `BREVO_SMS_SENDER`: 11 characters max, alphanumeric only (e.g., "LaTasca")
+
+## API Reference
+
+### Send Email
+
+```typescript
+import { sendEmail } from '@/lib/email/brevo';
+
+const result = await sendEmail({
+  to: 'customer@example.com',
+  subject: 'Thank you for your visit!',
+  htmlContent: '<h1>We hope you enjoyed your meal</h1><p>Come back soon!</p>',
+  textContent: 'We hope you enjoyed your meal. Come back soon!',
+  tags: ['post-visit', 'marketing'],
+  params: {
+    customerName: 'María',
+    loyaltyPoints: 1250
+  }
+});
+
+if (result.success) {
+  console.log('Email sent:', result.messageId);
+} else {
+  console.error('Email failed:', result.error);
+}
+```
+
+### Send Email to Multiple Recipients
+
+```typescript
+const result = await sendEmail({
+  to: ['customer1@example.com', 'customer2@example.com'],
+  subject: 'Exclusive offer for VIP members',
+  htmlContent: '<p>Get 20% off your next visit!</p>',
+  tags: ['vip-campaign']
+});
+```
+
+### Send SMS
+
+```typescript
+import { sendSMS } from '@/lib/email/brevo';
+
+const result = await sendSMS({
+  to: '+34612345678',
+  content: 'Your table at La Tasca is confirmed for tonight at 8:30pm. See you soon!',
+  tag: 'reservation-confirmation'
+});
+```
+
+<Info>
+  SMS phone numbers must include country code (e.g., `+34` for Spain). Brevo will validate the format.
+</Info>
+
+### Use Custom Sender
+
+```typescript
+const result = await sendEmail({
+  to: 'customer@example.com',
+  subject: 'Invoice for your stay',
+  htmlContent: '<p>Thank you for staying with us!</p>',
+  from: {
+    email: 'reservations@yourhotel.com',
+    name: 'Hotel Reservations Team'
+  },
+  replyTo: {
+    email: 'support@yourhotel.com',
+    name: 'Customer Support'
+  }
+});
+```
+
+## Data Structures
+
+### EmailOptions
+
+```typescript
+interface EmailOptions {
+    to: string | string[];              // Recipient(s)
+    subject: string;                    // Email subject line
+    htmlContent: string;                // HTML body
+    textContent?: string;               // Plain text fallback
+    from?: {                            // Optional custom sender
+        email: string;
+        name?: string;
+    };
+    replyTo?: {                         // Optional reply-to address
+        email: string;
+        name?: string;
+    };
+    tags?: string[];                    // For tracking/analytics
+    params?: Record<string, any>;       // Template variables
+}
+```
+
+### SMSOptions
+
+```typescript
+interface SMSOptions {
+    to: string;                         // Phone number with country code
+    content: string;                    // Message (160 chars recommended)
+    sender?: string;                    // Override default sender
+    tag?: string;                       // For tracking
+}
+```
+
+## How It Works
+
+<Steps>
+  <Step title="Campaign Creation">
+    Create a campaign in Hiro CRM with target segment and content
+  </Step>
+  <Step title="API Call">
+    Hiro sends email/SMS data to Brevo's transactional API
+  </Step>
+  <Step title="Brevo Processing">
+    Brevo validates, queues, and delivers your messages
+  </Step>
+  <Step title="Delivery Tracking">
+    Brevo tracks opens, clicks, bounces, and unsubscribes
+  </Step>
+  <Step title="Webhook (Optional)">
+    Brevo can send webhooks back to Hiro for engagement events
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+### API Key Invalid
+
+- Verify the key in your `.env.local` matches Brevo dashboard
+- Check for extra spaces or line breaks
+- Regenerate the key if it was revoked
+- Ensure the key has "Transactional Emails" and "SMS" permissions
+
+### Emails Not Delivered
+
+1. **Domain not verified**: Complete DNS verification
+2. **Sender email doesn't match verified domain**: Use `name@verifieddomain.com`
+3. **Recipient marked you as spam**: Check Brevo's blacklist
+4. **Hitting rate limits**: Upgrade your Brevo plan
+
+### SMS Failed
+
+- Phone number must include country code (`+34` for Spain)
+- SMS sender must be 11 characters or less
+- Ensure you have SMS credits in your Brevo account
+- Some countries require pre-registered sender IDs
+
+### Template Variables Not Working
+
+If `params` aren't rendering:
+
+```typescript
+// ❌ Wrong: Brevo doesn't auto-replace {{variables}} in htmlContent
+htmlContent: '<p>Hello {{customerName}}</p>'
+
+// ✅ Correct: Replace variables before sending
+htmlContent: `<p>Hello ${params.customerName}</p>`
+```
+
+## Example Use Cases
+
+### Post-Visit Thank You Email
+
+```typescript
+import { sendEmail } from '@/lib/email/brevo';
+
+const customer = await getCustomer(customerId);
+
+await sendEmail({
+  to: customer.email,
+  subject: `Thank you for dining with us, ${customer.first_name}!`,
+  htmlContent: `
+    <h2>We hope you enjoyed your experience</h2>
+    <p>Dear ${customer.first_name},</p>
+    <p>Thank you for choosing ${restaurantName}. We'd love to hear your feedback!</p>
+    <p><a href="https://yourrestaurant.com/review">Leave a Review</a></p>
+  `,
+  tags: ['post-visit', 'nps']
+});
+```
+
+### VIP Segment Campaign
+
+```typescript
+// Get VIP customers (RFM score > 4)
+const vipCustomers = await getCustomerSegment({ rfmScore: { min: 4 } });
+
+for (const customer of vipCustomers) {
+  await sendEmail({
+    to: customer.email,
+    subject: 'Exclusive invitation for our VIP guests',
+    htmlContent: `
+      <h1>You're Invited!</h1>
+      <p>Dear ${customer.first_name},</p>
+      <p>Join us for an exclusive wine tasting event on March 15th.</p>
+      <p>Your loyalty tier: <strong>${customer.loyalty_tier}</strong></p>
+    `,
+    tags: ['vip-event', 'wine-tasting']
+  });
+  
+  // Rate limit: wait 100ms between sends
+  await new Promise(resolve => setTimeout(resolve, 100));
+}
+```
+
+### Reservation Confirmation SMS
+
+```typescript
+import { sendSMS } from '@/lib/email/brevo';
+
+await sendSMS({
+  to: reservation.client_phone,
+  content: `Hi ${reservation.client_name}! Your table for ${reservation.pax} at ${restaurantName} is confirmed for ${reservation.date} at ${reservation.time}. See you soon!`
+});
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Email Design">
+    - Use responsive HTML templates (mobile-friendly)
+    - Include both `htmlContent` and `textContent`
+    - Keep subject lines under 50 characters
+    - Always include an unsubscribe link (required by GDPR)
+    - Test emails before sending to large segments
+  </Accordion>
+  
+  <Accordion title="Deliverability">
+    - Verify your domain with SPF, DKIM, and DMARC
+    - Use a dedicated IP if sending 100k+ emails/month
+    - Monitor bounce rates and remove invalid emails
+    - Respect unsubscribe requests immediately
+    - Avoid spam trigger words ("free", "urgent", "click now")
+  </Accordion>
+  
+  <Accordion title="SMS Guidelines">
+    - Keep messages under 160 characters to avoid splitting
+    - Only send SMS to customers who opted in
+    - Include your business name in the message
+    - Avoid sending late at night (respect quiet hours)
+    - Provide an opt-out method (e.g., "Reply STOP")
+  </Accordion>
+  
+  <Accordion title="Rate Limiting">
+    - Free plan: 300 emails/day max
+    - Add delays between bulk sends (100-200ms)
+    - Use Brevo's campaign API for large batches
+    - Monitor your quota in Brevo dashboard
+  </Accordion>
+</AccordionGroup>
+
+## GDPR Compliance
+
+When using Brevo for customers in the EU:
+
+1. **Obtain consent**: Customers must opt-in to marketing emails
+2. **Easy unsubscribe**: Every email must have an unsubscribe link
+3. **Data minimization**: Only collect necessary customer data
+4. **Right to erasure**: Allow customers to request data deletion
+5. **Privacy policy**: Disclose that you use Brevo for communications
+
+Brevo is GDPR-compliant and has data processing agreements available.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Customer Segments" icon="users-viewfinder" href="/essentials/segments">
+    Create targeted audiences for campaigns
+  </Card>
+  <Card title="Email Templates" icon="file-lines" href="/essentials/templates">
+    Design reusable email templates
+  </Card>
+</CardGroup>

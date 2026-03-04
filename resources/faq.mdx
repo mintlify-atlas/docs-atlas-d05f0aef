@@ -1,0 +1,288 @@
+---
+title: FAQ
+description: Frequently asked questions about Hiro CRM
+icon: question
+---
+
+Find answers to common questions about installing, configuring, and using Hiro CRM.
+
+## General
+
+<AccordionGroup>
+  <Accordion title="What is Hiro CRM?">
+    Hiro CRM is an open-source customer relationship management platform built specifically for the hospitality industry in Spain. It combines customer management, reservation analytics, marketing campaigns, loyalty programs, and AI-powered insights in a modern web application.
+    
+    The platform is designed for restaurants, hotels, and hospitality businesses that want full control over their customer data and operations.
+  </Accordion>
+  
+  <Accordion title="Is Hiro CRM free to use?">
+    Yes! Hiro CRM is open-source and licensed under the MIT License. You can use it freely for commercial purposes, modify it, and deploy it for your business.
+    
+    While the software is free, you'll need to cover infrastructure costs (Supabase, Vercel) and optional third-party services (OpenAI, Brevo) if you choose to use them.
+  </Accordion>
+  
+  <Accordion title="What does single-tenant mean?">
+    Single-tenant means each business gets its own dedicated deployment of Hiro CRM. Your data is completely isolated from other users, and you have full control over your instance.
+    
+    This is different from SaaS multi-tenant platforms where all customers share the same database and application instance.
+  </Accordion>
+  
+  <Accordion title="What languages does Hiro CRM support?">
+    Currently, Hiro CRM supports Spanish (ES) and English (EN). Additional languages (Portuguese, French, Italian, German) are planned for v2.0.
+    
+    The i18n system is already in place, making it easy to add new translations.
+  </Accordion>
+  
+  <Accordion title="Can I use Hiro CRM outside of Spain?">
+    Yes! While Hiro CRM was built for the Spanish hospitality market, it can be used anywhere. The platform supports internationalization and can be adapted to different markets.
+    
+    Future versions will include additional European POS integrations and multi-currency support.
+  </Accordion>
+</AccordionGroup>
+
+## Installation & Setup
+
+<AccordionGroup>
+  <Accordion title="What are the prerequisites for running Hiro CRM?">
+    To run Hiro CRM, you need:
+    
+    - **Node.js 20+** for the frontend application
+    - **A Supabase project** (free tier available) for database and authentication
+    - **Optional:** OpenAI API key for AI features
+    - **Optional:** Brevo API key for email/SMS campaigns
+    - **Optional:** CoverManager or Revo POS API keys for integrations
+  </Accordion>
+  
+  <Accordion title="How do I get started quickly?">
+    Follow the [Quickstart guide](/quickstart) for step-by-step instructions. The basic process is:
+    
+    1. Clone the repository
+    2. Install dependencies with `npm install`
+    3. Configure environment variables (`.env.local`)
+    4. Run database migrations
+    5. Start the dev server with `npm run dev`
+    
+    You'll have a working instance in under 10 minutes.
+  </Accordion>
+  
+  <Accordion title="Can I deploy Hiro CRM to Vercel?">
+    Yes! Hiro CRM is optimized for deployment on Vercel. The platform includes:
+    
+    - Standalone output configuration
+    - Optimized build settings
+    - Environment variable management
+    - Automatic deployments via GitHub integration
+    
+    A one-click deploy button is coming in v1.1.
+  </Accordion>
+  
+  <Accordion title="Do I need to set up all integrations?">
+    No. All third-party integrations are optional. Hiro CRM works as a standalone CRM without any external services.
+    
+    However, to unlock full functionality:
+    - **OpenAI** is required for the AI Assistant
+    - **Brevo** is required for email/SMS campaigns
+    - **CoverManager/Revo** are required for POS integration
+  </Accordion>
+  
+  <Accordion title="How do I run database migrations?">
+    If you have the Supabase CLI installed:
+    
+    ```bash
+    supabase db push
+    ```
+    
+    Alternatively, you can manually run the SQL files from `supabase/migrations/` in your Supabase dashboard's SQL editor, in order.
+  </Accordion>
+</AccordionGroup>
+
+## Features & Functionality
+
+<AccordionGroup>
+  <Accordion title="What is RFM segmentation?">
+    RFM (Recency, Frequency, Monetary) is a customer segmentation method that analyzes:
+    
+    - **Recency:** How recently a customer visited
+    - **Frequency:** How often they visit
+    - **Monetary:** How much they spend
+    
+    Hiro CRM automatically calculates RFM scores for all customers, helping you identify your best customers and those at risk of churning.
+  </Accordion>
+  
+  <Accordion title="How does the loyalty program work?">
+    The loyalty program includes:
+    
+    - **Configurable tiers** (e.g., New → Regular → VIP → Founders)
+    - **Points system** based on visits and spending
+    - **Member benefits** and tier progression
+    - **Management panel** for program administration
+    
+    You can customize the tier names, point values, and benefits from the admin panel.
+  </Accordion>
+  
+  <Accordion title="What can the AI Assistant do?">
+    The AI Assistant uses OpenAI GPT-4 to answer natural language queries about your customer data. Examples:
+    
+    - "Who are my top 10 customers this month?"
+    - "Show me customers who haven't visited in 60 days"
+    - "What's the average spend per visit for VIP members?"
+    
+    The assistant has read-only access to your database and can generate insights without requiring SQL knowledge.
+  </Accordion>
+  
+  <Accordion title="Can I manage multiple locations?">
+    Yes! Hiro CRM is built for multi-location management. You can:
+    
+    - Manage multiple restaurants or hotels under one brand
+    - Track customers across all locations
+    - Run location-specific or brand-wide campaigns
+    - View consolidated analytics
+  </Accordion>
+  
+  <Accordion title="What POS systems are supported?">
+    Currently supported:
+    
+    - **CoverManager** — Automatic reservation sync
+    - **Revo POS** — Sales and guest data import
+    
+    Additional European POS integrations (TheFork, OpenTable) are planned for v2.0.
+  </Accordion>
+</AccordionGroup>
+
+## Development & Contribution
+
+<AccordionGroup>
+  <Accordion title="How can I contribute to Hiro CRM?">
+    Contributions are welcome! You can:
+    
+    - Report bugs via [GitHub Issues](https://github.com/your-org/hiro-crm/issues)
+    - Suggest features with the `enhancement` label
+    - Submit pull requests for bug fixes or new features
+    - Improve documentation
+    - Share feedback from real-world usage
+    
+    See the [Contributing Guide](/contributing/overview) for detailed guidelines.
+  </Accordion>
+  
+  <Accordion title="What's the tech stack?">
+    - **Frontend:** Next.js 16, React 18, TypeScript
+    - **Styling:** Tailwind CSS v4, Framer Motion
+    - **Database:** Supabase (PostgreSQL + Row Level Security)
+    - **Authentication:** Supabase Auth
+    - **AI:** OpenAI GPT-4
+    - **Email/SMS:** Brevo
+    - **Background Jobs:** Inngest
+    - **Deployment:** Vercel
+    
+    See [Architecture](/architecture/overview) for more details.
+  </Accordion>
+  
+  <Accordion title="Are there tests?">
+    Yes! Hiro CRM includes:
+    
+    - **44 unit tests** (Vitest + React Testing Library)
+    - **58 E2E tests** (Playwright)
+    - **Lighthouse CI** for performance budgets
+    - **TypeScript** strict mode
+    - **ESLint** for code quality
+    
+    Run tests with `npm run test:run` and `npm run test:e2e`.
+  </Accordion>
+  
+  <Accordion title="How is data security handled?">
+    Security features include:
+    
+    - **Row Level Security (RLS)** on all database tables
+    - **Supabase Auth** for authentication
+    - **Input validation** with Zod schemas
+    - **Security headers** (CSP, X-Frame-Options, HSTS)
+    - **HTTPS** in production
+    - **Environment variables** for sensitive data
+    
+    Your instance is single-tenant, so your data never mixes with other users.
+  </Accordion>
+  
+  <Accordion title="Can I customize the UI and branding?">
+    Currently, you can modify the code directly to customize the UI. Tailwind CSS makes styling changes straightforward.
+    
+    v1.3 will introduce a **configurable theme system** allowing you to change colors, logos, and fonts from the admin panel without code changes.
+  </Accordion>
+</AccordionGroup>
+
+## Data & Privacy
+
+<AccordionGroup>
+  <Accordion title="Where is my data stored?">
+    Your data is stored in your own Supabase project. Supabase uses PostgreSQL and provides hosting in multiple regions.
+    
+    You have full control over your data and can export it at any time.
+  </Accordion>
+  
+  <Accordion title="Is Hiro CRM GDPR compliant?">
+    Hiro CRM includes features to help with GDPR compliance:
+    
+    - Customer data export capabilities
+    - RLS for data access control
+    - Secure authentication
+    - Data retention policies (configurable)
+    
+    v1.2 will add enhanced data export features specifically for GDPR compliance.
+  </Accordion>
+  
+  <Accordion title="Can I migrate data from another CRM?">
+    Yes. You can import data using:
+    
+    - SQL scripts directly into Supabase
+    - The admin API endpoints
+    - Custom migration scripts
+    
+    The database schema is documented in the [Architecture](/architecture/overview) section.
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="I'm getting environment variable errors">
+    Ensure you've created a `.env.local` file in the `frontend/` directory with all required variables:
+    
+    ```bash
+    NEXT_PUBLIC_SUPABASE_URL=your-project-url
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+    SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+    ```
+    
+    See the [Environment Variables](/configuration/environment-variables) guide for the complete list.
+  </Accordion>
+  
+  <Accordion title="The build is failing with TypeScript errors">
+    Run type checking to see the errors:
+    
+    ```bash
+    npm run type-check
+    ```
+    
+    Ensure you're using Node.js 20+ and have run `npm install` to get all dependencies.
+  </Accordion>
+  
+  <Accordion title="Database queries are slow">
+    The initial release includes 32+ performance indexes on critical tables. If you're experiencing slow queries:
+    
+    - Check that migrations ran successfully
+    - Review the indexes in `supabase/migrations/`
+    - Consider upgrading your Supabase plan for larger datasets
+  </Accordion>
+  
+  <Accordion title="Where can I get help?">
+    - Check this FAQ and the [documentation](/)
+    - Search [GitHub Issues](https://github.com/your-org/hiro-crm/issues)
+    - Open a new issue with your question
+    - Review the source code — it's well-documented!
+  </Accordion>
+</AccordionGroup>
+
+## Still have questions?
+
+<Card title="Contact & Support" icon="message" href="https://github.com/your-org/hiro-crm/issues">
+  Can't find what you're looking for? Open an issue on GitHub and we'll help you out.
+</Card>

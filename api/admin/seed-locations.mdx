@@ -1,0 +1,173 @@
+---
+title: Seed Locations
+api: GET /api/admin/seed-locations
+description: Seed the database with predefined brands and locations
+---
+
+# Seed Locations
+
+Initialize the database with predefined brands and locations. This endpoint is typically used during initial setup or testing.
+
+## Endpoint
+
+```
+GET /api/admin/seed-locations
+```
+
+## Authentication
+
+Requires `canViewSettings` permission (admin or super_admin only).
+
+```typescript
+await requirePermission("canViewSettings");
+```
+
+## Seeded Data
+
+### Brands
+
+| Name | Slug |
+|------|------|
+| La Tasca | la-tasca |
+| El Patio | el-patio |
+| La Brisa Madrid | la-brisa |
+
+### Locations
+
+| Name | City | Address | Brand |
+|------|------|---------|-------|
+| La Tasca Madrid · Centro | Madrid | Calle Gran Vía, 25 | La Tasca |
+| La Tasca Madrid · Salamanca | Madrid | Calle Serrano, 3 | La Tasca |
+| La Tasca Barcelona · Eixample | Barcelona | Carrer de Provença, 230 | La Tasca |
+| El Patio Barcelona | Barcelona | Carrer del Consell de Cent, 302 | El Patio |
+| La Brisa Madrid | Madrid | Paseo de la Castellana, 200 | La Brisa |
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Whether seeding completed successfully
+</ResponseField>
+
+<ResponseField name="seeded" type="object">
+  Details of seeded records
+  
+  <Expandable title="Seeded Properties">
+    <ResponseField name="brands" type="string[]">
+      Array of newly created brand names
+    </ResponseField>
+    
+    <ResponseField name="locations" type="string[]">
+      Array of newly created location names
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Request
+
+```bash
+curl -X GET https://your-domain.com/api/admin/seed-locations \
+  -H "Cookie: your-session-cookie"
+```
+
+## Example Response
+
+```json
+{
+  "success": true,
+  "seeded": {
+    "brands": ["La Tasca", "El Patio", "La Brisa Madrid"],
+    "locations": [
+      "La Tasca Madrid · Centro",
+      "La Tasca Madrid · Salamanca",
+      "La Tasca Barcelona · Eixample",
+      "El Patio Barcelona",
+      "La Brisa Madrid"
+    ]
+  }
+}
+```
+
+## Error Response
+
+```json
+{
+  "success": false,
+  "error": "Error message",
+  "status": 500
+}
+```
+
+## Implementation Details
+
+The endpoint:
+1. Uses **service role key** to bypass RLS
+2. Checks for existing brands/locations by `slug`/`name`
+3. Only creates records that don't already exist
+4. Returns arrays of newly created items (not existing ones)
+
+### Source Code Reference
+
+```typescript app/api/admin/seed-locations/route.ts
+import { createClient } from "@supabase/supabase-js";
+import { requirePermission } from "@/lib/authz";
+
+export async function GET() {
+    await requirePermission("canViewSettings");
+    
+    const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Seed brands
+    for (const brand of BRANDS) {
+        const { data: existing } = await supabase
+            .from('brands')
+            .select('id')
+            .eq('slug', brand.slug)
+            .maybeSingle();
+
+        if (!existing) {
+            await supabase.from('brands').insert({
+                name: brand.name,
+                slug: brand.slug
+            });
+        }
+    }
+
+    // Seed locations linked to brands
+    for (const loc of LOCATIONS) {
+        const brandId = allBrands.find(b => b.slug === loc.brand_slug)?.id;
+        
+        const { data: existingLoc } = await supabase
+            .from('locations')
+            .select('id')
+            .eq('name', loc.name)
+            .maybeSingle();
+
+        if (!existingLoc) {
+            await supabase.from('locations').insert({
+                name: loc.name,
+                city: loc.city,
+                address: loc.address,
+                brand_id: brandId
+            });
+        }
+    }
+}
+```
+
+## Idempotency
+
+This endpoint is **idempotent** - running it multiple times will not create duplicates. It only creates brands and locations that don't already exist.
+
+## Use Cases
+
+- Initial database setup for new installations
+- Development/testing environment setup
+- Restore default locations after testing
+- Demo data creation
+
+<Warning>
+  This endpoint uses the service role key and bypasses all RLS policies. Use with caution in production environments.
+</Warning>

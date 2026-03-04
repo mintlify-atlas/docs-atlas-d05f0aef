@@ -1,0 +1,470 @@
+---
+title: 'OpenAI Integration'
+description: 'AI-powered assistant for customer insights and natural language queries'
+icon: 'brain'
+---
+
+The OpenAI integration powers Hiro CRM's AI Assistant, enabling natural language queries, customer insights, and intelligent recommendations using GPT-4.
+
+## What You Can Do
+
+- Ask questions about your customer data in plain language
+- Get AI-powered insights on customer behavior and trends
+- Generate marketing campaign ideas based on customer segments
+- Analyze reservation patterns and predict no-shows
+- Receive proactive recommendations for VIP customer engagement
+- Query your database without writing SQL
+
+## The Concierge AI Persona
+
+Hiro's AI Assistant is designed as a **Concierge** - a sophisticated, proactive, and highly efficient marketing companion for luxury hospitality:
+
+- Speaks with the authority of a CMO
+- Provides strategic recommendations based on RFM scores and revenue data
+- Uses refined language suitable for 5-star hospitality
+- Focuses on customer lifetime value and exclusivity
+- Delivers insights in elegant markdown format
+
+## Prerequisites
+
+<Steps>
+  <Step title="OpenAI Account">
+    Sign up at [platform.openai.com](https://platform.openai.com)
+  </Step>
+  <Step title="API Key">
+    Generate an API key from your OpenAI dashboard
+  </Step>
+  <Step title="Billing Setup">
+    Add payment method and set usage limits
+  </Step>
+  <Step title="Model Access">
+    Ensure you have access to GPT-4 (recommended) or GPT-3.5-turbo
+  </Step>
+</Steps>
+
+## Setup
+
+### 1. Create OpenAI Account
+
+1. Go to [platform.openai.com/signup](https://platform.openai.com/signup)
+2. Complete registration and verify your email
+3. Add a payment method (required for API access)
+
+### 2. Generate API Key
+
+<Steps>
+  <Step title="Access API Keys">
+    Go to [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+  </Step>
+  <Step title="Create New Key">
+    Click **Create new secret key**
+  </Step>
+  <Step title="Name Your Key">
+    Give it a name like "Hiro CRM Production"
+  </Step>
+  <Step title="Copy Key">
+    Copy the key immediately (you won't see it again)
+  </Step>
+</Steps>
+
+### 3. Set Usage Limits (Recommended)
+
+1. Go to **Settings** > **Limits**
+2. Set a monthly budget (e.g., $50/month)
+3. Enable email alerts at 80% usage
+
+<Tip>
+  For a small restaurant, $20-50/month is typically sufficient for AI queries.
+</Tip>
+
+### 4. Configure Environment Variables
+
+Add your OpenAI API key to `frontend/.env.local`:
+
+<CodeGroup>
+
+```bash .env.local
+# OpenAI AI Assistant
+OPENAI_API_KEY=sk-proj-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
+
+```bash .env.example
+# OPTIONAL: OpenAI (for AI Assistant)
+OPENAI_API_KEY=sk-your-openai-key
+```
+
+</CodeGroup>
+
+<Warning>
+  **Critical**: Never commit your OpenAI API key to Git. Keep it in `.env.local` (which is in `.gitignore`). If accidentally exposed, revoke it immediately from OpenAI dashboard.
+</Warning>
+
+## API Reference
+
+### Check Configuration
+
+```typescript
+import { isOpenAIConfigured } from '@/lib/ai/openai';
+
+const isConfigured = await isOpenAIConfigured();
+
+if (isConfigured) {
+  console.log('OpenAI is ready!');
+} else {
+  console.log('Please add OPENAI_API_KEY to settings');
+}
+```
+
+### Send Chat Message
+
+```typescript
+import { sendChatMessage } from '@/lib/ai/openai';
+
+const response = await sendChatMessage([
+  {
+    role: 'system',
+    content: 'You are a helpful restaurant CRM assistant.'
+  },
+  {
+    role: 'user',
+    content: 'How many VIP customers visited last month?'
+  }
+]);
+
+if (response.success) {
+  console.log('AI Response:', response.content);
+  console.log('Tokens used:', response.usage?.total_tokens);
+} else {
+  console.error('Error:', response.error);
+}
+```
+
+### Use Hiro's Concierge AI
+
+```typescript
+import { generateHIROResponse } from '@/lib/ai/openai';
+
+// Provide context about your restaurant
+const context = `
+Restaurant: La Tasca Alicante
+Total Customers: 5,247
+VIP Customers (RFM 4-5): 342
+Last Month Revenue: €127,450
+Average Ticket: €48.30
+`;
+
+const response = await generateHIROResponse(
+  'What should I focus on this month?',
+  context
+);
+
+if (response.success) {
+  console.log(response.content);
+}
+```
+
+### Custom Model and Parameters
+
+```typescript
+import { sendChatMessage } from '@/lib/ai/openai';
+
+const response = await sendChatMessage(
+  [
+    { role: 'user', content: 'Suggest a campaign for lapsed customers' }
+  ],
+  {
+    model: 'gpt-4-turbo',        // or 'gpt-3.5-turbo'
+    temperature: 0.7,             // 0 = deterministic, 1 = creative
+    max_tokens: 1000              // Limit response length
+  }
+);
+```
+
+## Data Structures
+
+### ChatMessage
+
+```typescript
+interface ChatMessage {
+    role: 'system' | 'user' | 'assistant';
+    content: string;
+}
+```
+
+- `system`: Instructions for the AI (e.g., "You are a CRM assistant")
+- `user`: Messages from the human user
+- `assistant`: Previous AI responses (for conversation history)
+
+### ChatResponse
+
+```typescript
+interface ChatResponse {
+    success: boolean;
+    content?: string;                // AI's response text
+    error?: string;                  // Error message if failed
+    usage?: {
+        prompt_tokens: number;       // Tokens in your request
+        completion_tokens: number;   // Tokens in AI response
+        total_tokens: number;        // Total cost
+    };
+}
+```
+
+### ChatOptions
+
+```typescript
+interface ChatOptions {
+    model?: string;                  // 'gpt-4-turbo' | 'gpt-3.5-turbo'
+    temperature?: number;            // 0.0 to 1.0
+    max_tokens?: number;             // Max response length
+}
+```
+
+## How It Works
+
+<Steps>
+  <Step title="User Query">
+    User asks a question in natural language
+  </Step>
+  <Step title="Context Gathering">
+    Hiro fetches relevant customer data, KPIs, or segments
+  </Step>
+  <Step title="Prompt Construction">
+    System combines user query + context + Concierge persona
+  </Step>
+  <Step title="OpenAI API Call">
+    Request sent to GPT-4 with conversation history
+  </Step>
+  <Step title="Response Parsing">
+    AI response is formatted and displayed to user
+  </Step>
+</Steps>
+
+## The Concierge System Prompt
+
+Hiro uses a sophisticated system prompt to ensure professional, luxury-focused responses:
+
+```typescript
+const HIRO_SYSTEM_PROMPT = `
+Eres CONCIERGE AI, el acompañante estratégico de élite para Hiro CRM.
+
+Tu identidad:
+- Eres el "Concierge" de datos: sofisticado, impecable, proactivo
+- Hablas con la autoridad de un Director de Marketing (CMO)
+- No esperas órdenes; sugieres oportunidades basadas en datos
+
+Tus capacidades estratégicas:
+- Auditoría de Reservas
+- Gestión VIP
+- Inteligencia de Campañas
+- Análisis Predictivo
+
+Formato:
+- Estilo "Luxury Minimalist"
+- Usa emojis premium: 👑, ✨, 🍷, 📊, 🥂
+- Proporciona un "Insight del Concierge" al final
+`;
+```
+
+You can customize this prompt in `frontend/lib/ai/openai.ts`.
+
+## Pricing
+
+OpenAI charges per token (words + punctuation):
+
+| Model | Input (per 1M tokens) | Output (per 1M tokens) | Speed |
+|-------|----------------------|------------------------|-------|
+| GPT-4 Turbo | $10 | $30 | Fast |
+| GPT-4 | $30 | $60 | Standard |
+| GPT-3.5 Turbo | $0.50 | $1.50 | Very Fast |
+
+**Example Costs:**
+
+- Simple query: ~500 tokens = $0.01 - $0.05
+- Complex analysis: ~2,000 tokens = $0.05 - $0.20
+- 100 queries/month ≈ $10 - $30/month
+
+<Tip>
+  Start with **GPT-3.5 Turbo** for testing (10x cheaper). Upgrade to **GPT-4 Turbo** for production use (better reasoning).
+</Tip>
+
+## Troubleshooting
+
+### API Key Invalid
+
+- Check for typos in `.env.local`
+- Verify key starts with `sk-proj-` or `sk-`
+- Ensure key hasn't been revoked
+- Confirm billing is active on OpenAI account
+
+### Quota Exceeded
+
+Error: `You exceeded your current quota`
+
+**Solutions:**
+
+1. Add payment method to OpenAI account
+2. Wait for free tier to reset (if on free plan)
+3. Increase usage limits in OpenAI dashboard
+4. Check for runaway API calls in logs
+
+### Rate Limited
+
+Error: `Rate limit reached`
+
+- Free tier: 3 requests/minute
+- Paid tier: 10,000 requests/minute
+
+**Solutions:**
+
+- Add delays between requests
+- Cache AI responses
+- Upgrade to paid tier
+
+### Poor Response Quality
+
+- Increase `temperature` for more creative responses
+- Provide more context in the prompt
+- Use GPT-4 instead of GPT-3.5
+- Refine your system prompt
+
+## Example Use Cases
+
+### Customer Insights Query
+
+```typescript
+import { generateHIROResponse } from '@/lib/ai/openai';
+
+const customerStats = {
+  totalCustomers: 5247,
+  vipCount: 342,
+  lapsedCount: 892,
+  avgSpend: 48.30,
+  avgVisits: 3.2
+};
+
+const context = `
+Total Customers: ${customerStats.totalCustomers}
+VIP Customers: ${customerStats.vipCount}
+Lapsed (no visit in 6+ months): ${customerStats.lapsedCount}
+Average Spend: €${customerStats.avgSpend}
+Average Visits: ${customerStats.avgVisits}
+`;
+
+const response = await generateHIROResponse(
+  'What marketing campaign should I run this month?',
+  context
+);
+```
+
+### Reservation Pattern Analysis
+
+```typescript
+const context = `
+Last 30 Days:
+- Total Reservations: 1,247
+- No-Shows: 87 (7%)
+- Average Party Size: 3.4
+- Peak Day: Saturday (312 reservations)
+- Peak Hour: 21:00 (18% of daily reservations)
+`;
+
+const response = await generateHIROResponse(
+  'How can I reduce no-shows?',
+  context
+);
+```
+
+### VIP Customer Strategy
+
+```typescript
+const vipCustomers = [
+  { name: 'María García', visits: 23, ltv: 2840 },
+  { name: 'Carlos López', visits: 18, ltv: 2340 },
+  { name: 'Ana Martínez', visits: 15, ltv: 1980 }
+];
+
+const context = `
+Top 3 VIP Customers:
+${vipCustomers.map(c => `- ${c.name}: ${c.visits} visits, €${c.ltv} LTV`).join('\n')}
+
+Goal: Increase retention of VIP tier customers
+`;
+
+const response = await generateHIROResponse(
+  'Suggest a VIP retention strategy',
+  context
+);
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Prompt Engineering">
+    - Provide specific context (numbers, dates, segments)
+    - Ask one clear question at a time
+    - Include your business goal in the query
+    - Use follow-up questions to drill deeper
+  </Accordion>
+  
+  <Accordion title="Cost Management">
+    - Cache common queries (e.g., daily insights)
+    - Limit `max_tokens` to avoid long responses
+    - Use GPT-3.5 Turbo for simple queries
+    - Monitor usage in OpenAI dashboard
+    - Set monthly spending limits
+  </Accordion>
+  
+  <Accordion title="Data Privacy">
+    - Don't send personally identifiable information (PII) unnecessarily
+    - Aggregate data before sending to AI (e.g., "342 VIP customers" not "María García, maria@example.com")
+    - Review OpenAI's data usage policy
+    - Consider using Azure OpenAI for EU data residency
+  </Accordion>
+  
+  <Accordion title="Response Quality">
+    - Review AI suggestions before acting on them
+    - Combine AI insights with human judgment
+    - Fine-tune system prompt for your brand voice
+    - Test different models to find the best fit
+  </Accordion>
+</AccordionGroup>
+
+## Database Integration
+
+The AI can query your Supabase database via the `integration_configs` table:
+
+```sql
+CREATE TABLE integration_configs (
+  id UUID PRIMARY KEY,
+  organization_id UUID REFERENCES organizations(id),
+  integration_type TEXT, -- 'openai'
+  is_enabled BOOLEAN DEFAULT true,
+  config JSONB -- { "api_key": "sk-...", "model": "gpt-4-turbo" }
+);
+```
+
+This allows you to:
+
+- Store different API keys per organization (if multi-tenant)
+- Enable/disable AI per location
+- Configure model and parameters per customer
+
+## Security Considerations
+
+1. **Never log API keys** - Exclude from error logs and monitoring
+2. **Rotate keys regularly** - Generate new keys every 6-12 months
+3. **Use environment variables** - Never hardcode keys in source code
+4. **Limit scope** - Use separate keys for dev/staging/production
+5. **Monitor usage** - Set up alerts for unusual activity
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Customer Analytics" icon="chart-mixed" href="/essentials/analytics">
+    Learn what data the AI can analyze
+  </Card>
+  <Card title="Campaign Builder" icon="bullhorn" href="/essentials/campaigns">
+    Use AI suggestions to create campaigns
+  </Card>
+</CardGroup>

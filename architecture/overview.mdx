@@ -1,0 +1,224 @@
+---
+title: Architecture Overview
+description: Understanding the technical architecture of Hiro CRM
+---
+
+# Architecture Overview
+
+Hiro CRM is a modern, full-stack customer relationship management platform built specifically for hospitality businesses in Spain. The system follows a **single-tenant architecture** optimized for analytics, marketing automation, and customer insights.
+
+## Tech Stack
+
+Hiro CRM leverages cutting-edge technologies to deliver a fast, secure, and scalable platform:
+
+### Frontend
+
+- **Next.js 16** - React framework with App Router architecture
+- **React 18** - Component-based UI library with Server Components
+- **TypeScript** - Type-safe development across the entire codebase
+- **Tailwind CSS 4** - Utility-first CSS framework for rapid UI development
+- **Framer Motion** - Animation library for smooth interactions
+- **Lucide React** - Icon library with 500+ icons
+
+### Backend & Infrastructure
+
+- **Supabase** - Backend-as-a-Service platform providing:
+  - PostgreSQL database with real-time capabilities
+  - Row Level Security (RLS) for data protection
+  - Authentication & authorization
+  - Storage for file uploads
+  - Edge Functions
+
+### Additional Services
+
+- **Inngest** - Workflow orchestration and background jobs
+- **Sentry** - Error tracking and performance monitoring
+- **Vercel Analytics** - Performance insights
+- **Brevo** - Email marketing automation
+
+## Architecture Principles
+
+### 1. Single-Tenant Design
+
+Hiro CRM is designed for **single-tenant** deployment, specifically for Grupo Gastro Portal's hospitality brands:
+
+- Optimized security with tenant-specific RLS policies
+- Centralized data analytics across all locations
+- Simplified access control and permissions
+- Better performance through targeted optimization
+
+### 2. Server-First Architecture
+
+The application follows Next.js App Router conventions:
+
+```typescript
+// Server Components by default
+export default async function DashboardPage() {
+  const supabase = await createClient()
+  const { data } = await supabase.from('customers').select('*')
+  
+  return <Dashboard data={data} />
+}
+```
+
+- **Server Components**: Default for data fetching and rendering
+- **Client Components**: Used only when interactivity is required
+- **Server Actions**: Handle mutations and form submissions
+- **API Routes**: RESTful endpoints for external integrations
+
+### 3. Type Safety Throughout
+
+End-to-end type safety with TypeScript:
+
+```typescript
+// Database types auto-generated from Supabase schema
+import { Database } from '@/types/database'
+
+type Customer = Database['public']['Tables']['customers']['Row']
+type Reservation = Database['public']['Tables']['reservations']['Row']
+```
+
+### 4. Performance Optimization
+
+- **Code Splitting**: Automatic route-based code splitting
+- **Tree Shaking**: Optimized imports for libraries like Lucide React
+- **Image Optimization**: Next.js Image component with AVIF/WebP formats
+- **Bundle Analysis**: Built-in analyzer for monitoring bundle size
+- **Database Indexing**: Strategic indexes on frequently queried columns
+
+### 5. Security First
+
+- **Row Level Security (RLS)**: Database-level access control
+- **Content Security Policy (CSP)**: Protection against XSS attacks
+- **CORS Protection**: Restricted API access
+- **Auth Middleware**: Session management and token refresh
+- **Input Validation**: Zod schemas for all user inputs
+
+## System Components
+
+### Application Layer
+
+```
+frontend/
+├── app/              # Next.js App Router (pages, layouts, API routes)
+├── components/       # React components (UI, features, domain-specific)
+├── lib/              # Business logic, utilities, integrations
+├── hooks/            # Custom React hooks
+├── context/          # React Context providers
+└── types/            # TypeScript type definitions
+```
+
+### Data Layer
+
+- **PostgreSQL Database**: Relational database with advanced features
+- **Supabase Client**: Type-safe database client with real-time subscriptions
+- **Server Actions**: Data mutations from React Server Components
+- **API Routes**: RESTful endpoints for third-party integrations
+
+### Integration Layer
+
+- **CoverManager**: Reservation system integration
+- **Airtable**: Legacy data migration
+- **Google Drive**: Document storage and retrieval
+- **Inngest**: Background job processing
+
+## Data Flow
+
+### Read Operations (Server Components)
+
+```
+User Request → Next.js Server → Supabase Client → PostgreSQL
+                                    ↓
+                    Server Component renders with data
+                                    ↓
+                    HTML streamed to browser
+```
+
+### Write Operations (Server Actions)
+
+```
+User Interaction → Client Component → Server Action → Validation
+                                           ↓
+                    Supabase Client → PostgreSQL → Triggers
+                                           ↓
+                        Revalidate cache → Update UI
+```
+
+### Real-time Updates
+
+```
+Database Change → PostgreSQL Trigger → Supabase Realtime
+                                            ↓
+                    Client Subscription → UI Update
+```
+
+## Deployment Architecture
+
+### Vercel (Frontend)
+
+- **Edge Network**: Global CDN for static assets
+- **Serverless Functions**: API routes and Server Actions
+- **Build Cache**: Incremental Static Regeneration (ISR)
+- **Preview Deployments**: Automatic preview URLs for PRs
+
+### Supabase (Backend)
+
+- **Database**: Managed PostgreSQL cluster
+- **Auth**: Authentication service
+- **Storage**: Object storage for files
+- **Realtime**: WebSocket connections for live updates
+
+## Monitoring & Observability
+
+### Error Tracking
+
+- **Sentry**: Capture and track errors across client and server
+- **Source Maps**: Debug production errors with original source
+- **User Context**: Identify which users encounter errors
+
+### Performance Monitoring
+
+- **Web Vitals**: Track Core Web Vitals (LCP, FID, CLS)
+- **Vercel Analytics**: Real user monitoring
+- **Database Queries**: Slow query detection in Supabase
+
+### Logging
+
+```typescript
+import { logger } from '@/lib/logger'
+
+logger.info('Customer created', { customerId: customer.id })
+logger.error('Failed to sync', { error, context })
+```
+
+## Scalability Considerations
+
+### Database Optimization
+
+- **Indexes**: Strategic indexes on high-traffic queries
+- **Connection Pooling**: PgBouncer for efficient connection management
+- **Query Optimization**: Materialized views for complex analytics
+
+### Application Optimization
+
+- **Caching**: React Cache and Next.js data cache
+- **Static Generation**: Pre-render pages when possible
+- **Lazy Loading**: Dynamic imports for large components
+- **Tree Shaking**: Eliminate unused code from bundles
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Database Schema" icon="database" href="/architecture/database-schema">
+    Explore the database structure and relationships
+  </Card>
+  <Card title="Frontend Structure" icon="react" href="/architecture/frontend-structure">
+    Learn about the component architecture
+  </Card>
+  <Card title="API Routes" icon="code" href="/architecture/api-routes">
+    Understand the API endpoint structure
+  </Card>
+  <Card title="Developer Guide" icon="book" href="/developer-guide/getting-started">
+    Start building with Hiro CRM
+  </Card>
+</CardGroup>

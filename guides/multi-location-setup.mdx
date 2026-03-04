@@ -1,0 +1,370 @@
+---
+title: 'Multi-Location Setup'
+description: 'Configure and manage multiple restaurant locations in Hiro CRM'
+icon: 'building'
+---
+
+Hiro CRM is designed for hospitality groups managing multiple restaurant locations across Spain. This guide explains how to set up and manage your multi-location infrastructure.
+
+## Understanding Locations
+
+In Hiro CRM, a **Location** represents a physical restaurant or venue. Each location can have:
+
+- Unique settings and configurations
+- Its own reservation system
+- Separate staff and capacity
+- Integration credentials (Cover Manager, Revo TPV)
+- Custom branding (when grouped under brands)
+
+<Note>
+Locations are the foundation of Hiro CRM's multi-tenant architecture. All data like reservations, customers, and analytics can be filtered by location.
+</Note>
+
+## Creating Your First Location
+
+<Steps>
+  <Step title="Navigate to Settings">
+    Go to **Settings** > **Restaurantes** in the main navigation.
+  </Step>
+
+  <Step title="Click 'Nuevo Restaurante'">
+    Click the **+ Nuevo Restaurante** button in the top-right corner.
+  </Step>
+
+  <Step title="Fill in Basic Information">
+    Required fields:
+    - **Name**: The restaurant name (e.g., "La Tasca Claudio Coello")
+    - **City**: Location city
+    
+    Optional but recommended:
+    - **Marca**: Associate with a brand if managing multiple concepts
+    - **Address**: Full street address
+    - **Código Postal**: Postal code
+    - **Phone** and **Email**: Contact information
+  </Step>
+
+  <Step title="Configure Settings">
+    Set operational parameters:
+    - **Capacidad Total**: Total seating capacity
+    - **Zona Horaria**: Timezone (default: Europe/Madrid)
+    - **Moneda**: Currency (default: EUR)
+    - **CoverManager Slug**: Your Cover Manager location identifier
+  </Step>
+
+  <Step title="Activate the Location">
+    Check **Restaurante activo** to make the location operational.
+    
+    Click **Crear** to save.
+  </Step>
+</Steps>
+
+## Location Data Structure
+
+Each location in Hiro stores the following information:
+
+```typescript
+interface Location {
+  id: string;
+  brand_id?: string;           // Optional brand association
+  name: string;                // Restaurant name
+  slug: string;                // URL-friendly identifier
+  address?: string;            // Street address
+  city?: string;               // City
+  postal_code?: string;        // Postal code
+  country?: string;            // Country code (default: ES)
+  phone?: string;              // Contact phone
+  email?: string;              // Contact email
+  timezone?: string;           // Timezone (default: Europe/Madrid)
+  currency?: string;           // Currency (default: EUR)
+  total_capacity?: number;     // Seating capacity
+  covermanager_slug?: string;  // Cover Manager integration
+  revo_tenant?: string;        // Revo TPV integration
+  is_active?: boolean;         // Active status
+}
+```
+
+See `frontend/app/actions/locations.ts:11-35` for the complete type definition.
+
+## Managing Multiple Locations
+
+### Viewing All Locations
+
+The **Restaurantes** settings page displays all your locations in a grid:
+
+- Active locations are marked with a green "Activo" badge
+- Each card shows the location name, city, and brand
+- Use the search bar to filter locations by name, city, or brand
+
+### Editing Locations
+
+<Steps>
+  <Step title="Click 'Editar' on a Location Card">
+    Find the location you want to edit and click the **Editar** button.
+  </Step>
+
+  <Step title="Update Information">
+    Modify any field in the form. All changes are tracked and timestamped.
+  </Step>
+
+  <Step title="Save Changes">
+    Click **Actualizar** to save your changes.
+  </Step>
+</Steps>
+
+<Warning>
+Changing a location's slug will affect URLs and API integrations. Only modify slugs if necessary.
+</Warning>
+
+### Deactivating Locations
+
+To temporarily disable a location without deleting it:
+
+1. Edit the location
+2. Uncheck **Restaurante activo**
+3. Save changes
+
+Inactive locations won't appear in reservation systems or analytics but maintain their data.
+
+### Deleting Locations
+
+Hiro uses **soft deletes** to protect your data:
+
+1. Click the trash icon on a location card
+2. Confirm the deletion
+
+<Warning>
+You cannot delete a location that has associated reservations. Deactivate it instead.
+</Warning>
+
+## Location-Based Features
+
+### Location Filtering
+
+Most views in Hiro support location filtering:
+
+**Dashboard**: Select a location from the dropdown to view location-specific stats
+
+```typescript
+// Example: Dashboard location selector
+<select value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)}>
+  <option value="all">Todos los locales</option>
+  {locations.map((loc) => (
+    <option key={loc.id} value={loc.id}>{loc.name}</option>
+  ))}
+</select>
+```
+
+See `frontend/components/dashboard/CustomizableDashboard.tsx:439-447`
+
+**Analytics**: Filter reports by location for insights
+
+**Reservations**: View and manage reservations per location
+
+### Location-Specific Integrations
+
+Each location can have unique integration credentials:
+
+**Cover Manager**:
+- Set `covermanager_slug` to sync reservations
+- Configured in Location Settings
+
+**Revo TPV**:
+- Set `revo_tenant` for POS integration
+- Syncs orders and revenue data
+
+See `frontend/lib/inngest/functions.ts:15-91` for sync workflows.
+
+## Brands and Multi-Concept Management
+
+### What are Brands?
+
+Brands allow you to group locations under different restaurant concepts:
+
+- **La Tasca** (tapas concept) - multiple locations
+- **Manero Steakhouse** (fine dining) - multiple locations
+- **Claudio Coello** (flagship location)
+
+Each location can belong to one brand, or operate independently.
+
+### Creating Brands
+
+1. Navigate to **Settings** > **Marcas**
+2. Click **+ Nueva Marca**
+3. Configure brand identity:
+   - Name and slug
+   - Brand colors and logo
+   - Default settings for locations
+
+### Assigning Locations to Brands
+
+When creating or editing a location:
+
+1. Select a brand from the **Marca** dropdown
+2. The location inherits brand styling and settings
+3. Brand appears on location cards and reports
+
+## Multi-Location Workflows
+
+### Daily Operations Across Locations
+
+<Tabs>
+  <Tab title="View All Locations">
+    **Dashboard View**: See aggregated stats from all locations
+    
+    ```typescript
+    // All locations stats
+    const stats = {
+      totalReservations: 145,  // Sum across all locations
+      totalPax: 380,           // Total diners
+      vipCount: 12,            // VIPs across locations
+      expectedRevenue: 15420   // Combined revenue
+    }
+    ```
+  </Tab>
+
+  <Tab title="Focus on One Location">
+    **Filtered View**: Select a specific location from the dropdown
+    
+    ```typescript
+    // Single location stats
+    const stats = {
+      totalReservations: 42,   // La Tasca Claudio Coello only
+      totalPax: 98,
+      vipCount: 3,
+      expectedRevenue: 4200
+    }
+    ```
+  </Tab>
+
+  <Tab title="Compare Locations">
+    **Analytics View**: Compare performance across locations
+    
+    Navigate to **Ejecutivos** > **CEO Dashboard** to see:
+    - Revenue comparison by location
+    - Top performing locations
+    - Location-specific trends
+  </Tab>
+</Tabs>
+
+### Syncing Multi-Location Data
+
+Hiro automatically syncs data from all active locations:
+
+<Steps>
+  <Step title="Automatic Sync">
+    Background jobs sync each location's data:
+    - Cover Manager: Every 30 minutes
+    - Revo TPV: Every 15 minutes
+    - Loyalty calculations: Daily at 2 AM
+  </Step>
+
+  <Step title="Manual Sync">
+    Use the **Sincronizar** button on the Dashboard to force a sync:
+    
+    ```typescript
+    const handleSync = async () => {
+      const result = await syncTodayAction(selectedLocation);
+      if (result.success) {
+        toast.success(`${result.count} reservas sincronizadas`);
+      }
+    };
+    ```
+    
+    See `frontend/components/dashboard/CustomizableDashboard.tsx:367-383`
+  </Step>
+
+  <Step title="Monitor Sync Status">
+    Check sync logs in **Settings** > **Integraciones** for each location.
+  </Step>
+</Steps>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Consistent Naming" icon="tag">
+    Use clear, consistent location names:
+    - ✅ "La Tasca - Claudio Coello"
+    - ✅ "Manero Steakhouse - Recoletos"
+    - ❌ "Location 1"
+    - ❌ "Test Restaurant"
+  </Card>
+
+  <Card title="Keep Slugs Stable" icon="link">
+    Don't change slugs after initial setup. They're used in:
+    - URLs and deep links
+    - API integrations
+    - External systems (Cover Manager, etc.)
+  </Card>
+
+  <Card title="Set Accurate Capacity" icon="users">
+    Configure realistic `total_capacity` for each location:
+    - Affects reservation availability
+    - Used in demand predictions
+    - Impacts staff recommendations
+  </Card>
+
+  <Card title="Use Brands for Reporting" icon="chart-bar">
+    Group locations by brand to get:
+    - Brand-level analytics
+    - Cross-location insights
+    - Consolidated reporting
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Location not appearing in dropdown">
+    Check that the location is active:
+    1. Go to **Settings** > **Restaurantes**
+    2. Find the location
+    3. Ensure it has an "Activo" badge
+    4. If not, edit and check **Restaurante activo**
+  </Accordion>
+
+  <Accordion title="Reservations not syncing for a location">
+    Verify integration credentials:
+    1. Edit the location
+    2. Check `covermanager_slug` is correct
+    3. Verify API keys in Settings > Integraciones
+    4. Check sync logs for errors
+  </Accordion>
+
+  <Accordion title="Cannot delete a location">
+    Locations with reservations cannot be deleted:
+    1. Check if the location has associated reservations
+    2. If yes, **deactivate** instead of deleting
+    3. Soft delete preserves historical data
+    
+    See `frontend/app/actions/locations.ts:336-344` for deletion logic.
+  </Accordion>
+
+  <Accordion title="Wrong timezone for a location">
+    Each location can have its own timezone:
+    1. Edit the location
+    2. Set **Zona Horaria** (e.g., "Europe/Madrid")
+    3. This affects reservation times and reporting
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+Now that you've set up your locations:
+
+<CardGroup cols={2}>
+  <Card title="Configure User Roles" icon="users" href="/guides/user-roles">
+    Set up role-based access for your team across locations
+  </Card>
+
+  <Card title="Set Up Automations" icon="robot" href="/guides/workflows-automation">
+    Configure automated workflows for each location
+  </Card>
+
+  <Card title="View Analytics" icon="chart-line" href="/guides/analytics-dashboard">
+    Track performance across all your locations
+  </Card>
+
+  <Card title="API Reference" icon="code" href="/api-reference/locations">
+    Access location data programmatically
+  </Card>
+</CardGroup>

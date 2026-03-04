@@ -1,0 +1,206 @@
+---
+title: Authentication
+description: Learn how to authenticate API requests using Supabase Auth
+---
+
+# Authentication
+
+Hiro CRM uses **Supabase Authentication** for securing API endpoints. Authentication is managed through session cookies and JWT tokens.
+
+## Authentication Methods
+
+### 1. Session-Based (Recommended for Web)
+
+API routes automatically access the user session via cookies using `createClient()` from `@supabase/ssr`.
+
+```typescript
+import { createClient } from '@/lib/supabase/server';
+
+export async function GET() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
+  // User is authenticated
+}
+```
+
+### 2. Service Role Key (Admin Operations)
+
+For admin endpoints that bypass Row-Level Security (RLS), use the service role key:
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+```
+
+<Warning>
+  The service role key bypasses all RLS policies. Only use it in secure server-side contexts.
+</Warning>
+
+### 3. Cron Secret (Scheduled Jobs)
+
+Cron endpoints require a `CRON_SECRET` in the `Authorization` header:
+
+```bash
+curl -X GET https://your-domain.com/api/cron/sync \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+```
+
+## Permission System
+
+Hiro uses role-based permissions defined in `/lib/authz.ts`:
+
+### User Roles
+
+| Role | Description |
+|------|-------------|
+| `super_admin` | Full platform access |
+| `admin` | Organization-wide access |
+| `manager` | Location management access |
+| `marketing` | Marketing and customer operations |
+| `operaciones` | Operations and reservations |
+| `viewer` | Read-only access |
+
+### Permission Helpers
+
+#### `requireAuth()`
+
+Verify authentication and retrieve user profile:
+
+```typescript
+import { requireAuth } from '@/lib/authz';
+
+export async function GET() {
+  const { supabase, user, role, isPlatformAdmin } = await requireAuth();
+  // User is authenticated
+}
+```
+
+**Returns:**
+- `supabase`: Authenticated Supabase client
+- `user`: Supabase user object
+- `role`: User's role (UserRole type)
+- `isPlatformAdmin`: Boolean (true for super_admin)
+
+#### `requirePermission()`
+
+Verify specific permission before allowing access:
+
+```typescript
+import { requirePermission } from '@/lib/authz';
+
+export async function GET() {
+  await requirePermission("canAccessOperaciones");
+  // User has required permission
+}
+```
+
+**Available Permissions:**
+- `canViewSettings` - Access settings pages
+- `canAccessOperaciones` - Access operations/reservations
+- `canManageAutomations` - Manage marketing automations
+- `canManageCustomers` - Manage customer data
+- `canManageLocations` - Manage locations
+- `canManageUsers` - Manage users and roles
+
+## Example: Authenticated Endpoint
+
+```typescript app/api/example/route.ts
+import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  try {
+    const supabase = await createClient();
+    
+    // Verify authentication
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get user's organization
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile?.organization_id) {
+      return NextResponse.json({ error: 'No organization' }, { status: 400 });
+    }
+
+    // Fetch data scoped to user's organization
+    const { data } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('organization_id', profile.organization_id);
+
+    return NextResponse.json({ success: true, data });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+```
+
+## Error Responses
+
+### 401 Unauthorized
+
+```json
+{
+  "error": "No autorizado"
+}
+```
+
+User is not authenticated.
+
+### 403 Forbidden
+
+```json
+{
+  "error": "FORBIDDEN"
+}
+```
+
+User lacks required permission.
+
+### 400 Bad Request
+
+```json
+{
+  "error": "Usuario sin organización"
+}
+```
+
+User profile is incomplete or invalid.
+
+## Security Best Practices
+
+<Check>
+  **Always validate user authentication** before processing requests
+</Check>
+
+<Check>
+  **Scope data to user's organization** using `organization_id` filters
+</Check>
+
+<Check>
+  **Use `requirePermission()`** for sensitive operations
+</Check>
+
+<Check>
+  **Never expose service role keys** in client-side code
+</Check>
+
+<Check>
+  **Validate CRON_SECRET** for all scheduled job endpoints
+</Check>

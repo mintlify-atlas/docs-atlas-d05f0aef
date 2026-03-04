@@ -1,0 +1,124 @@
+---
+title: Introduction
+description: Welcome to Hiro CRM - an open-source CRM platform built specifically for the hospitality industry in Spain
+---
+
+Hiro CRM is an open-source, single-tenant CRM platform designed specifically for the hospitality industry in Spain. It combines customer management, reservation analytics, marketing campaigns, and AI-powered insights in a single modern web application.
+
+## What is Hiro CRM?
+
+Hiro CRM helps hospitality businesses manage their operations, understand their customers, and grow their revenue through data-driven marketing and personalized experiences. Whether you run a restaurant group, hotel chain, or mixed hospitality portfolio, Hiro CRM provides the tools you need to succeed.
+
+### Built for hospitality
+
+Unlike generic CRM solutions, Hiro CRM is purpose-built for restaurants, hotels, and hospitality groups. Every feature is designed around the unique needs of the industry:
+
+- Customer profiles with visit history and preferences
+- Integration with Spanish POS systems (CoverManager, Revo)
+- Marketing campaigns via email and SMS through Brevo
+- Loyalty programs with configurable tiers
+- Multi-location management for restaurant groups
+- Hotel guest management and operations
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="Customer Management" icon="users">
+    Full customer profiles with RFM analysis, segments, loyalty tiers, and visit history
+  </Card>
+  
+  <Card title="Reservation Analytics" icon="chart-line">
+    Integration with CoverManager & Revo POS for automatic reservation sync and analytics
+  </Card>
+  
+  <Card title="Marketing Campaigns" icon="bullhorn">
+    Email & SMS campaigns via Brevo, with audience segmentation and NPS tracking
+  </Card>
+  
+  <Card title="Loyalty Program" icon="star">
+    Points-based system with configurable tiers from Bronze to Founders level
+  </Card>
+  
+  <Card title="AI Assistant" icon="sparkles">
+    Powered by OpenAI GPT-4 for natural language queries over your customer data
+  </Card>
+  
+  <Card title="Multi-location" icon="building">
+    Manage multiple brands and locations from a single dashboard
+  </Card>
+</CardGroup>
+
+## Technology stack
+
+Hiro CRM is built with modern, production-ready technologies:
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | Next.js 16, React 18, TypeScript |
+| Styling | Tailwind CSS v4, Framer Motion |
+| Database | Supabase (PostgreSQL + RLS) |
+| Auth | Supabase Auth |
+| AI | OpenAI GPT-4 |
+| Email/SMS | Brevo |
+| Background Jobs | Inngest |
+| POS Integration | CoverManager, Revo POS (optional) |
+| Deployment | Vercel |
+
+## Single-tenant architecture
+
+Hiro CRM is designed as a **single-tenant application** - one deployment per business. This gives you:
+
+<Steps>
+  <Step title="Full control over your data">
+    Your customer data stays in your own Supabase project, not shared with anyone else
+  </Step>
+  
+  <Step title="Complete customization">
+    Modify the codebase to fit your specific business needs without affecting other users
+  </Step>
+  
+  <Step title="Simple deployment">
+    Deploy to Vercel with a single click, no complex infrastructure required
+  </Step>
+  
+  <Step title="Predictable costs">
+    Pay only for your own resources, with no per-seat pricing or hidden fees
+  </Step>
+</Steps>
+
+<Note>
+While Hiro CRM is designed as single-tenant, you can manage multiple locations and brands within a single deployment. This is perfect for restaurant groups or hospitality companies with multiple properties.
+</Note>
+
+## Use cases
+
+Hiro CRM is perfect for:
+
+- **Restaurant groups** managing multiple locations across Spain
+- **Hotels** tracking guest preferences and automating marketing
+- **Mixed hospitality portfolios** combining restaurants, hotels, and event spaces
+- **Independent restaurants** building customer loyalty programs
+- **Event venues** managing client relationships and bookings
+
+## Open source
+
+Hiro CRM is released under the MIT License. You can:
+
+- Use it for commercial purposes
+- Modify the source code to fit your needs
+- Deploy it to your own infrastructure
+- Contribute improvements back to the community
+
+View the source code on [GitHub](https://github.com/your-org/hiro-crm) and check out the [Contributing Guide](/contributing) to learn how you can help improve Hiro CRM.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get Hiro CRM running locally in under 10 minutes
+  </Card>
+  
+  <Card title="Installation" icon="download" href="/installation">
+    Complete installation and deployment guide
+  </Card>
+</CardGroup>

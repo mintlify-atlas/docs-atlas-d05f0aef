@@ -1,97 +1,299 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: Hiro CRM Documentation
+description: Open-source CRM platform for hospitality and hotel businesses in Spain
+mode: custom
 ---
 
-## Setting up
+<div className="relative overflow-hidden dark:bg-[#0f1117] bg-white">
+  {/* Hero Section */}
+  <div className="relative py-20 px-4 sm:px-6 lg:px-8">
+    <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-[#0f1117] dark:via-[#1a1d27] dark:to-[#0f1117] bg-gradient-to-br from-gray-50 via-white to-gray-50" />
+    
+    <div className="relative max-w-7xl mx-auto">
+      <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-center">
+        <div className="lg:col-span-7">
+          <h1 className="text-5xl sm:text-6xl font-bold dark:text-white text-gray-900 mb-6">
+            Smart CRM for <span className="text-[#94cb04]">Hospitality</span>
+          </h1>
+          
+          <p className="text-xl dark:text-gray-300 text-gray-600 mb-8 max-w-2xl">
+            Open-source customer relationship management built specifically for restaurants, hotels, and hospitality businesses in Spain. Manage customers, reservations, marketing campaigns, and loyalty programs—all in one modern platform.
+          </p>
+          
+          <div className="flex flex-wrap gap-4">
+            <a 
+              href="/quickstart" 
+              className="inline-flex items-center px-6 py-3 rounded-lg bg-[#94cb04] text-gray-900 font-semibold hover:bg-[#7fb003] transition-colors"
+            >
+              Get Started
+              <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </a>
+            
+            <a 
+              href="/api/overview" 
+              className="inline-flex items-center px-6 py-3 rounded-lg dark:bg-white/10 bg-gray-100 dark:text-white text-gray-900 dark:border-white/20 border border-gray-200 font-semibold dark:hover:bg-white/20 hover:bg-gray-200 transition-colors"
+            >
+              API Reference
+            </a>
+            
+            <a 
+              href="https://github.com/David-Cabeza/hiro-crm" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-6 py-3 rounded-lg dark:bg-white/5 bg-gray-50 dark:text-white text-gray-900 dark:border-white/10 border border-gray-200 font-semibold dark:hover:bg-white/10 hover:bg-gray-100 transition-colors"
+            >
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+              </svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+        
+        <div className="hidden lg:block lg:col-span-5 mt-12 lg:mt-0">
+          <div className="dark:bg-[#1a1d27] bg-white dark:border-[#27272a] border-gray-200 border rounded-2xl p-8 shadow-xl">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-[#94cb04]/10 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-[#94cb04]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-sm dark:text-gray-400 text-gray-600">Total Customers</div>
+                  <div className="text-2xl font-bold dark:text-white text-gray-900">5,247</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-[#94cb04]/10 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-[#94cb04]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-sm dark:text-gray-400 text-gray-600">Reservations</div>
+                  <div className="text-2xl font-bold dark:text-white text-gray-900">1,892</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-[#94cb04]/10 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-[#94cb04]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-sm dark:text-gray-400 text-gray-600">Active Campaigns</div>
+                  <div className="text-2xl font-bold dark:text-white text-gray-900">12</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-Get your documentation site up and running in minutes.
+{/* Quick Start Section */}
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold dark:text-white text-gray-900 mb-4">Quick Start</h2>
+  <p className="text-lg dark:text-gray-400 text-gray-600 mb-8">Get Hiro CRM running in minutes</p>
+  
+  <Steps>
+    <Step title="Clone the repository">
+      Clone the Hiro CRM repository and navigate to the frontend directory:
+      
+      ```bash
+      git clone https://github.com/David-Cabeza/hiro-crm.git
+      cd hiro-crm/frontend
+      npm install
+      ```
+    </Step>
+    
+    <Step title="Configure environment variables">
+      Create a `.env.local` file with your Supabase credentials:
+      
+      ```bash
+      cp .env.example .env.local
+      ```
+      
+      Add your Supabase project URL and keys:
+      
+      ```bash
+      NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+      SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+      ```
+    </Step>
+    
+    <Step title="Set up the database">
+      Run the database migrations using the Supabase CLI:
+      
+      ```bash
+      supabase db push
+      ```
+      
+      Or apply migrations manually via the Supabase dashboard SQL editor.
+    </Step>
+    
+    <Step title="Start the development server">
+      Launch the application:
+      
+      ```bash
+      npm run dev
+      ```
+      
+      Visit [http://localhost:3000](http://localhost:3000) to access your Hiro CRM instance.
+    </Step>
+  </Steps>
+</div>
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+{/* Features Grid */}
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold dark:text-white text-gray-900 mb-4">Core Features</h2>
+  <p className="text-lg dark:text-gray-400 text-gray-600 mb-8">Everything you need to manage hospitality operations</p>
+  
+  <CardGroup cols={3}>
+    <Card title="Customer Management" icon="users" href="/features/customer-management">
+      Full customer profiles with RFM segmentation, visit history, and spending analytics
+    </Card>
+    
+    <Card title="Reservations" icon="calendar" href="/features/reservations">
+      Sync reservations from CoverManager and Revo POS with real-time analytics
+    </Card>
+    
+    <Card title="Marketing Campaigns" icon="envelope" href="/features/marketing-campaigns">
+      Email and SMS campaigns via Brevo with audience segmentation and performance tracking
+    </Card>
+    
+    <Card title="Loyalty Program" icon="star" href="/features/loyalty-program">
+      Configurable tiers and points system to reward your best customers
+    </Card>
+    
+    <Card title="AI Assistant" icon="robot" href="/features/ai-assistant">
+      Natural language queries powered by GPT-4 to analyze your customer data
+    </Card>
+    
+    <Card title="Hotel CRM" icon="building" href="/features/hotel-crm">
+      Guest management and hotel operations module for hospitality properties
+    </Card>
+  </CardGroup>
+</div>
 
-## Make it yours
+{/* Integrations */}
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold dark:text-white text-gray-900 mb-4">Integrations</h2>
+  <p className="text-lg dark:text-gray-400 text-gray-600 mb-8">Connect with the tools you already use</p>
+  
+  <CardGroup cols={3}>
+    <Card title="CoverManager" icon="utensils" href="/integrations/covermanager">
+      Sync reservations and customer data from CoverManager POS
+    </Card>
+    
+    <Card title="Revo POS" icon="cash-register" href="/integrations/revo-pos">
+      Import sales and guest data from Revo point-of-sale systems
+    </Card>
+    
+    <Card title="Brevo" icon="paper-plane" href="/integrations/brevo">
+      Send email and SMS campaigns with Brevo (formerly Sendinblue)
+    </Card>
+    
+    <Card title="OpenAI" icon="brain" href="/integrations/openai">
+      Power your AI assistant with GPT-4 for intelligent insights
+    </Card>
+    
+    <Card title="Google Drive" icon="folder" href="/integrations/google-drive">
+      Store menus, contracts, and documents in Google Drive
+    </Card>
+    
+    <Card title="Inngest" icon="workflow" href="/integrations/overview">
+      Automate background workflows and scheduled tasks
+    </Card>
+  </CardGroup>
+</div>
 
-Design a docs site that looks great and empowers your users.
+{/* API Reference */}
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold dark:text-white text-gray-900 mb-4">API Reference</h2>
+  <p className="text-lg dark:text-gray-400 text-gray-600 mb-8">Build custom integrations with the Hiro CRM API</p>
+  
+  <CardGroup cols={2}>
+    <Card title="Authentication" icon="lock" href="/api/authentication">
+      Secure your API requests with Supabase authentication
+    </Card>
+    
+    <Card title="Admin Endpoints" icon="shield" href="/api/admin/seed-locations">
+      Manage organizations, import data, and debug reservations
+    </Card>
+    
+    <Card title="AI Chat" icon="message" href="/api/ai/chat">
+      Query customer data using natural language with the AI assistant
+    </Card>
+    
+    <Card title="Loyalty & Organization" icon="award" href="/api/loyalty/config">
+      Configure loyalty programs and manage organization context
+    </Card>
+  </CardGroup>
+</div>
 
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+{/* Resources */}
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold dark:text-white text-gray-900 mb-4">Resources</h2>
+  <p className="text-lg dark:text-gray-400 text-gray-600 mb-8">Learn more about contributing and project architecture</p>
+  
+  <CardGroup cols={2}>
+    <Card title="Contributing Guide" icon="code-pull-request" href="/contributing/overview">
+      Learn how to contribute to Hiro CRM development
+    </Card>
+    
+    <Card title="Architecture" icon="sitemap" href="/architecture/overview">
+      Understand the technical architecture and codebase structure
+    </Card>
+    
+    <Card title="Roadmap" icon="map" href="/resources/roadmap">
+      See what's coming next in Hiro CRM development
+    </Card>
+    
+    <Card title="FAQ" icon="question" href="/resources/faq">
+      Find answers to frequently asked questions
+    </Card>
+  </CardGroup>
+</div>
 
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+{/* CTA Banner */}
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <div className="dark:bg-gradient-to-r dark:from-[#1a1d27] dark:to-[#242838] bg-gradient-to-r from-gray-50 to-gray-100 dark:border-[#27272a] border-gray-200 border rounded-2xl p-8 sm:p-12 text-center">
+    <h2 className="text-3xl font-bold dark:text-white text-gray-900 mb-4">
+      Ready to get started?
+    </h2>
+    <p className="text-lg dark:text-gray-400 text-gray-600 mb-8 max-w-2xl mx-auto">
+      Deploy your own Hiro CRM instance and start managing your hospitality business today.
+    </p>
+    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      <a 
+        href="/quickstart" 
+        className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-[#94cb04] text-gray-900 font-semibold hover:bg-[#7fb003] transition-colors"
+      >
+        Get Started
+        <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+      </a>
+      <a 
+        href="https://github.com/David-Cabeza/hiro-crm" 
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center justify-center px-6 py-3 rounded-lg dark:bg-white/10 bg-white dark:text-white text-gray-900 dark:border-white/20 border border-gray-200 font-semibold dark:hover:bg-white/20 hover:bg-gray-50 transition-colors"
+      >
+        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+          <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+        </svg>
+        View on GitHub
+      </a>
+    </div>
+  </div>
+</div>

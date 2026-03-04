@@ -1,0 +1,648 @@
+---
+title: 'Workflows & Automation'
+description: 'Automate customer engagement with intelligent workflows in Hiro CRM'
+icon: 'robot'
+---
+
+Hiro CRM includes powerful automation workflows designed specifically for luxury hospitality. This guide explains how to set up and manage automated customer engagement workflows.
+
+## Understanding Automation in Hiro
+
+Hiro's automation system is built around two core concepts:
+
+1. **RFM-Based Workflows**: Automatically engage customers based on their Recency, Frequency, and Monetary value
+2. **Behavioral Workflows**: Trigger actions based on customer behavior (birthdays, reservations, feedback)
+
+<Note>
+All workflows are pre-configured and optimized for hospitality. Simply enable the ones you need.
+</Note>
+
+## Automation Architecture
+
+Hiro uses two automation engines:
+
+### 1. RFM Automation Engine
+
+Pre-built workflows for customer lifecycle management:
+
+```typescript
+export interface AutomationWorkflow {
+  id: string;
+  name: string;
+  description: string;
+  trigger_type: string;           // 'rfm_segment', 'birthday', etc.
+  trigger_condition: string;      // 'equals', '>=', 'in_days'
+  trigger_value: string;          // Segment ID or condition value
+  trigger_config: Record<string, any>;
+  action_type: string;            // 'create_campaign_with_template'
+  action_payload: Record<string, any>;
+  action_config: Record<string, any>;
+  category: 'rfm' | 'behavioral' | 'temporal' | 'engagement';
+  priority: 'high' | 'medium' | 'low';
+  is_premium: boolean;
+}
+```
+
+From `frontend/lib/automations/rfm-workflows.ts:9-23`
+
+### 2. Inngest Background Jobs
+
+Scheduled tasks for data processing:
+
+- **Sync Cover Manager**: Every 30 minutes
+- **Sync Revo TPV**: Every 15 minutes  
+- **Calculate Loyalty**: Daily at 2 AM
+
+From `frontend/lib/inngest/functions.ts`
+
+## Pre-Built RFM Workflows
+
+Hiro includes 6 pre-configured RFM workflows:
+
+<CardGroup cols={2}>
+  <Card title="Champions VIP Experience" icon="crown">
+    **Trigger**: Customer in Champions segment (RFM 555)
+    
+    **Action**: Offer exclusive VIP experience every 3 months
+    
+    **Purpose**: Maintain and maximize your best customers
+    
+    ```typescript
+    {
+      trigger: 'rfm-champions',
+      frequency: 'every 90 days',
+      template: 'champions-vip-experience',
+      priority: 'high'
+    }
+    ```
+  </Card>
+
+  <Card title="At Risk Re-engagement" icon="exclamation-triangle">
+    **Trigger**: Customer in At Risk segment (inactive 90+ days)
+    
+    **Action**: Send re-engagement campaign immediately
+    
+    **Purpose**: Win back customers before they churn
+    
+    ```typescript
+    {
+      trigger: 'rfm-at-risk',
+      frequency: 'once per 30 days',
+      template: 'at-risk-comeback',
+      priority: 'high',
+      send_immediately: true
+    }
+    ```
+  </Card>
+
+  <Card title="Cannot Lose Them Urgent" icon="fire">
+    **Trigger**: High-value customer at risk (inactive 120+ days)
+    
+    **Action**: Urgent personalized campaign + team notification
+    
+    **Purpose**: Emergency intervention for valuable customers
+    
+    ```typescript
+    {
+      trigger: 'rfm-cannot-lose',
+      frequency: 'every 15 days',
+      template: 'cannot-lose-urgent',
+      priority: 'high',
+      notify_team: true
+    }
+    ```
+  </Card>
+
+  <Card title="Hibernating Reawakening" icon="moon">
+    **Trigger**: Customer hibernating (inactive 180+ days)
+    
+    **Action**: Reactivation campaign every 2 months
+    
+    **Purpose**: Last-ditch effort to recover lost customers
+    
+    ```typescript
+    {
+      trigger: 'rfm-hibernating',
+      frequency: 'every 60 days',
+      template: 'hibernating-reawakening',
+      priority: 'medium'
+    }
+    ```
+  </Card>
+
+  <Card title="Loyal Customers Engagement" icon="heart">
+    **Trigger**: Customer in Loyal segment
+    
+    **Action**: Special offers every 60 days
+    
+    **Purpose**: Keep loyal customers engaged
+    
+    ```typescript
+    {
+      trigger: 'rfm-loyal',
+      frequency: 'every 60 days',
+      template: 'loyal-customers-return',
+      priority: 'medium'
+    }
+    ```
+  </Card>
+
+  <Card title="Potential Loyalists Onboarding" icon="star">
+    **Trigger**: New customer with high potential (2-5 visits)
+    
+    **Action**: Premium onboarding sequence
+    
+    **Purpose**: Convert new customers into loyal ones
+    
+    ```typescript
+    {
+      trigger: 'rfm-potential',
+      frequency: 'once',
+      template: 'potential-loyalists-welcome',
+      priority: 'medium'
+    }
+    ```
+  </Card>
+</CardGroup>
+
+Complete workflow definitions in `frontend/lib/automations/rfm-workflows.ts:29-224`
+
+## Behavioral Workflows
+
+These workflows trigger based on customer actions:
+
+### Birthday Celebration
+
+**Trigger**: 7 days before customer's birthday
+
+**Action**: Send birthday offer
+
+```typescript
+{
+  id: 'birthday-automatic-celebration',
+  trigger_type: 'birthday',
+  trigger_condition: 'in_days',
+  trigger_value: '7',
+  action_type: 'create_campaign_with_template',
+  action_payload: {
+    template_id: 'birthday-celebration',
+    channel: 'email'
+  },
+  priority: 'high'
+}
+```
+
+From `frontend/lib/automations/rfm-workflows.ts:233-261`
+
+### NPS Negative Escalation
+
+**Trigger**: Customer gives NPS ≤ 6
+
+**Action**: Alert team + send follow-up
+
+```typescript
+{
+  id: 'nps-negative-escalation',
+  trigger_type: 'nps_score',
+  trigger_condition: '<=',
+  trigger_value: '6',
+  action_type: 'internal_alert_and_campaign',
+  action_payload: {
+    alert_team: true,
+    alert_channels: ['email', 'slack'],
+    create_followup_campaign: true
+  },
+  priority: 'high'
+}
+```
+
+From `frontend/lib/automations/rfm-workflows.ts:263-292`
+
+### First Reservation Welcome
+
+**Trigger**: Customer completes first reservation
+
+**Action**: Send welcome email 1 day later
+
+```typescript
+{
+  id: 'first-reservation-welcome',
+  trigger_type: 'reservation_completed',
+  trigger_condition: 'first_visit',
+  action_type: 'create_campaign_with_template',
+  action_payload: {
+    template_id: 'potential-loyalists-welcome',
+    schedule_offset_days: 1
+  },
+  priority: 'medium'
+}
+```
+
+From `frontend/lib/automations/rfm-workflows.ts:294-322`
+
+### Post-Visit Feedback Request
+
+**Trigger**: 2 days after reservation completion
+
+**Action**: Request feedback (max once per 30 days)
+
+```typescript
+{
+  id: 'reservation-completed-feedback',
+  trigger_type: 'reservation_completed',
+  trigger_condition: 'days_after',
+  trigger_value: '2',
+  trigger_config: {
+    days_after_completion: 2,
+    exclude_if_recent_feedback: true,
+    feedback_cooldown_days: 30
+  },
+  priority: 'medium'
+}
+```
+
+From `frontend/lib/automations/rfm-workflows.ts:324-352`
+
+## Enabling Workflows
+
+<Steps>
+  <Step title="Navigate to Marketing > Automations">
+    Access the automation dashboard from the main navigation.
+  </Step>
+
+  <Step title="Browse Available Workflows">
+    Review pre-built workflows organized by category:
+    - RFM Workflows
+    - Behavioral Workflows
+    - Temporal Workflows
+  </Step>
+
+  <Step title="Enable a Workflow">
+    Toggle the switch next to the workflow you want to activate.
+    
+    The workflow will:
+    1. Start monitoring for trigger conditions
+    2. Execute actions when conditions are met
+    3. Track execution history
+  </Step>
+
+  <Step title="Configure Workflow Settings (Optional)">
+    Click the workflow to customize:
+    - Frequency limits
+    - Email templates
+    - Target segments
+    - Notification recipients
+  </Step>
+
+  <Step title="Test the Workflow">
+    Use the "Test" button to simulate the workflow with sample data.
+  </Step>
+</Steps>
+
+## Workflow Execution Flow
+
+<Steps>
+  <Step title="Trigger Detection">
+    System monitors for trigger conditions:
+    
+    ```typescript
+    // Check interval varies by trigger type
+    trigger_config: {
+      check_interval: 'daily' | 'realtime' | 'weekly'
+    }
+    ```
+  </Step>
+
+  <Step title="Condition Validation">
+    Verify all conditions are met:
+    
+    ```typescript
+    // Example: At Risk workflow
+    {
+      rfm_segment: 'rfm-at-risk',
+      min_days_since_last_visit: 90,
+      min_days_since_last_automation: 30  // Don't spam
+    }
+    ```
+  </Step>
+
+  <Step title="Action Execution">
+    Perform the configured action:
+    
+    ```typescript
+    action_type: 'create_campaign_with_template'
+    action_payload: {
+      template_id: 'at-risk-comeback',
+      channel: 'email',
+      segment_id: 'rfm-at-risk',
+      auto_schedule: true
+    }
+    ```
+  </Step>
+
+  <Step title="Logging & Tracking">
+    Record execution in automation history:
+    - Timestamp
+    - Affected customers
+    - Action taken
+    - Result (success/failure)
+  </Step>
+</Steps>
+
+## Advanced Workflow Configuration
+
+### Frequency Limits
+
+Prevent over-communication:
+
+```typescript
+trigger_config: {
+  min_days_since_last_automation: 30  // Wait 30 days between runs
+}
+
+action_config: {
+  max_per_customer: 1,                // Only once per customer
+  max_per_customer_per_year: 1        // Only once per year (birthdays)
+}
+```
+
+### Conditional Actions
+
+Execute different actions based on conditions:
+
+<Tabs>
+  <Tab title="High Priority">
+    **Cannot Lose Them** workflow:
+    
+    ```typescript
+    {
+      send_immediately: true,
+      notify_team: true,              // Alert team
+      max_per_customer: 2             // Allow multiple attempts
+    }
+    ```
+  </Tab>
+
+  <Tab title="Medium Priority">
+    **Loyal Customers** workflow:
+    
+    ```typescript
+    {
+      send_immediately: false,        // Queue for optimal time
+      use_template: true,
+      personalization: true
+    }
+    ```
+  </Tab>
+
+  <Tab title="Low Priority">
+    **Hibernating** workflow:
+    
+    ```typescript
+    {
+      send_immediately: false,
+      max_per_customer: 1,            // One final attempt
+      check_interval: 'weekly'        // Lower frequency
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Background Jobs
+
+Hiro runs scheduled jobs for data processing:
+
+### Cover Manager Sync
+
+**Schedule**: Every 30 minutes
+
+**Purpose**: Sync reservations from Cover Manager
+
+```typescript
+export const syncCoverManager = inngest.createFunction(
+  { 
+    id: 'sync-cover-manager',
+    retries: 3,
+  },
+  { 
+    cron: '*/30 * * * *',  // Every 30 minutes
+  },
+  async ({ event, step }) => {
+    return await step.run('sync-reservations', async () => {
+      // Sync logic
+    });
+  }
+);
+```
+
+From `frontend/lib/inngest/functions.ts:15-50`
+
+### Revo TPV Sync
+
+**Schedule**: Every 15 minutes
+
+**Purpose**: Sync orders and revenue from Revo POS
+
+```typescript
+export const syncRevo = inngest.createFunction(
+  { 
+    id: 'sync-revo',
+    retries: 3,
+  },
+  { 
+    cron: '*/15 * * * *',  // Every 15 minutes
+  },
+  async ({ event, step }) => {
+    // Sync logic
+  }
+);
+```
+
+From `frontend/lib/inngest/functions.ts:56-91`
+
+### Loyalty Calculation
+
+**Schedule**: Daily at 2 AM
+
+**Purpose**: Calculate customer RFM scores and loyalty tiers
+
+```typescript
+export const calculateLoyalty = inngest.createFunction(
+  { 
+    id: 'calculate-loyalty',
+    retries: 2,
+  },
+  { 
+    cron: '0 2 * * *',  // Daily at 2 AM
+  },
+  async ({ event, step }) => {
+    // Calculate RFM, assign tiers
+  }
+);
+```
+
+From `frontend/lib/inngest/functions.ts:97-130`
+
+## Manual Workflow Triggers
+
+You can manually trigger workflows via API:
+
+```typescript
+import { createClient } from '@/lib/supabase/client';
+
+// Manually run a workflow for a specific customer
+async function triggerWorkflow(workflowId: string, customerId: string) {
+  const response = await fetch(`/api/automations/${workflowId}/run`, {
+    method: 'POST',
+    body: JSON.stringify({ customerId })
+  });
+  
+  return response.json();
+}
+
+// Example: Trigger birthday workflow
+await triggerWorkflow('birthday-automatic-celebration', 'customer-123');
+```
+
+## Monitoring Automation Performance
+
+### Automation Dashboard
+
+View key metrics:
+
+- **Active Workflows**: How many workflows are running
+- **Executions Today**: Total triggers today
+- **Success Rate**: Percentage of successful executions
+- **Top Performing**: Workflows with highest engagement
+
+### Execution History
+
+Track individual workflow runs:
+
+```typescript
+interface WorkflowExecution {
+  id: string;
+  workflow_id: string;
+  customer_id: string;
+  triggered_at: string;
+  completed_at: string;
+  status: 'success' | 'failure' | 'pending';
+  action_taken: string;
+  result: Record<string, any>;
+}
+```
+
+### Debugging Failed Workflows
+
+Check logs when a workflow fails:
+
+1. Navigate to **Marketing** > **Automations**
+2. Click on the workflow
+3. View **Execution History**
+4. Click on failed execution
+5. Review error details and customer data
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Start with High-Priority Workflows" icon="fire">
+    Enable these first:
+    - Cannot Lose Them (save high-value customers)
+    - At Risk Re-engagement (prevent churn)
+    - NPS Negative Escalation (fix issues fast)
+  </Card>
+
+  <Card title="Set Appropriate Frequency Limits" icon="clock">
+    Avoid spam:
+    - Champions: Every 90 days
+    - At Risk: Every 30 days
+    - Hibernating: Every 60 days
+    - Feedback: Max once per 30 days
+  </Card>
+
+  <Card title="Personalize Email Templates" icon="envelope">
+    Customize templates with:
+    - Customer name
+    - Favorite dishes
+    - Last visit date
+    - Loyalty tier
+  </Card>
+
+  <Card title="Monitor and Optimize" icon="chart-line">
+    Track metrics weekly:
+    - Open rates by workflow
+    - Conversion rates
+    - Customer responses
+    - Adjust templates and timing
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Workflow not triggering">
+    Check:
+    1. Workflow is enabled (toggle is ON)
+    2. Trigger conditions are being met
+    3. Frequency limits haven't been hit
+    4. Customer is in the correct segment
+    
+    View execution logs for debugging.
+  </Accordion>
+
+  <Accordion title="Customer receiving too many emails">
+    Review frequency settings:
+    ```typescript
+    trigger_config: {
+      min_days_since_last_automation: 30  // Increase this
+    }
+    
+    action_config: {
+      max_per_customer: 1  // Limit executions
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Background job not running">
+    Check Inngest dashboard:
+    1. Navigate to `/api/inngest`
+    2. Verify function is registered
+    3. Check last execution time
+    4. Review error logs
+    
+    Restart the function if needed:
+    ```bash
+    npm run inngest:dev
+    ```
+  </Accordion>
+
+  <Accordion title="Template not rendering correctly">
+    Verify template variables:
+    - All placeholders exist in customer data
+    - Date formats are correct
+    - Images are accessible
+    - Links are valid
+    
+    Test with sample data before deploying.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="View Analytics" icon="chart-line" href="/guides/analytics-dashboard">
+    Track automation performance in the analytics dashboard
+  </Card>
+
+  <Card title="Customer Segmentation" icon="users" href="/features/customer-segmentation">
+    Learn how RFM segments power automation
+  </Card>
+
+  <Card title="Email Templates" icon="envelope" href="/features/email-templates">
+    Customize templates for your workflows
+  </Card>
+
+  <Card title="API Reference" icon="code" href="/api-reference/automations">
+    Trigger workflows programmatically
+  </Card>
+</CardGroup>

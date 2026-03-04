@@ -1,0 +1,324 @@
+---
+title: Cron Jobs Overview
+description: Overview of scheduled tasks for syncing, notifications, and automations
+---
+
+# Cron Jobs Overview
+
+Hiro CRM uses scheduled cron jobs to automate routine tasks like syncing reservations, sending notifications, and executing marketing automations.
+
+## Master Cron Endpoint
+
+```
+GET /api/cron/master
+```
+
+The master cron consolidates all scheduled tasks into a single endpoint, optimized for **Vercel Hobby Plan** which allows only 2 cron jobs.
+
+### Configuration
+
+```typescript
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300; // 5 minutes
+```
+
+### Executed Endpoints
+
+The master cron calls these endpoints sequentially:
+
+1. `/api/cron/sync` - Sync reservations from PMS
+2. `/api/cron/calendar-notifications` - Send calendar event notifications
+3. `/api/cron/calendar-reminders` - Send calendar reminders
+4. `/api/cron/ticket-notifications` - Send ticket notifications
+5. `/api/cron/ticket-reminders` - Send ticket reminders
+6. `/api/cron/automations` - Execute active marketing automations
+
+### Authentication
+
+All cron endpoints require `CRON_SECRET` in the `Authorization` header:
+
+```bash
+Authorization: Bearer YOUR_CRON_SECRET
+```
+
+<Warning>
+  Set `CRON_SECRET` environment variable to a strong random string. Never expose this value publicly.
+</Warning>
+
+### Example Request
+
+```bash
+curl -X GET https://your-domain.com/api/cron/master \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "master": true,
+  "timestamp": "2026-03-04T10:00:00.000Z",
+  "results": [
+    {
+      "endpoint": "/api/cron/sync",
+      "status": 200,
+      "data": {
+        "success": true,
+        "synced": 142
+      }
+    },
+    {
+      "endpoint": "/api/cron/automations",
+      "status": 200,
+      "data": {
+        "success": true,
+        "executed": 3,
+        "totalSent": 45
+      }
+    },
+    {
+      "endpoint": "/api/cron/calendar-notifications",
+      "error": "No notifications to send"
+    }
+  ]
+}
+```
+
+## Individual Cron Endpoints
+
+### Sync
+
+**Endpoint:** `GET /api/cron/sync`
+
+Synchronizes reservations from CoverManager and other PMS systems.
+
+**Timeout:** 60 seconds
+
+**Frequency:** Every 15 minutes (recommended)
+
+**Response:**
+```json
+{
+  "success": true,
+  "timestamp": "2026-03-04T10:00:00.000Z",
+  "summary": [
+    {
+      "location": "La Tasca Madrid · Centro",
+      "result": {
+        "status": "success",
+        "reservations": 67
+      }
+    }
+  ]
+}
+```
+
+**See also:** [Sync Reservations](/api/sync)
+
+---
+
+### Automations
+
+**Endpoint:** `GET /api/cron/automations`
+
+Executes all active marketing automations (birthday campaigns, re-engagement, VIP rewards).
+
+**Timeout:** 300 seconds (5 minutes)
+
+**Frequency:** Daily or every 30 minutes (depending on automation type)
+
+**Response:**
+```json
+{
+  "success": true,
+  "timestamp": "2026-03-04T10:00:00.000Z",
+  "total": 5,
+  "executed": 5,
+  "failed": 0,
+  "statistics": {
+    "totalProcessed": 245,
+    "totalSent": 238,
+    "totalSkipped": 5,
+    "totalFailed": 2
+  },
+  "details": [
+    {
+      "automationId": "auto-uuid-1",
+      "automationName": "Cumpleaños VIP",
+      "success": true,
+      "processed": 12,
+      "sent": 12,
+      "skipped": 0,
+      "failed": 0
+    }
+  ]
+}
+```
+
+**See also:** [Run Automation](/api/automations/run)
+
+---
+
+### Calendar Notifications
+
+**Endpoint:** `GET /api/cron/calendar-notifications`
+
+Sends notifications for upcoming calendar events.
+
+**Timeout:** 60 seconds
+
+**Frequency:** Every 15 minutes (recommended)
+
+---
+
+### Calendar Reminders
+
+**Endpoint:** `GET /api/cron/calendar-reminders`
+
+Sends reminders for calendar events.
+
+**Timeout:** 60 seconds
+
+**Frequency:** Hourly or every 30 minutes
+
+---
+
+### Ticket Notifications
+
+**Endpoint:** `GET /api/cron/ticket-notifications`
+
+Sends notifications for new or updated support tickets.
+
+**Timeout:** 60 seconds
+
+**Frequency:** Every 15 minutes
+
+---
+
+### Ticket Reminders
+
+**Endpoint:** `GET /api/cron/ticket-reminders`
+
+Sends reminders for open tickets nearing SLA deadlines.
+
+**Timeout:** 60 seconds
+
+**Frequency:** Every 4 hours
+
+## Vercel Cron Configuration
+
+Add to `vercel.json`:
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron/master",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}
+```
+
+**Schedule formats:**
+- `*/15 * * * *` - Every 15 minutes
+- `0 * * * *` - Every hour
+- `0 9 * * *` - Daily at 9:00 AM
+- `0 0 * * 0` - Weekly on Sunday at midnight
+
+## Error Handling
+
+Cron jobs implement graceful error handling:
+
+- Individual endpoint failures don't stop the master cron
+- Errors are logged and returned in the `results` array
+- Failed tasks are retried on the next cron execution
+
+### Example Error Response
+
+```json
+{
+  "success": true,
+  "master": true,
+  "results": [
+    {
+      "endpoint": "/api/cron/sync",
+      "error": "PMS API timeout"
+    }
+  ]
+}
+```
+
+## Monitoring
+
+All cron executions are logged:
+
+```typescript
+logger.info("Master cron execution completed", "MasterCron", {
+  timestamp: new Date().toISOString(),
+  endpoints: endpoints.length,
+  results: results.length
+});
+```
+
+Monitor logs in your hosting platform (Vercel, Railway, etc.) for:
+- Execution frequency
+- Error rates
+- Performance metrics
+- API call volumes
+
+## Best Practices
+
+<Check>
+  Use the **master cron** endpoint for Vercel Hobby Plan deployments
+</Check>
+
+<Check>
+  Set appropriate **timeout durations** for each task
+</Check>
+
+<Check>
+  Monitor **cron execution logs** for failures
+</Check>
+
+<Check>
+  Test cron endpoints **manually** before scheduling
+</Check>
+
+<Check>
+  Rotate **CRON_SECRET** periodically for security
+</Check>
+
+<Warning>
+  Cron jobs on Vercel Hobby Plan have a **10-second timeout by default**. Use `maxDuration` to extend this.
+</Warning>
+
+## Debugging Cron Jobs
+
+Manually trigger cron endpoints for testing:
+
+```bash
+# Test master cron
+curl -X GET https://your-domain.com/api/cron/master \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+
+# Test individual sync
+curl -X GET https://your-domain.com/api/cron/sync \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+
+# Test automations
+curl -X GET https://your-domain.com/api/cron/automations \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+```
+
+## Alternative Schedulers
+
+Besides Vercel Cron, you can use:
+
+- **GitHub Actions** (scheduled workflows)
+- **Render Cron Jobs** (if deploying on Render)
+- **Railway Cron** (if deploying on Railway)
+- **External services** (cron-job.org, EasyCron)
+
+All require the `CRON_SECRET` for authentication.

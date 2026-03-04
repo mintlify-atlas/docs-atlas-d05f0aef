@@ -1,0 +1,275 @@
+---
+title: 'Development Setup'
+description: 'Set up your local development environment for Hiro CRM'
+---
+
+This guide will help you set up Hiro CRM for local development.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- **Node.js 20+** — [Download Node.js](https://nodejs.org/)
+- **Git** — [Download Git](https://git-scm.com/)
+- **Supabase Account** — [Sign up for Supabase](https://supabase.com)
+- **Code Editor** — We recommend [VS Code](https://code.visualstudio.com/)
+
+### Optional Tools
+
+- **OpenAI API Key** — For AI Assistant features
+- **Brevo Account** — For email/SMS campaign testing
+- **Supabase CLI** — For database migrations
+
+## Installation
+
+<Steps>
+  <Step title="Clone your fork">
+    First, fork the repository on GitHub, then clone it:
+    
+    ```bash
+    git clone https://github.com/your-username/hiro-crm.git
+    cd hiro-crm
+    ```
+  </Step>
+  
+  <Step title="Navigate to frontend directory">
+    The main application code is in the `frontend/` directory:
+    
+    ```bash
+    cd frontend
+    ```
+  </Step>
+  
+  <Step title="Install dependencies">
+    Install all required npm packages:
+    
+    ```bash
+    npm install
+    ```
+    
+    This will install Next.js, React, TypeScript, Supabase client, and all development dependencies.
+  </Step>
+  
+  <Step title="Configure environment variables">
+    Copy the environment template:
+    
+    ```bash
+    cp .env.example .env.local
+    ```
+    
+    Edit `.env.local` and fill in your Supabase credentials:
+    
+    ```bash
+    # Required
+    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+    SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+    NEXT_PUBLIC_APP_URL=http://localhost:3000
+    ```
+  </Step>
+  
+  <Step title="Set up the database">
+    You need to apply the database schema to your Supabase project.
+    
+    **Option A: Using Supabase CLI (recommended)**
+    
+    ```bash
+    # Install Supabase CLI globally
+    npm install -g supabase
+    
+    # Link to your project
+    supabase link --project-ref your-project-ref
+    
+    # Apply migrations
+    supabase db push
+    ```
+    
+    **Option B: Manual via Supabase Dashboard**
+    
+    1. Go to your Supabase project dashboard
+    2. Navigate to SQL Editor
+    3. Run the migration files from `supabase/migrations/` in order
+  </Step>
+  
+  <Step title="Seed demo data (optional)">
+    To get started with sample data:
+    
+    ```bash
+    # Start the dev server first
+    npm run dev
+    
+    # In another terminal, seed locations
+    curl http://localhost:3000/api/admin/seed-locations
+    ```
+    
+    For a full demo dataset with customers and reservations, run `supabase/seeds/demo.sql` in the Supabase SQL editor.
+  </Step>
+  
+  <Step title="Start the development server">
+    ```bash
+    npm run dev
+    ```
+    
+    The app will be available at [http://localhost:3000](http://localhost:3000).
+  </Step>
+</Steps>
+
+## Environment Variables Reference
+
+Here's a complete breakdown of environment variables:
+
+### Required Variables
+
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous (public) key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (keep secret!) |
+| `NEXT_PUBLIC_APP_URL` | Application URL (`http://localhost:3000` for dev) |
+
+### Optional Variables
+
+| Variable | Description | Feature |
+|----------|-------------|----------|
+| `OPENAI_API_KEY` | OpenAI API key | AI Assistant |
+| `BREVO_API_KEY` | Brevo API key | Email & SMS campaigns |
+| `BREVO_SENDER_EMAIL` | Sender email address | Email campaigns |
+| `BREVO_SENDER_NAME` | Sender name | Email campaigns |
+| `BREVO_SMS_SENDER` | SMS sender ID | SMS campaigns |
+| `COVERMANAGER_API_KEY` | CoverManager API key | POS integration |
+| `REVO_ACCESS_TOKEN` | Revo POS access token | Revo integration |
+| `INNGEST_EVENT_KEY` | Inngest event key | Background workflows |
+| `INNGEST_SIGNING_KEY` | Inngest signing key | Background workflows |
+| `GOOGLE_DRIVE_CLIENT_ID` | Google OAuth client ID | Document library |
+| `GOOGLE_DRIVE_CLIENT_SECRET` | Google OAuth secret | Document library |
+| `GOOGLE_DRIVE_REFRESH_TOKEN` | Google refresh token | Document library |
+| `SENTRY_DSN` | Sentry DSN | Error tracking |
+| `NEXT_PUBLIC_SENTRY_DSN` | Sentry public DSN | Client-side errors |
+
+<Warning>
+Never commit `.env.local` to version control! It contains sensitive credentials.
+</Warning>
+
+## Verification
+
+Verify your setup is working:
+
+```bash
+# Check TypeScript compilation
+npm run type-check
+
+# Run tests
+npm run test:run
+
+# Build for production (optional)
+npm run build
+```
+
+## Project Structure
+
+Understanding the codebase:
+
+```
+frontend/
+├── app/                    # Next.js App Router
+│   ├── (auth)/            # Authentication pages
+│   ├── (dashboard)/       # Main app pages
+│   ├── api/               # API routes
+│   └── layout.tsx         # Root layout
+├── components/            # React components
+│   ├── ui/               # Reusable UI components
+│   └── [feature]/        # Feature-specific components
+├── lib/                   # Core libraries
+│   ├── supabase/         # Supabase client & queries
+│   ├── actions/          # Server actions
+│   └── utils/            # Utility functions
+├── hooks/                 # Custom React hooks
+├── context/               # React context providers
+├── types/                 # TypeScript type definitions
+├── tests/                 # Test files
+│   ├── unit/             # Unit tests
+│   ├── integration/      # Integration tests
+│   └── setup.ts          # Test configuration
+├── e2e/                   # Playwright E2E tests
+└── public/                # Static assets
+```
+
+## Common Development Tasks
+
+### Running the app with Turbopack disabled
+
+```bash
+npm run dev:webpack
+```
+
+### Type checking
+
+```bash
+npm run type-check
+```
+
+### Running linter
+
+```bash
+npm run lint
+```
+
+### Cleaning build artifacts
+
+```bash
+npm run clean
+```
+
+### Creating a test user
+
+```bash
+npm run create:user
+```
+
+## Troubleshooting
+
+### Port 3000 already in use
+
+Change the port in your start command:
+
+```bash
+PORT=3001 npm run dev
+```
+
+Update `NEXT_PUBLIC_APP_URL` in `.env.local` accordingly.
+
+### Supabase connection errors
+
+- Verify your Supabase URL and keys in `.env.local`
+- Check that your Supabase project is active
+- Ensure RLS policies are set up correctly
+
+### TypeScript errors
+
+Clear the Next.js cache:
+
+```bash
+npm run clean
+rm -rf node_modules/.cache
+npm run dev
+```
+
+### Module not found errors
+
+Reinstall dependencies:
+
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Code Standards" icon="code" href="/contributing/code-standards">
+    Learn our coding conventions
+  </Card>
+  <Card title="Testing Guide" icon="flask" href="/contributing/testing">
+    Write and run tests
+  </Card>
+</CardGroup>

@@ -1,0 +1,512 @@
+---
+title: 'User Roles & Permissions'
+description: 'Manage team access with role-based permissions in Hiro CRM'
+icon: 'user-shield'
+---
+
+Hiro CRM uses a role-based access control (RBAC) system designed specifically for hospitality organizations in Spain. This guide explains how to configure and manage user roles and permissions.
+
+## Available User Roles
+
+Hiro includes 6 built-in roles, each with specific permissions:
+
+<CardGroup cols={2}>
+  <Card title="Super Admin" icon="crown">
+    **Full system access**
+    
+    - Complete control over all modules
+    - User management
+    - System settings
+    - All location access
+  </Card>
+
+  <Card title="CEO" icon="briefcase">
+    **Executive dashboard access**
+    
+    - View all operations
+    - Executive analytics
+    - All modules except user management
+    - Read-only settings
+  </Card>
+
+  <Card title="Marketing" icon="megaphone">
+    **Customer & campaign management**
+    
+    - Customer database
+    - Marketing campaigns
+    - Segments and automations
+    - Basic operations access
+  </Card>
+
+  <Card title="Operaciones" icon="clipboard-list">
+    **Daily operations management**
+    
+    - Reservations
+    - Customer interactions
+    - Tickets and service
+    - No marketing or HR access
+  </Card>
+
+  <Card title="RRHH" icon="users">
+    **Human resources management**
+    
+    - Employee management
+    - HR tools
+    - Limited customer access
+    - No operations access
+  </Card>
+
+  <Card title="PR Comunicación" icon="newspaper">
+    **Public relations & media**
+    
+    - Media center
+    - Press kit
+    - VIP management
+    - Limited operational access
+  </Card>
+</CardGroup>
+
+## Permission Matrix
+
+Here's what each role can access:
+
+| Module | Super Admin | CEO | Marketing | Operaciones | RRHH | PR Comunicación |
+|--------|------------|-----|-----------|-------------|------|----------------|
+| **Dashboard** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Tickets** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Operaciones** (Reservations) | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| **Clientes** (CRM) | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| **Marketing** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **RRHH** (HR) | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
+| **Ejecutivos** (Analytics) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Grupo** (Media Center) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **User Management** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Settings** | ✅ | ✅ (read) | ❌ | ❌ | ❌ | ❌ |
+
+See `frontend/lib/roles.ts:20-93` for the complete permission definitions.
+
+## Role-Based Code Implementation
+
+### Role Type Definition
+
+```typescript
+export type UserRole = 
+  | 'super_admin' 
+  | 'ceo' 
+  | 'marketing' 
+  | 'operaciones' 
+  | 'rrhh' 
+  | 'pr_comunicacion';
+
+export const ROLES: Record<string, UserRole> = {
+  SUPER_ADMIN: 'super_admin',
+  CEO: 'ceo',
+  MARKETING: 'marketing',
+  OPERACIONES: 'operaciones',
+  RRHH: 'rrhh',
+  PR_COMUNICACION: 'pr_comunicacion',
+};
+```
+
+From `frontend/lib/roles.ts:1-18`
+
+### Checking Permissions
+
+```typescript
+export function hasPermission(
+  role: UserRole, 
+  permission: keyof typeof PERMISSIONS['super_admin']
+) {
+  const rolePermissions = PERMISSIONS[role];
+  if (!rolePermissions) return false;
+  return rolePermissions[permission] || false;
+}
+```
+
+From `frontend/lib/roles.ts:95-99`
+
+## Managing User Roles
+
+### Creating a New User
+
+<Steps>
+  <Step title="Access User Management">
+    Only **Super Admin** can create users.
+    
+    Navigate to **Settings** > **Team** (or use the admin script).
+  </Step>
+
+  <Step title="Add User Details">
+    Provide:
+    - Email address
+    - Full name
+    - Role assignment
+  </Step>
+
+  <Step title="Assign Role">
+    Select the appropriate role based on the user's responsibilities:
+    
+    <Tabs>
+      <Tab title="Operations Team">
+        Use **Operaciones** for:
+        - Restaurant managers
+        - Reservation coordinators
+        - Front-of-house staff
+        - Service supervisors
+      </Tab>
+
+      <Tab title="Marketing Team">
+        Use **Marketing** for:
+        - Marketing managers
+        - Customer success team
+        - Campaign coordinators
+        - CRM specialists
+      </Tab>
+
+      <Tab title="Executive Team">
+        Use **CEO** for:
+        - C-level executives
+        - General managers
+        - Department heads
+        - Strategic planners
+      </Tab>
+
+      <Tab title="Support Teams">
+        - **RRHH**: HR managers, recruiters
+        - **PR Comunicación**: PR managers, media coordinators
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Send Invitation">
+    The user receives an email invitation to set their password and access Hiro.
+  </Step>
+</Steps>
+
+### Changing User Roles
+
+<Warning>
+Changing a user's role immediately affects their access. Ensure the change is intentional.
+</Warning>
+
+<Steps>
+  <Step title="Navigate to User Management">
+    Go to **Settings** > **Team**
+  </Step>
+
+  <Step title="Select User">
+    Find the user whose role you want to change
+  </Step>
+
+  <Step title="Update Role">
+    Select the new role from the dropdown
+  </Step>
+
+  <Step title="Save Changes">
+    Confirm the role change. The user's access updates immediately.
+  </Step>
+</Steps>
+
+## Authorization System
+
+### Server-Side Authorization
+
+Hiro uses server-side checks to enforce permissions:
+
+```typescript
+import { requireAuth, requirePermission } from '@/lib/authz';
+
+// Require authentication only
+export async function getCustomers() {
+  const { supabase, user, role } = await requireAuth();
+  // ... fetch customers
+}
+
+// Require specific permission
+export async function createCampaign() {
+  const { supabase, user, role } = await requirePermission('canAccessMarketing');
+  // ... create campaign
+}
+```
+
+From `frontend/lib/authz.ts:5-51`
+
+### Authorization Flow
+
+<Steps>
+  <Step title="User Attempts Action">
+    User clicks a button or navigates to a page
+  </Step>
+
+  <Step title="Authentication Check">
+    System verifies user is logged in:
+    
+    ```typescript
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) {
+      throw new Error("UNAUTHENTICATED");
+    }
+    ```
+  </Step>
+
+  <Step title="Role Lookup">
+    System fetches user's role from profile:
+    
+    ```typescript
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    
+    const role = profile.role || 'marketing';
+    ```
+  </Step>
+
+  <Step title="Permission Check">
+    System verifies role has required permission:
+    
+    ```typescript
+    const rolePermissions = PERMISSIONS[role];
+    if (!rolePermissions?.[permission]) {
+      throw new Error("FORBIDDEN");
+    }
+    ```
+  </Step>
+
+  <Step title="Action Allowed or Denied">
+    - ✅ **Allowed**: Action proceeds
+    - ❌ **Denied**: Error returned, user redirected
+  </Step>
+</Steps>
+
+## Role-Based UI Customization
+
+### Dashboard Customization
+
+Different roles see different dashboard greetings and features:
+
+```typescript
+const isExecutive = user?.role === 'super_admin' || user?.role === 'ceo';
+const isMarketing = user?.role === 'marketing';
+const isOperational = user?.role === 'operaciones';
+const isHR = user?.role === 'rrhh';
+const isCommunication = user?.role === 'pr_comunicacion';
+
+// Different messages per role
+{isExecutive && 'Vista ejecutiva de todas las operaciones'}
+{isMarketing && 'Clientes y campañas pendientes'}
+{isOperational && 'Control de reservas y servicio de hoy'}
+{isHR && 'Resumen de gestión de recursos humanos'}
+{isCommunication && 'Portal de comunicación y VIPs'}
+```
+
+From `frontend/components/dashboard/CustomizableDashboard.tsx:162-424`
+
+### Navigation Restrictions
+
+Menu items are hidden based on role:
+
+```typescript
+// Example: Marketing menu only visible to marketing role
+{hasPermission(role, 'canAccessMarketing') && (
+  <NavLink href="/marketing">
+    Marketing
+  </NavLink>
+)}
+```
+
+## Common Role Scenarios
+
+<AccordionGroup>
+  <Accordion title="Multi-location restaurant manager">
+    **Recommended Role**: `operaciones`
+    
+    **Can access**:
+    - View reservations across all locations
+    - Manage daily operations
+    - Handle customer service tickets
+    - Access customer profiles
+    
+    **Cannot access**:
+    - Marketing campaigns
+    - Executive analytics
+    - HR functions
+    - System settings
+  </Accordion>
+
+  <Accordion title="Marketing coordinator">
+    **Recommended Role**: `marketing`
+    
+    **Can access**:
+    - Customer database and segments
+    - Create and manage campaigns
+    - Set up automated workflows
+    - View basic operational data
+    
+    **Cannot access**:
+    - HR functions
+    - Executive-level analytics
+    - Detailed operations (reservations)
+  </Accordion>
+
+  <Accordion title="General manager">
+    **Recommended Role**: `ceo`
+    
+    **Can access**:
+    - Executive dashboard with all KPIs
+    - Cross-location analytics
+    - All operational modules (read-only)
+    - Strategic insights
+    
+    **Cannot access**:
+    - User management
+    - System configuration
+  </Accordion>
+
+  <Accordion title="PR/Communications team">
+    **Recommended Role**: `pr_comunicacion`
+    
+    **Can access**:
+    - Media center and press kit
+    - VIP customer management
+    - Group resources
+    - Tickets and basic operations
+    
+    **Cannot access**:
+    - Marketing campaigns
+    - Operations/reservations
+    - HR functions
+    - Analytics
+  </Accordion>
+</AccordionGroup>
+
+## Platform Admin vs Regular Roles
+
+### Platform Admin (Super Admin)
+
+The `super_admin` role has unrestricted access:
+
+```typescript
+const isPlatformAdmin = role === 'super_admin';
+
+if (isPlatformAdmin) {
+  return { supabase, user, role, isPlatformAdmin };
+}
+```
+
+**Super Admin capabilities**:
+- Create and delete users
+- Modify system settings
+- Access all modules
+- Configure integrations
+- Manage locations and brands
+
+From `frontend/lib/authz.ts:28-40`
+
+### Regular Roles
+
+All other roles follow permission-based access:
+- Access is explicitly granted per module
+- Cannot modify users or settings
+- Limited to their functional area
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Principle of Least Privilege" icon="shield-halved">
+    Assign the minimum role needed:
+    - Don't give `ceo` role just for analytics
+    - Use `operaciones` for daily staff
+    - Reserve `super_admin` for IT/owners
+  </Card>
+
+  <Card title="Regular Access Reviews" icon="user-check">
+    Review user roles quarterly:
+    - Remove access for departed employees
+    - Update roles for promoted staff
+    - Verify permissions are still appropriate
+  </Card>
+
+  <Card title="Document Role Assignments" icon="book">
+    Keep a record of:
+    - Who has which role
+    - Why they were assigned that role
+    - Date of last review
+  </Card>
+
+  <Card title="Separate Operational & Strategic" icon="diagram-project">
+    - Operational staff: `operaciones`, `marketing`
+    - Strategic staff: `ceo`
+    - Specialized: `rrhh`, `pr_comunicacion`
+    - System admin: `super_admin`
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="User can't access a module">
+    1. Verify their role in **Settings** > **Team**
+    2. Check the permission matrix above
+    3. Ensure the module is enabled for that role
+    4. If needed, change their role to one with appropriate access
+  </Accordion>
+
+  <Accordion title="User sees 'FORBIDDEN' error">
+    The user's role lacks the required permission:
+    
+    ```typescript
+    // Error thrown when permission check fails
+    throw new Error("FORBIDDEN");
+    ```
+    
+    **Solutions**:
+    - Upgrade their role if justified
+    - Use a different user account with appropriate role
+    - Contact a Super Admin to adjust permissions
+  </Accordion>
+
+  <Accordion title="New user can't log in">
+    Check:
+    1. User received invitation email
+    2. User completed password setup
+    3. Profile was created with correct role
+    4. Account is not deactivated
+    
+    If issue persists, use admin script to verify user:
+    ```bash
+    npm run verify-user <email>
+    ```
+  </Accordion>
+
+  <Accordion title="Need a custom role">
+    Hiro's roles are fixed in code. For custom needs:
+    
+    1. Choose the closest existing role
+    2. Use feature flags or settings to fine-tune access
+    3. For major customization, contact support
+    
+    **Do not modify** `frontend/lib/roles.ts` without developer assistance.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Set Up Locations" icon="building" href="/guides/multi-location-setup">
+    Configure multi-location access for your team
+  </Card>
+
+  <Card title="Configure Automations" icon="robot" href="/guides/workflows-automation">
+    Set up automated workflows based on user roles
+  </Card>
+
+  <Card title="API Authentication" icon="key" href="/api-reference/authentication">
+    Learn how to authenticate API requests with roles
+  </Card>
+
+  <Card title="Security Best Practices" icon="lock" href="/security">
+    Understand Hiro's security model and compliance
+  </Card>
+</CardGroup>

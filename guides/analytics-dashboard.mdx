@@ -1,0 +1,659 @@
+---
+title: Analytics Dashboard
+description: Gain insights from your restaurant data with Hiro CRM analytics tools
+icon: chart-line
+---
+
+Hiro CRM provides comprehensive analytics dashboards designed for hospitality businesses. This guide explains how to use analytics to gain actionable insights and make data-driven decisions.
+
+## Analytics Overview
+
+Hiro offers three levels of analytics:
+
+<CardGroup cols={3}>
+  <Card title="Operational Analytics" icon="chart-bar">
+    Daily metrics for restaurant managers:
+    - Today's reservations
+    - Revenue and pax
+    - Table occupancy
+    - NPS scores
+  </Card>
+
+  <Card title="Marketing Analytics" icon="megaphone">
+    Customer engagement metrics:
+    - RFM segmentation
+    - Campaign performance
+    - Customer lifetime value
+    - Retention rates
+  </Card>
+
+  <Card title="Executive Analytics" icon="briefcase">
+    Strategic insights for leadership:
+    - Cross-location comparison
+    - Revenue trends
+    - Demand predictions
+    - AI-powered insights
+  </Card>
+</CardGroup>
+
+## Main Analytics Dashboard
+
+Access: **Analytics** in main navigation
+
+### Dashboard Layout
+
+The analytics page displays comprehensive restaurant metrics:
+
+```typescript
+interface AnalyticsDashboard {
+  // KPI Cards
+  totalRevenue: number;
+  averageTicket: number;
+  satisfaction: {
+    nps: number;
+    food: number;
+    service: number;
+    ambience: number;
+  };
+  
+  // Charts
+  revenueByPeriod: Array<{ period: string; revenue: number; pax: number }>;
+  topDishes: Array<{ name: string; sales: number; percent: number }>;
+  hourlyOccupancy: Array<{ day: number; hour: string; intensity: number; count: number }>;
+  
+  // Performance
+  satisfaction: {
+    waiter_ranking: Array<{ name: string; score: number; reviews: number }>;
+    detractors: Array<{ table: string; date: string; comment: string; nps: number }>;
+  };
+}
+```
+
+From `frontend/app/analytics/page.tsx`
+
+### Key Metrics
+
+<Tabs>
+  <Tab title="Revenue Metrics">
+    **Total Revenue**: Sum of all transactions in selected period
+    
+    **Average Ticket**: Revenue ÷ number of covers
+    
+    **Revenue Trend**: Week-over-week and month-over-month comparison
+    
+    ```typescript
+    const totalRevenue = data?.revenueByPeriod?.reduce(
+      (sum, p) => sum + p.revenue, 
+      0
+    ) || 0;
+    
+    const totalPax = data?.revenueByPeriod?.reduce(
+      (sum, p) => sum + (p.pax || 0), 
+      0
+    ) || 0;
+    ```
+    
+    From `frontend/app/analytics/page.tsx:200-201`
+  </Tab>
+
+  <Tab title="Customer Satisfaction">
+    **NPS (Net Promoter Score)**: Customer loyalty metric
+    - 9-10: Promoters
+    - 7-8: Passives
+    - 0-6: Detractors
+    
+    **Food Rating**: Average food quality score (0-10)
+    
+    **Service Rating**: Average service quality score (0-10)
+    
+    **Ambience Rating**: Average atmosphere score (0-10)
+  </Tab>
+
+  <Tab title="Operational Metrics">
+    **Reservations**: Total bookings
+    
+    **Covers (Pax)**: Total diners
+    
+    **Table Occupancy**: Utilization by hour/day
+    
+    **Peak Hours**: Busiest time slots
+  </Tab>
+</Tabs>
+
+### Visualizations
+
+#### Revenue Trajectory Chart
+
+Interactive bar chart showing revenue trends:
+
+```typescript
+<div className="h-64 flex items-end justify-between gap-2">
+  {data?.revenueByPeriod?.map((item, i) => {
+    const max = Math.max(...data.revenueByPeriod.map(p => p.revenue), 100);
+    const height = Math.max((item.revenue / max) * 100, 8);
+    
+    return (
+      <motion.div
+        initial={{ height: 0 }}
+        animate={{ height: `${height}%` }}
+        className="flex-1 bg-gradient-to-t from-[var(--brand-primary)] to-[var(--brand-secondary)]"
+      />
+    );
+  })}
+</div>
+```
+
+From `frontend/app/analytics/page.tsx:287-320`
+
+#### Top Dishes Chart
+
+Horizontal bars showing best-selling items:
+
+```typescript
+{data?.topDishes?.map((item, i) => (
+  <div key={i}>
+    <div className="flex justify-between mb-2">
+      <span className="font-semibold">{item.name}</span>
+      <span className="font-mono">€{item.sales.toLocaleString()}</span>
+    </div>
+    <motion.div
+      initial={{ width: 0 }}
+      animate={{ width: `${item.percent}%` }}
+      className="h-2.5 bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-secondary)]"
+    />
+  </div>
+))}
+```
+
+From `frontend/app/analytics/page.tsx:324-353`
+
+#### Occupancy Heatmap
+
+Visual representation of busy times:
+
+```typescript
+<div className="grid grid-cols-8 gap-1.5">
+  <div className="h-8"></div>
+  {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => (
+    <div key={d} className="font-bold">{d}</div>
+  ))}
+  {[13, 14, 15, 20, 21, 22].map((hour) => (
+    <>
+      <div className="flex items-center">{hour}h</div>
+      {[0, 1, 2, 3, 4, 5, 6].map(day => {
+        const point = data?.hourlyOccupancy?.find(
+          p => p.day === day && p.hour === `${hour}:00`
+        );
+        return <HeatmapCell intensity={point?.intensity || 0} count={point?.count || 0} />;
+      })}
+    </>
+  ))}
+</div>
+```
+
+From `frontend/app/analytics/page.tsx:406-439`
+
+## Executive Dashboard (CEO View)
+
+Access: **Ejecutivos** > **CEO Dashboard** (requires `ceo` or `super_admin` role)
+
+### Features
+
+<Tabs>
+  <Tab title="Overview">
+    High-level KPIs across all locations:
+    
+    ```typescript
+    const overview = await getCEOOverview();
+    
+    {
+      totalRevenue: 125000,
+      totalReservations: 1250,
+      averageTicket: 100,
+      totalLocations: 5,
+      activeCustomers: 3200,
+      nps: 72,
+      monthlyGrowth: 15.2
+    }
+    ```
+    
+    From `frontend/app/executive/ceo/page.tsx:43-64`
+  </Tab>
+
+  <Tab title="Location Comparison">
+    Side-by-side performance metrics:
+    
+    ```typescript
+    const comparison = await getRestaurantComparison();
+    
+    [
+      { 
+        location: "La Tasca Claudio Coello",
+        revenue: 45000,
+        reservations: 420,
+        nps: 78,
+        growth: 12
+      },
+      { 
+        location: "Manero Recoletos",
+        revenue: 38000,
+        reservations: 315,
+        nps: 81,
+        growth: 18
+      }
+    ]
+    ```
+  </Tab>
+
+  <Tab title="Revenue Trends">
+    Historical revenue analysis:
+    
+    ```typescript
+    const revenueTrend = await getRevenueTrend();
+    
+    // Monthly data for charts
+    [
+      { month: "Jan", revenue: 95000, year: 2024 },
+      { month: "Feb", revenue: 102000, year: 2024 },
+      { month: "Mar", revenue: 115000, year: 2024 }
+    ]
+    ```
+  </Tab>
+
+  <Tab title="AI Insights">
+    Machine learning-powered recommendations:
+    
+    ```typescript
+    const aiInsights = await getAIInsights();
+    
+    [
+      "Peak demand detected for Friday evenings - consider increasing staff by 20%",
+      "Customer churn risk identified in Champions segment - trigger retention campaign",
+      "Menu item 'Chuletón' shows 300% growth - feature prominently"
+    ]
+    ```
+  </Tab>
+</Tabs>
+
+## Demand Predictor
+
+Access: **Ejecutivos** > **Analytics** > **Predictor**
+
+### AI-Powered Predictions
+
+Hiro analyzes historical data to predict future demand:
+
+```typescript
+interface DemandAnalysis {
+  patterns: {
+    byDay: Array<{        // Weekly patterns
+      dayOfWeek: number;
+      dayName: string;
+      avgReservations: number;
+      avgPax: number;
+    }>;
+    byHour: Array<{       // Hourly patterns
+      hour: number;
+      label: string;
+      avgReservations: number;
+    }>;
+  };
+  
+  predictions: Array<{   // 7-day forecast
+    date: string;
+    dayName: string;
+    predictedReservations: number;
+    predictedPax: number;
+    predictedRevenue: number;
+    staffRecommendation: number;
+    peakHours: string[];
+    alerts: string[];
+    confidence: number;   // 0-100%
+  }>;
+  
+  insights: {
+    avgDailyReservations: number;
+    avgDailyPax: number;
+    bestDay: string;
+    worstDay: string;
+    peakHour: string;
+    weeklyTrend: number;  // % change
+  };
+  
+  recommendations: string[];
+}
+```
+
+From `frontend/components/analytics/DemandPredictor.tsx:26`
+
+### Using Predictions
+
+<Steps>
+  <Step title="View 7-Day Forecast">
+    See predicted reservations, covers, and revenue for the next week:
+    
+    Each day card shows:
+    - Predicted reservations and pax
+    - Expected revenue
+    - Staff recommendation
+    - Peak hours
+    - Confidence level
+  </Step>
+
+  <Step title="Analyze Patterns">
+    **By Day**: Which days are busiest?
+    
+    **By Hour**: When are peak times?
+    
+    Use this to optimize:
+    - Staff scheduling
+    - Inventory ordering
+    - Marketing campaigns
+  </Step>
+
+  <Step title="Review Recommendations">
+    AI-generated suggestions:
+    
+    - "Increase staff on Fridays by 2-3 people"
+    - "Consider lunch specials on Tuesdays to boost slow day"
+    - "Peak hour is 21:00 - optimize kitchen prep"
+  </Step>
+
+  <Step title="Adjust Operations">
+    Apply insights to your operations:
+    - Schedule more staff on predicted busy days
+    - Order more inventory before peak periods
+    - Run promotions on slow days
+  </Step>
+</Steps>
+
+### Pattern Analysis
+
+**Weekly Patterns**:
+
+```typescript
+// Example: Saturday is busiest day
+patterns.byDay.find(d => d.dayOfWeek === 6);
+// { dayName: "Sábado", avgReservations: 58, avgPax: 142 }
+```
+
+**Hourly Patterns**:
+
+```typescript
+// Example: 21:00 is peak dinner hour
+patterns.byHour.find(h => h.hour === 21);
+// { hour: 21, label: "21h", avgReservations: 24 }
+```
+
+From `frontend/components/analytics/DemandPredictor.tsx:275-350`
+
+## Location-Based Analytics
+
+### Filtering by Location
+
+All analytics views support location filtering:
+
+```typescript
+const [selectedLocation, setSelectedLocation] = useState<string>('all');
+
+<select 
+  value={selectedLocation} 
+  onChange={(e) => setSelectedLocation(e.target.value)}
+>
+  <option value="all">Todas las Ubicaciones</option>
+  {locations.map(l => (
+    <option key={l.id} value={l.id}>{l.name}</option>
+  ))}
+</select>
+```
+
+From `frontend/app/analytics/page.tsx:171-222`
+
+### Location Comparison
+
+Compare performance across locations:
+
+**Top Restaurants Widget**:
+
+```typescript
+interface LocationStats {
+  locationId: string;
+  locationName: string;
+  revenue: number;
+  reservations: number;
+  averageTicket: number;
+  nps: number;
+  growth: number;  // % vs previous period
+}
+```
+
+## Customizable Dashboard Widgets
+
+Access: **Dashboard** (main page)
+
+### Available Widgets
+
+Customize your dashboard with real-time widgets:
+
+<CardGroup cols={2}>
+  <Card title="Today's Reservations" icon="calendar">
+    Live reservation list with:
+    - Guest names and party size
+    - Reservation times
+    - Table assignments
+    - Special requests
+  </Card>
+
+  <Card title="Today's Stats" icon="chart-bar">
+    Daily KPIs:
+    - Total reservations
+    - Total pax
+    - Expected revenue
+    - Occupancy rate
+  </Card>
+
+  <Card title="VIPs Today" icon="crown">
+    High-value customers visiting:
+    - VIP names
+    - Loyalty tier
+    - Lifetime value
+    - Special notes
+  </Card>
+
+  <Card title="Today's Alerts" icon="bell">
+    Operational alerts:
+    - Overbookings
+    - VIP arrivals
+    - Special requests
+    - Negative feedback
+  </Card>
+
+  <Card title="Customers to Contact" icon="users">
+    Marketing actions needed:
+    - At-risk customers
+    - Birthday upcoming
+    - Post-visit follow-up
+  </Card>
+
+  <Card title="Top Restaurants" icon="trophy">
+    Location performance:
+    - Revenue ranking
+    - Reservation counts
+    - NPS scores
+  </Card>
+</CardGroup>
+
+### Customizing Your Dashboard
+
+<Steps>
+  <Step title="Enter Edit Mode">
+    Click **Personalizar** in the top-right corner of the dashboard.
+  </Step>
+
+  <Step title="Add Widgets">
+    Click **+ Agregar Panel** to see available widgets.
+    
+    Select widgets relevant to your role:
+    - **Operations**: Reservations, Stats, Alerts
+    - **Marketing**: Customers to Contact, VIPs
+    - **Executive**: Top Restaurants, Revenue
+  </Step>
+
+  <Step title="Resize Widgets">
+    Use the size dropdown on each widget:
+    - **Pequeño**: 1 column
+    - **Mediano**: 2 columns
+    - **Grande**: 3 columns
+    - **Extra Grande**: 4 columns (full width)
+  </Step>
+
+  <Step title="Reorder Widgets">
+    Drag and drop widgets to rearrange.
+    
+    The drag handle appears when in edit mode.
+  </Step>
+
+  <Step title="Save Layout">
+    Click **Guardar** to save your customized dashboard.
+    
+    Your layout is saved per user - each team member can have their own view.
+  </Step>
+</Steps>
+
+From `frontend/components/dashboard/CustomizableDashboard.tsx:136-638`
+
+## Performance Metrics
+
+### Waiter Performance
+
+Track service quality by staff member:
+
+```typescript
+interface WaiterPerformance {
+  name: string;
+  score: number;      // Average rating 0-10
+  reviews: number;    // Number of reviews
+  rank: number;       // Position in ranking
+}
+
+// Display with medals for top 3
+const medals = ['🥇', '🥈', '🥉'];
+```
+
+From `frontend/app/analytics/page.tsx:103-127`
+
+### Dish Performance
+
+Identify best and worst performing menu items:
+
+```typescript
+interface DishAnalytics {
+  name: string;
+  sales: number;      // Total revenue
+  orders: number;     // Number of orders
+  percent: number;    // % of total sales
+}
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Check Analytics Daily" icon="calendar-check">
+    Review key metrics every morning:
+    - Yesterday's performance
+    - Today's bookings
+    - Week-over-week trends
+    - Alerts and issues
+  </Card>
+
+  <Card title="Use Location Filters" icon="filter">
+    Compare locations to:
+    - Identify best practices
+    - Spot underperformers
+    - Allocate resources
+    - Share successful strategies
+  </Card>
+
+  <Card title="Act on Predictions" icon="lightbulb">
+    Use demand forecasts to:
+    - Schedule staff efficiently
+    - Manage inventory
+    - Plan marketing
+    - Optimize pricing
+  </Card>
+
+  <Card title="Monitor NPS Closely" icon="heart">
+    Track customer satisfaction:
+    - Address detractors immediately
+    - Celebrate promoters
+    - Learn from feedback
+    - Improve service quality
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="No data showing in analytics">
+    Check:
+    1. Location filter is set correctly
+    2. Date range includes data
+    3. Integrations are syncing (Cover Manager, Revo)
+    4. Sufficient historical data exists
+    
+    Use **Sincronizar** button to force a data refresh.
+  </Accordion>
+
+  <Accordion title="Predictions seem inaccurate">
+    Prediction quality depends on:
+    - Amount of historical data (need 30+ days)
+    - Consistency of operations
+    - Seasonality factors
+    
+    **Confidence score** indicates reliability:
+    - 80%+: Highly reliable
+    - 60-80%: Moderately reliable
+    - &lt;60%: Use with caution
+  </Accordion>
+
+  <Accordion title="Dashboard widgets not loading">
+    Widgets may fail if:
+    1. Missing location access
+    2. Role lacks permissions
+    3. Data source is unavailable
+    
+    Try:
+    - Refresh the page
+    - Check your role permissions
+    - Remove and re-add the widget
+  </Accordion>
+
+  <Accordion title="Revenue numbers don't match POS">
+    Discrepancies can occur due to:
+    - Sync timing (up to 15-30 min delay)
+    - Refunds and cancellations
+    - Payment type filters
+    
+    Check **Settings** > **Integraciones** for sync status.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Set Up Automations" icon="robot" href="/guides/workflows-automation">
+    Use analytics insights to trigger automated workflows
+  </Card>
+
+  <Card title="Customer Segmentation" icon="users" href="/features/customer-segmentation">
+    Leverage RFM analytics for targeted marketing
+  </Card>
+
+  <Card title="Multi-Location Setup" icon="building" href="/guides/multi-location-setup">
+    Configure analytics for multiple restaurants
+  </Card>
+
+  <Card title="API Reference" icon="code" href="/api-reference/analytics">
+    Access analytics data programmatically
+  </Card>
+</CardGroup>

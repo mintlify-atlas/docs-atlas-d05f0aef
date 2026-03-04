@@ -1,0 +1,396 @@
+---
+title: 'Reservation Management'
+description: 'Manage reservations across all locations with timeline views, table maps, and real-time operations control'
+icon: 'calendar'
+---
+
+## Overview
+
+Hiro's Reservation Management system is designed for multi-location hospitality operations. It provides real-time visibility across all your restaurants, with specialized views for operations teams, managers, and executives.
+
+<Note>
+**Built for:** Restaurant groups managing 2-50+ locations with centralized oversight and location-specific operations.
+</Note>
+
+## View Modes
+
+The reservation system offers three complementary views:
+
+<Tabs>
+  <Tab title="Operations Control Center">
+    Real-time dashboard showing all locations simultaneously:
+    - Grid of restaurant cards
+    - Live reservation counts per location
+    - VIP reservations highlighted
+    - Recovery alerts for detractors
+    - Quick filters by status and time slot
+  </Tab>
+  <Tab title="List View">
+    Traditional reservation list with powerful filtering:
+    - Sortable columns
+    - Advanced search
+    - Bulk status updates
+    - Export capabilities
+    - Mobile-optimized cards
+  </Tab>
+  <Tab title="Timeline View">
+    Visual timeline across all locations:
+    - Hour-by-hour grid (10:00 - 23:00)
+    - Color-coded by status
+    - Capacity planning at a glance
+    - Rush hour identification
+    - Conflict detection
+  </Tab>
+</Tabs>
+
+## Operations Control Center
+
+The primary view for daily operations:
+
+### Location Cards
+
+Each restaurant displays a card showing:
+- Restaurant name and zone
+- Total reservations for selected date
+- Total pax (party size sum)
+- VIP count (Founders + VIP tier customers)
+- Recovery alerts (customers with low NPS)
+
+<CardGroup cols={2}>
+  <Card title="Quick Stats" icon="bar-chart">
+    - Reservations: Count + total pax
+    - VIPs: Highlighted count
+    - Recoveries: Customers needing attention
+  </Card>
+  <Card title="Status Breakdown" icon="pie-chart">
+    - Confirmed: Green
+    - Pending: Yellow
+    - Seated: Blue
+    - Completed: Gray
+    - No-show/Cancelled: Red
+  </Card>
+</CardGroup>
+
+### Recovery Panel
+
+Visible on the right side (desktop) or expandable (mobile):
+
+**Shows customers needing recovery:**
+- Customers with NPS ≤ 6 (detractors)
+- Sorted by severity (lowest score first)
+- Limited to top 5 per day
+- Click to view full customer profile
+- Displays reservation time and rating
+
+<Note type="warning">
+**Critical for service recovery:** Reach out to detractors before or during their visit to prevent further dissatisfaction.
+</Note>
+
+### Time Slot Filters
+
+Quick filter reservations by service:
+- **Mediodía (Lunch)**: 10:00 - 16:00
+- **Cena (Dinner)**: 16:00 - 21:00
+- **Nocturno (Late)**: 21:00 - 23:00
+- **Todo el día (All)**: All reservations
+
+## Reservation Details
+
+Click any reservation to see complete information:
+
+<Tabs>
+  <Tab title="Customer Info">
+    - Full name with tier badge
+    - Contact: email and phone
+    - Customer ID and external IDs
+    - Tags and preferences
+    - Alert indicators
+  </Tab>
+  <Tab title="Reservation Details">
+    - Date and time
+    - Party size (pax)
+    - Status with color-coded badge
+    - Table/zone assignment
+    - Special requests
+    - Source (phone, web, etc.)
+  </Tab>
+  <Tab title="History">
+    - Previous visits to this location
+    - Visits to other group locations
+    - Average spend per visit
+    - No-show history
+    - Preferred tables
+  </Tab>
+  <Tab title="Quick Actions">
+    - Call customer (tel: link)
+    - Email customer (mailto: link)
+    - View full customer profile
+    - Update status
+    - Add notes
+  </Tab>
+</Tabs>
+
+## Reservation Statuses
+
+Hiro uses six standard reservation statuses:
+
+| Status | Description | Color | When to Use |
+|--------|-------------|-------|-------------|
+| **Pending** | Initial state, awaiting confirmation | Yellow | New reservations |
+| **Confirmed** | Customer confirmed attendance | Green | After confirmation call/email |
+| **Seated** | Customer is currently at the table | Blue | When seated |
+| **Completed** | Service finished, table cleared | Gray | After payment |
+| **No Show** | Customer didn't arrive | Red | 30min after time with no contact |
+| **Cancelled** | Reservation cancelled by customer/restaurant | Red | Cancellations |
+
+<Accordion title="Status Workflow Example">
+**Typical reservation lifecycle:**
+
+1. **Created** → Pending (from web or phone)
+2. **Confirmation call** → Confirmed (day before or morning of)
+3. **Customer arrives** → Seated (hostess updates)
+4. **Service complete** → Completed (table cleared)
+
+**Alternative paths:**
+- Pending → Cancelled (customer cancels)
+- Confirmed → No Show (didn't arrive)
+- Any status → Cancelled (cancellation request)
+</Accordion>
+
+## Timeline View
+
+The timeline provides visual capacity planning:
+
+### Layout
+
+- **Vertical axis**: All locations listed
+- **Horizontal axis**: Hours of operation (10:00 - 23:00)
+- **Cells**: Reservation count per location per hour
+- **Color intensity**: More reservations = darker color
+
+### Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Rush Hour Planning" icon="clock">
+    Identify peak times across locations to optimize staffing
+  </Card>
+  <Card title="Capacity Management" icon="users">
+    See which locations have availability at specific times
+  </Card>
+  <Card title="Conflict Detection" icon="alert-triangle">
+    Spot overbooking before it becomes a problem
+  </Card>
+  <Card title="Executive Overview" icon="eye">
+    High-level view of daily operations for group management
+  </Card>
+</CardGroup>
+
+## Filtering & Search
+
+### Date Selection
+
+Navigate between dates:
+- **Previous/Next day buttons**
+- **Date picker** for specific dates
+- **Today shortcut** to return to current date
+
+### Status Filters
+
+Filter chips for quick access:
+- All Reservations
+- Confirmed (green badge)
+- Pending (yellow badge)
+- VIPs (star icon)
+- Recoveries (warning icon)
+
+### Location Filter
+
+Select specific locations:
+- All Locations (default)
+- Individual restaurant selection
+- Multi-select for comparison
+
+### Search
+
+Search across all fields:
+- Customer name
+- Phone number
+- Email address
+- Reservation ID
+- Special requests/notes
+
+<Note type="tip">
+**Pro Tip:** Use search to quickly find a customer when they call. Type their name or phone number for instant results.
+</Note>
+
+## Mobile Operations
+
+Optimized for on-the-floor use:
+
+### Swipe Actions
+
+On mobile reservation cards:
+- **Swipe right**: Call customer
+- **Swipe left**: Email customer
+- Visual feedback shows action before release
+
+### Touch Optimization
+
+- Larger tap targets (44px minimum)
+- Bottom navigation for one-handed use
+- Quick status updates without opening details
+- Pull-to-refresh for latest data
+
+### Offline Mode
+
+Basic offline functionality:
+- View previously loaded reservations
+- Take notes (syncs when online)
+- Visual indicator when offline
+- Auto-sync when connection restored
+
+## Table Management
+
+### Map View (Per Location)
+
+Each location can have a table map:
+- Visual floor plan
+- Drag-and-drop table assignments
+- Real-time availability
+- Zone-based organization
+
+**Accessing map view:**
+- Click "Ver Ficha Completa" on location card
+- Navigate to specific restaurant page
+- Map shows all tables with current status
+
+### Zone Management
+
+Organize tables by zones:
+- Terraza (Terrace)
+- Sala Principal (Main Dining)
+- Privado (Private Room)
+- Barra (Bar)
+
+Customize zones per location in Settings.
+
+## Integration Features
+
+### CoverManager Sync
+
+<Steps>
+  <Step title="Automatic Import">
+    Reservations from CoverManager sync every 15 minutes (configurable)
+  </Step>
+  <Step title="Customer Matching">
+    Customers auto-matched by email/phone, created if new
+  </Step>
+  <Step title="Bidirectional Updates">
+    Status changes in Hiro can sync back to CoverManager
+  </Step>
+  <Step title="Conflict Resolution">
+    CoverManager is source of truth; Hiro data used for analytics
+  </Step>
+</Steps>
+
+### API Access
+
+Reservations available via REST API:
+- Read reservations with filters
+- Create reservations programmatically
+- Update status and assignments
+- Webhooks for real-time updates
+
+## Analytics Dashboard
+
+Access analytics for reservation patterns:
+
+### Key Metrics
+
+- **Occupancy Rate**: Percentage of capacity filled
+- **No-Show Rate**: Percentage of confirmed reservations that didn't show
+- **Average Party Size**: Mean pax across all reservations
+- **Peak Hours**: Most popular time slots
+- **Lead Time**: Average days between booking and reservation
+
+### Trends
+
+- Day-over-day comparisons
+- Week-over-week growth
+- Month-over-month trends
+- Year-over-year seasonality
+
+<Accordion title="Calculating Occupancy Rate">
+**Formula:**
+```
+Occupancy = (Reserved Pax / Total Capacity) × 100
+```
+
+**Example:**
+- Total capacity: 120 seats
+- Reserved: 18 reservations × 4 avg pax = 72 pax
+- Occupancy: 72/120 = 60%
+
+Target 75-85% for optimal service level.
+</Accordion>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Confirmation Calls" icon="phone">
+    Call to confirm reservations 24 hours in advance. Update status to "Confirmed" to track completion.
+  </Card>
+  <Card title="VIP Preparation" icon="crown">
+    Review VIP reservations each morning. Check preferences, last visit notes, and prepare personalized service.
+  </Card>
+  <Card title="No-Show Management" icon="x-circle">
+    Mark no-shows accurately. After 2-3 no-shows, customer is flagged for confirmation requirement.
+  </Card>
+  <Card title="Detractor Recovery" icon="heart">
+    Contact detractors before their next reservation. Acknowledge past issues and ensure special attention.
+  </Card>
+</CardGroup>
+
+## Operational Workflows
+
+### Morning Routine (10:00 AM)
+
+1. Open Operations Control Center
+2. Review today's reservations across all locations
+3. Check VIP count and prepare special touches
+4. Review Recovery Panel for detractors
+5. Identify rush hours and notify locations
+6. Confirm staff coverage for peak times
+
+### Service Period (12:00 - 15:00, 20:00 - 23:00)
+
+1. Update statuses as customers arrive (Confirmed → Seated)
+2. Monitor timeline for conflicts
+3. Coordinate with location managers on capacity
+4. Handle last-minute bookings
+5. Mark no-shows 30min after reservation time
+
+### Evening Wrap-up (23:30)
+
+1. Ensure all reservations marked Completed
+2. Update any late cancellations or no-shows
+3. Review day's metrics
+4. Note any issues for tomorrow's briefing
+5. Check tomorrow's VIP list
+
+## Technical Specifications
+
+**Real-time Updates:**
+- Data refreshes every 30 seconds automatically
+- Manual refresh button available
+- WebSocket support for instant updates
+
+**Performance:**
+- Loads 500+ reservations in &lt;200ms
+- Timeline renders 14 hours × 50 locations instantly
+- Mobile optimized for 3G networks
+
+**Data Retention:**
+- Active reservations: Indefinite
+- Completed reservations: 2 years (configurable)
+- Historical analytics: 5 years

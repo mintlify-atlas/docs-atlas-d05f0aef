@@ -1,0 +1,92 @@
+---
+title: 'Integrations Overview'
+description: 'Connect Hiro CRM with your existing tools and services'
+icon: 'plug'
+---
+
+Hiro CRM integrates with leading hospitality, marketing, and AI platforms to create a unified customer experience. All integrations are optional and can be enabled based on your business needs.
+
+## Available Integrations
+
+<CardGroup cols={2}>
+  <Card title="CoverManager" icon="utensils" href="/integrations/covermanager">
+    Sync reservations and guest data from your CoverManager POS system
+  </Card>
+  <Card title="Revo POS" icon="cash-register" href="/integrations/revo-pos">
+    Import orders, revenue, and customer transactions from Revo
+  </Card>
+  <Card title="Brevo" icon="envelope" href="/integrations/brevo">
+    Send email and SMS campaigns to your customer segments
+  </Card>
+  <Card title="Google Drive" icon="google-drive" href="/integrations/google-drive">
+    Access menus, contracts, and marketing materials directly in Hiro
+  </Card>
+  <Card title="OpenAI" icon="brain" href="/integrations/openai">
+    AI-powered assistant for customer insights and natural language queries
+  </Card>
+</CardGroup>
+
+## Integration Categories
+
+### POS & Reservation Systems
+
+Integrate with your point-of-sale and reservation management systems to automatically sync customer data, reservations, and transaction history.
+
+- **CoverManager** - Popular reservation platform in Spain
+- **Revo POS** - Cloud-based POS system with order and customer tracking
+
+### Marketing & Communication
+
+Connect your marketing tools to send targeted campaigns and measure engagement.
+
+- **Brevo** - All-in-one email and SMS marketing platform (replaces legacy tools like Resend)
+
+### AI & Automation
+
+Leverage artificial intelligence to gain insights from your customer data.
+
+- **OpenAI** - GPT-4 powered assistant for natural language queries and customer intelligence
+
+### Document Management
+
+Centralize your business documents and marketing materials.
+
+- **Google Drive** - Document library for menus, press kits, contracts, and more
+
+## Configuration
+
+All integrations are configured via environment variables in your `.env.local` file. You can find the complete template in `frontend/.env.example`.
+
+<Warning>
+  Never commit API keys or secrets to version control. Always use environment variables and keep your `.env.local` file in `.gitignore`.
+</Warning>
+
+## Single-Tenant Architecture
+
+Hiro CRM is designed as a **single-tenant** application, meaning one deployment per business. This gives you:
+
+- Full control over your data
+- Ability to customize integrations for your specific needs
+- No shared resources or rate limits with other tenants
+- Direct API connections without middleware
+
+## Getting Started
+
+1. Choose the integrations you need for your business
+2. Sign up for API access with each provider
+3. Add the API keys to your `.env.local` file
+4. Restart your Next.js development server
+5. Test the connection in the Hiro CRM dashboard
+
+<Tip>
+  Start with just the essential integrations (like CoverManager or Revo) and add marketing tools (Brevo, OpenAI) as you grow.
+</Tip>
+
+## Need Help?
+
+If you encounter issues with any integration:
+
+1. Check the provider's API documentation for changes
+2. Verify your API keys are correct and active
+3. Review error logs in your browser console or server logs
+4. Open an issue on the [Hiro CRM GitHub repository](https://github.com/your-org/hiro-crm/issues)

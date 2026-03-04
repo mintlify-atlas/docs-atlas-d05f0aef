@@ -1,0 +1,209 @@
+---
+title: Organization Context
+api: GET /api/organization/context
+description: Retrieve the active organization for the authenticated user
+---
+
+# Organization Context
+
+Retrieve the active organization context for the authenticated user. In Hiro CRM's single-tenant architecture, this returns the user's assigned organization.
+
+## Endpoint
+
+```
+GET /api/organization/context
+```
+
+## Authentication
+
+Requires authenticated user session.
+
+## Query Parameters
+
+<ParamField query="orgId" type="string">
+  Organization ID override (ignored in single-tenant mode)
+</ParamField>
+
+<Note>
+  The `orgId` parameter is reserved for future multi-tenant features. Currently, it's ignored and the user's assigned organization is always returned.
+</Note>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Whether the request was successful
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Organization data (null if no active organization)
+  
+  <Expandable title="Organization Properties">
+    <ResponseField name="id" type="string">
+      Organization UUID
+    </ResponseField>
+    
+    <ResponseField name="name" type="string">
+      Organization name
+    </ResponseField>
+    
+    <ResponseField name="slug" type="string">
+      Organization slug (URL-friendly identifier)
+    </ResponseField>
+    
+    <ResponseField name="isPlatformAdminView" type="boolean">
+      Whether viewing as platform admin (always false in single-tenant)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="isPlatformAdmin" type="boolean">
+  Whether the user is a platform admin (super_admin role)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Status message (present when no organization found)
+</ResponseField>
+
+## Example Request
+
+```bash
+curl -X GET https://your-domain.com/api/organization/context \
+  -H "Cookie: your-session-cookie"
+```
+
+## Example Response (Success)
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "org-uuid-123",
+    "name": "La Tasca Group",
+    "slug": "la-tasca-group",
+    "isPlatformAdminView": false
+  },
+  "isPlatformAdmin": false
+}
+```
+
+## Example Response (No Organization)
+
+```json
+{
+  "success": true,
+  "data": null,
+  "isPlatformAdmin": false,
+  "message": "No hay organización activa"
+}
+```
+
+## Error Response
+
+```json
+{
+  "success": false,
+  "error": "Error al obtener contexto de organización"
+}
+```
+
+## Implementation Details
+
+The endpoint uses the `getActiveOrganization()` helper:
+
+```typescript app/api/organization/context/route.ts
+import { getActiveOrganization } from "@/lib/organization-context";
+
+export async function GET(request: NextRequest) {
+    try {
+        const activeOrg = await getActiveOrganization();
+
+        if (!activeOrg) {
+            return NextResponse.json({ 
+                success: true, 
+                data: null,
+                isPlatformAdmin: false,
+                message: "No hay organización activa"
+            });
+        }
+
+        return NextResponse.json({
+            success: true,
+            data: activeOrg,
+            isPlatformAdmin: activeOrg.isPlatformAdminView
+        });
+    } catch (error: any) {
+        logger.error("Error getting organization context", "OrganizationAPI", error);
+        return NextResponse.json(
+            { success: false, error: error.message },
+            { status: 500 }
+        );
+    }
+}
+```
+
+### Organization Resolution
+
+The `getActiveOrganization()` function:
+
+1. Gets authenticated user from session
+2. Fetches user's profile with `organization_id`
+3. Retrieves organization details from `organizations` table
+4. Returns organization object with metadata
+
+## Platform Admin Detection
+
+Platform admins are identified by role:
+
+```typescript
+const isPlatformAdmin = role === 'super_admin';
+```
+
+- `super_admin` role = Platform admin
+- All other roles = Regular users
+
+## Single-Tenant Architecture
+
+Hiro CRM uses a **single-tenant per deployment** model:
+
+- Each user belongs to **one organization**
+- Organization switching is not supported
+- `orgId` query parameter is ignored
+- `isPlatformAdminView` is always `false`
+
+<Info>
+  For multi-tenant deployments, extend `getActiveOrganization()` to support organization switching via localStorage or query parameters.
+</Info>
+
+## Use Cases
+
+- Display current organization in UI header
+- Scope API requests to user's organization
+- Validate user has access to features
+- Show organization-specific branding
+- Redirect users without organization to setup flow
+
+## Client-Side Usage
+
+```typescript
+const response = await fetch('/api/organization/context');
+const { success, data } = await response.json();
+
+if (success && data) {
+  console.log(`Active organization: ${data.name}`);
+  // Store in context/state management
+} else {
+  // Redirect to organization setup
+}
+```
+
+## Logging
+
+Errors are logged using the Logger service:
+
+```typescript
+logger.error("Error getting organization context", "OrganizationAPI", error);
+```
+
+<Note>
+  This endpoint is typically called once during app initialization to establish organization context for the session.
+</Note>

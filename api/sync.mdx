@@ -1,0 +1,258 @@
+---
+title: Sync Reservations
+api: POST /api/sync
+description: Synchronize reservations from external PMS systems (CoverManager)
+---
+
+# Sync Reservations
+
+Manually trigger synchronization of reservations from external Property Management Systems (PMS) like CoverManager.
+
+## Endpoint
+
+```
+POST /api/sync
+```
+
+## Authentication
+
+Requires `CRON_SECRET` in the `Authorization` header.
+
+```bash
+Authorization: Bearer YOUR_CRON_SECRET
+```
+
+<Warning>
+  This endpoint is secured with a cron secret and should only be called by authorized systems or cron jobs.
+</Warning>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Whether the sync completed successfully
+</ResponseField>
+
+<ResponseField name="synced" type="number">
+  Number of reservations synced
+</ResponseField>
+
+<ResponseField name="created" type="number">
+  Number of new reservations created
+</ResponseField>
+
+<ResponseField name="updated" type="number">
+  Number of existing reservations updated
+</ResponseField>
+
+<ResponseField name="locations" type="array">
+  Array of location sync results
+  
+  <Expandable title="Location Result">
+    <ResponseField name="locationId" type="string">
+      Location UUID
+    </ResponseField>
+    
+    <ResponseField name="locationName" type="string">
+      Location name
+    </ResponseField>
+    
+    <ResponseField name="count" type="number">
+      Number of reservations synced for this location
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="errors" type="array">
+  Array of error messages (if any)
+</ResponseField>
+
+## Example Request
+
+```bash
+curl -X POST https://your-domain.com/api/sync \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+```
+
+## Example Response
+
+```json
+{
+  "success": true,
+  "synced": 142,
+  "created": 38,
+  "updated": 104,
+  "locations": [
+    {
+      "locationId": "location-madrid-centro-uuid",
+      "locationName": "La Tasca Madrid · Centro",
+      "count": 67
+    },
+    {
+      "locationId": "location-barcelona-eixample-uuid",
+      "locationName": "La Tasca Barcelona · Eixample",
+      "count": 75
+    }
+  ],
+  "errors": []
+}
+```
+
+## Error Responses
+
+### 401 Unauthorized
+
+```json
+{
+  "error": "Unauthorized"
+}
+```
+
+Missing or invalid `CRON_SECRET`.
+
+### 500 Internal Server Error
+
+```json
+{
+  "error": "Sync error message"
+}
+```
+
+## Implementation Details
+
+The endpoint calls the `syncSmartGlobal()` function from `/lib/services/sync-core.ts`:
+
+```typescript app/api/sync/route.ts
+import { syncSmartGlobal } from '@/lib/services/sync-core';
+
+export async function POST(request: Request) {
+    // Security Check
+    const authHeader = request.headers.get('authorization');
+    const cronSecret = process.env.CRON_SECRET;
+    
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    try {
+        const result = await syncSmartGlobal();
+        return NextResponse.json(result);
+    } catch (e: any) {
+        return NextResponse.json({ error: e.message }, { status: 500 });
+    }
+}
+```
+
+### Sync Process
+
+1. **Fetch Active Locations** - Get all locations with `covermanager_id` configured
+2. **Query External PMS** - Fetch reservations from CoverManager API
+3. **Match Customers** - Find or create customers by email/phone
+4. **Upsert Reservations** - Create new or update existing reservations
+5. **Update Customer Stats** - Recalculate `total_visits` and `total_spend`
+6. **Sync Customer Data** - Update customer profiles with latest info from PMS
+
+### Customer Matching
+
+Customers are matched using:
+1. Email (primary)
+2. Phone number (fallback)
+3. Create new customer if no match found
+
+### Reservation Upsert
+
+Reservations are identified by `external_id` (PMS reservation ID):
+
+```sql
+UPSERT INTO reservations (
+  external_id,
+  location_id,
+  customer_id,
+  reservation_date,
+  reservation_time,
+  party_size,
+  status,
+  ...
+)
+VALUES (...)
+ON CONFLICT (external_id) DO UPDATE
+```
+
+## Sync Scope
+
+The sync typically covers:
+- **Today's reservations** (00:00 - 23:59)
+- **Tomorrow's reservations** (optional, based on configuration)
+- **Recent past** (last 7 days for updates)
+
+## CoverManager Integration
+
+CoverManager API configuration is stored in `integration_configs` table:
+
+```json
+{
+  "integration_type": "covermanager",
+  "config": {
+    "api_key": "your-api-key",
+    "venue_id": "venue-123",
+    "base_url": "https://api.covermanager.com/v1"
+  },
+  "is_enabled": true
+}
+```
+
+## Scheduled Sync
+
+For automated syncing, use the cron endpoint:
+
+```bash
+GET /api/cron/sync
+```
+
+See [Cron: Sync](/api/cron/overview#sync) for details.
+
+## Data Mapping
+
+### Reservation Fields
+
+| CoverManager | Hiro CRM |
+|--------------|----------|
+| `booking_id` | `external_id` |
+| `customer_name` | `customer_name` |
+| `customer_email` | (matched to `customers.email`) |
+| `booking_date` | `reservation_date` |
+| `booking_time` | `reservation_time` |
+| `party_size` | `party_size` |
+| `status` | `status` (mapped to enum) |
+| `notes` | `notes` |
+
+### Status Mapping
+
+| CoverManager | Hiro CRM |
+|--------------|----------|
+| `pending` | `pending` |
+| `confirmed` | `confirmed` |
+| `seated` | `seated` |
+| `finished` | `completed` |
+| `cancelled` | `cancelled` |
+| `no_show` | `no_show` |
+
+## Performance
+
+- Average sync time: **30-60 seconds** for 100-200 reservations
+- Maximum locations synced per call: **Unlimited**
+- Timeout: **60 seconds** (configured in cron endpoint)
+
+## Use Cases
+
+- Manual sync after bulk PMS updates
+- Immediate sync for critical reservations
+- Testing sync logic during integration setup
+- Recovery from sync failures
+
+<Note>
+  For production use, schedule automatic syncs using **Vercel Cron** or similar scheduler. See [Cron Jobs](/api/cron/overview).
+</Note>
+
+<Warning>
+  Frequent manual syncs may hit PMS API rate limits. Use scheduled cron jobs for regular syncing.
+</Warning>

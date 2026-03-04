@@ -1,0 +1,523 @@
+---
+title: 'AI Assistant'
+description: 'Intelligent query processing and natural language insights powered by OpenAI integration'
+icon: 'sparkles'
+---
+
+## Overview
+
+Hiro's AI Assistant brings conversational intelligence to your CRM. Ask questions in natural language and get instant insights about reservations, customers, revenue, and operations—without navigating through menus or building reports.
+
+<Note>
+**Powered by:** OpenAI GPT-4 with hospitality-specific training and your real-time operational data.
+</Note>
+
+## Key Capabilities
+
+<CardGroup cols={2}>
+  <Card title="Natural Language Queries" icon="message-circle">
+    Ask questions in Spanish or English just like talking to your team:
+    - "¿Cuántas reservas tenemos hoy?"
+    - "Show me VIP customers who haven't visited in 3 months"
+  </Card>
+  <Card title="Real-time Data" icon="zap">
+    Responses use live data from:
+    - Today's reservations
+    - Customer database
+    - Revenue metrics
+    - Visit patterns
+  </Card>
+  <Card title="Context-Aware" icon="brain">
+    Understands hospitality context:
+    - "Detractors" = customers with NPS ≤ 6
+    - "VIP" = top-tier loyalty customers
+    - "Revenue" = calculated from reservations × avg ticket
+  </Card>
+  <Card title="Actionable Insights" icon="lightbulb">
+    Not just data—get recommendations:
+    - Recovery strategies
+    - Re-engagement tactics
+    - Operational optimizations
+  </Card>
+</CardGroup>
+
+## How It Works
+
+### Query Router
+
+When you ask a question, Hiro's AI follows this process:
+
+<Steps>
+  <Step title="Intent Classification">
+    Analyzes your question to determine intent:
+    - Reservations query?
+    - Customer lookup?
+    - Revenue analysis?
+    - Operational help?
+  </Step>
+  <Step title="Context Loading">
+    Fetches relevant real-time data:
+    - Today's reservations across all locations
+    - Weekly revenue trends
+    - VIP customer status
+    - Inactive customer lists
+    - General statistics
+  </Step>
+  <Step title="Response Generation">
+    Two modes depending on setup:
+    - **OpenAI Mode**: Full GPT-4 response with conversational tone
+    - **Structured Mode**: Pre-formatted responses with data tables
+  </Step>
+  <Step title="Formatting & Delivery">
+    Response formatted with:
+    - Markdown formatting
+    - Emojis for visual clarity
+    - Tables and lists
+    - Action recommendations
+  </Step>
+</Steps>
+
+## Query Types
+
+### Reservation Queries
+
+Ask about today's reservations:
+
+<Accordion title="Example: Daily Reservations">
+**Query:** "¿Cuántas reservas tenemos hoy?"
+
+**Response:**
+```
+📅 Reservas de Hoy:
+
+• Total: 42 reservas
+• Confirmadas: 38
+• Pendientes: 3
+• VIP: 6
+
+🕐 Próxima reserva: María García a las 14:30 (4 personas)
+
+¿Necesitas más detalles sobre alguna reserva específica?
+```
+</Accordion>
+
+<Accordion title="Example: VIP Reservations">
+**Query:** "Show me today's VIP reservations"
+
+**Response:**
+```
+⭐ Reservas VIP de Hoy:
+
+1. Carlos Mendoza - 13:00 (2 pax)
+   • Tier: Founders
+   • Mesa preferida: Terraza 5
+   • Nota: Aniversario
+
+2. Ana Ruiz - 14:30 (4 pax)
+   • Tier: VIP
+   • Última visita: 15 días
+   • Gasto promedio: €180
+
+3. Roberto Silva - 20:00 (6 pax)
+   • Tier: VIP
+   • Preferencia: Vino tinto Rioja
+
+💡 Sugerencia: Prepara vino de cortesía para mesa de Mendoza (aniversario)
+```
+</Accordion>
+
+### Customer Queries
+
+Find and analyze customer segments:
+
+<Accordion title="Example: Inactive VIPs">
+**Query:** "¿Qué clientes VIP no han visitado en 3 meses?"
+
+**Response:**
+```
+⭐ Clientes VIP inactivos (3+ meses):
+
+1. Laura Martínez - Última visita: 12 mayo
+   Gasto promedio: €250
+
+2. David Torres - Última visita: 8 junio
+   Gasto promedio: €180
+
+3. Carmen López - Última visita: 22 abril
+   Gasto promedio: €320
+
+4. Miguel Ángel Ruiz - Última visita: 5 mayo
+   Gasto promedio: €290
+
+5. Isabel González - Última visita: 18 junio
+   Gasto promedio: €210
+
+💡 Sugerencia: Envía una campaña de re-engagement con una oferta especial.
+```
+</Accordion>
+
+<Accordion title="Example: Customer Lookup">
+**Query:** "Find customer named García"
+
+**Response:**
+```
+👥 Resultados para "García":
+
+1. María García Sánchez
+   • Email: maria.garcia@email.com
+   • Teléfono: +34 612 345 678
+   • Tier: Oro
+   • Visitas: 12 | Gasto: €1,450
+   • Última visita: 8 días
+
+2. Carlos García Ruiz
+   • Email: carlos.gr@email.com
+   • Teléfono: +34 687 654 321
+   • Tier: Plata
+   • Visitas: 6 | Gasto: €780
+   • Última visita: 22 días
+
+¿Quieres ver el perfil completo de alguno?
+```
+</Accordion>
+
+### Revenue Queries
+
+Analyze financial performance:
+
+<Accordion title="Example: Weekly Revenue">
+**Query:** "¿Cuál ha sido el revenue esta semana?"
+
+**Response:**
+```
+💰 Revenue Semanal:
+
+• Lun: €3,250
+• Mar: €4,180
+• Mié: €3,890
+• Jue: €4,650
+• Vie: €6,780
+• Sáb: €8,920
+• Dom: €5,430
+
+📊 Total: €37,100 (📈 +12% vs semana anterior)
+
+🎯 Mejor día: Sábado (€8,920)
+💡 Insight: Viernes-Sábado representan 42% del revenue semanal
+```
+</Accordion>
+
+### Analytics Queries
+
+Get operational insights:
+
+<Accordion title="Example: General Statistics">
+**Query:** "Dame un resumen general del negocio"
+
+**Response:**
+```
+📊 Resumen General:
+
+👥 Clientes registrados: 2,847
+📅 Reservas este mes: 342
+📈 Ocupación media: 75%
+❌ Tasa de no-shows: 8%
+
+💰 Revenue semanal: €37,100
+📅 Reservas hoy: 42 (6 VIP)
+
+🎯 Puntos destacados:
+• Ocupación saludable (objetivo: 75-85%)
+• No-shows bajo control (&lt;10%)
+• Tendencia positiva: +12% vs semana pasada
+```
+</Accordion>
+
+<Accordion title="Example: No-Show Analysis">
+**Query:** "Analyze no-show rate and give recommendations"
+
+**Response:**
+```
+❌ Análisis de No-Shows:
+
+• Tasa actual: 8%
+
+✅ Tu tasa de no-shows está bajo control. Recomendaciones:
+
+1. Implementar confirmación por WhatsApp 24h antes
+2. Solicitar depósito para grupos grandes (6+ personas)
+3. Sistema de penalizaciones para reincidentes
+4. Mantener base de datos actualizada (teléfonos válidos)
+
+📈 Benchmark industria: 10-15%
+🎯 Tu performance: Por encima de la media
+```
+</Accordion>
+
+### Help & Recommendations
+
+<Accordion title="Example: General Help">
+**Query:** "What can you help me with?"
+
+**Response:**
+```
+🤖 ¿Qué puedo hacer por ti?
+
+📅 Reservas:
+• Consultar reservas del día
+• Buscar reservas específicas
+• Identificar no-shows
+
+👥 Clientes:
+• Buscar clientes VIP inactivos
+• Ver estadísticas de clientes
+• Buscar cliente por nombre
+
+📊 Analytics:
+• Revenue diario/semanal/mensual
+• Tendencias y comparativas
+• Estadísticas generales
+
+💡 Consejos:
+• Optimización de ocupación
+• Estrategias de fidelización
+
+¡Pregúntame lo que necesites!
+```
+</Accordion>
+
+<Accordion title="Example: Optimization Recommendations">
+**Query:** "Give me recommendations to increase occupancy"
+
+**Response:**
+```
+💡 Consejos para aumentar ocupación:
+
+📉 Días con menor ocupación: Lun, Mar, Mié
+
+Sugerencias:
+• Menú del día especial (20% descuento)
+• Happy Hour extendido (18:00-20:00)
+• Promoción 2x1 en entrantes
+• Programa "Martes de Vino" con maridajes
+
+⚠️ No-shows están en 8%. Implementa:
+• Confirmación por WhatsApp 24h antes
+• Depósito para grupos grandes
+
+🎯 Objetivos:
+• Aumentar ocupación lunes-miércoles del 60% al 75%
+• Reducir no-shows del 8% al 5%
+
+¿Quieres que profundice en alguna de estas estrategias?
+```
+</Accordion>
+
+## OpenAI Configuration
+
+### Setup Requirements
+
+To enable full AI Assistant capabilities:
+
+<Steps>
+  <Step title="Navigate to Settings">
+    Go to Settings → Integrations → OpenAI
+  </Step>
+  <Step title="Enter API Key">
+    Input your OpenAI API key:
+    - Get key from https://platform.openai.com
+    - Requires paid OpenAI account
+    - Recommended: Create dedicated key for Hiro
+  </Step>
+  <Step title="Configure Model">
+    Choose model:
+    - **gpt-4-turbo** (Recommended): Best quality, slower
+    - **gpt-4**: High quality, balanced speed
+    - **gpt-3.5-turbo**: Faster, lower cost, less capable
+  </Step>
+  <Step title="Set Parameters">
+    Adjust settings:
+    - **Temperature**: 0.7 (default) for balanced creativity
+    - **Max Tokens**: 1000 (default) for detailed responses
+  </Step>
+  <Step title="Test & Save">
+    Test with sample query, then save configuration
+  </Step>
+</Steps>
+
+### Fallback Mode
+
+If OpenAI is not configured:
+
+- AI Assistant still works with structured responses
+- Uses pre-formatted templates
+- No conversational depth
+- Limited to predefined query types
+
+<Note type="tip">
+**Cost Estimate:** With gpt-4-turbo, typical query costs €0.02-0.05. For 100 queries/day, expect ~€3-5/day in API costs.
+</Note>
+
+## Privacy & Security
+
+### Data Handling
+
+<CardGroup cols={2}>
+  <Card title="What's Sent to OpenAI" icon="upload">
+    - Your natural language query
+    - Aggregated statistics (counts, sums)
+    - NO customer emails or phone numbers
+    - NO payment information
+    - NO personal identifying data
+  </Card>
+  <Card title="What Stays in Hiro" icon="shield">
+    - Full customer profiles
+    - Contact information
+    - Payment details
+    - Reservation notes
+    - All sensitive data
+  </Card>
+</CardGroup>
+
+### OpenAI Data Policy
+
+Per OpenAI's Enterprise Agreement:
+- API data NOT used for model training (as of March 2023+)
+- Data NOT retained after 30 days
+- GDPR compliant
+- ISO 27001 certified
+
+<Note type="warning">
+**Important:** Never ask the AI Assistant to "send" customer data externally. It has no email/export capabilities and won't expose sensitive data.
+</Note>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Be Specific" icon="target">
+    "VIP customers inactive 3 months" is better than "show me customers"
+  </Card>
+  <Card title="Use Time Ranges" icon="calendar">
+    "This week" or "last 30 days" gives more relevant results than no time frame
+  </Card>
+  <Card title="Ask Follow-ups" icon="message-circle">
+    After getting a list, ask "tell me more about the first one" for details
+  </Card>
+  <Card title="Request Actions" icon="zap">
+    Ask for recommendations: "How should I handle this?" or "What's the best approach?"
+  </Card>
+</CardGroup>
+
+## Advanced Features
+
+### Semantic Customer Search
+
+Find customers by description, not just name:
+
+**Query:** "High-spending customers who love wine and haven't visited recently"
+
+**AI Process:**
+1. Identifies criteria: high spend + wine preference + inactive
+2. Searches customer tags for "wine" or "wine lover"
+3. Filters by spend (top 25%)
+4. Filters by last visit (60+ days)
+5. Returns ranked results
+
+### SQL Generation (Advanced)
+
+For complex queries, AI generates SQL:
+
+**Query:** "Show me average party size by day of week for last month"
+
+**AI Process:**
+1. Recognizes need for grouping and aggregation
+2. Generates SQL query (executed safely)
+3. Formats results in readable table
+4. Provides interpretation
+
+<Note type="info">
+SQL generation is sandboxed and read-only. No data modification possible.
+</Note>
+
+### Trend Analysis
+
+AI identifies patterns:
+
+**Query:** "Are we getting busier or slower?"
+
+**Response:**
+```
+📈 Análisis de Tendencia:
+
+📊 Última semana: €37,100
+📊 Semana anterior: €33,125
+📊 Hace 2 semanas: €31,850
+
+✅ TENDENCIA: Creciendo (+12% esta semana)
+
+🎯 Insights:
+• Crecimiento constante últimas 3 semanas
+• Sábados muy fuertes (€8,920 último)
+• Lunes-Miércoles oportunidad de mejora
+
+💡 Recomendación: Capitalizar momentum con campaña
+para rellenar slots de lunes-miércoles.
+```
+
+## Troubleshooting
+
+<Accordion title="AI Not Responding">
+**Possible Causes:**
+- OpenAI API key invalid or expired
+- Rate limit exceeded
+- OpenAI service outage
+
+**Solutions:**
+1. Check Settings → Integrations → OpenAI
+2. Verify API key is active in OpenAI dashboard
+3. Check OpenAI status page
+4. Falls back to structured mode automatically
+</Accordion>
+
+<Accordion title="Slow Responses">
+**Causes:**
+- GPT-4 models slower than 3.5
+- Complex queries require more processing
+- Large datasets (many customers/reservations)
+
+**Solutions:**
+- Switch to gpt-3.5-turbo for speed
+- Reduce max_tokens to 500
+- Be more specific in queries (narrows data set)
+</Accordion>
+
+<Accordion title="Inaccurate Answers">
+**Causes:**
+- Ambiguous question
+- Missing context in data
+- AI hallucination (rare)
+
+**Solutions:**
+- Rephrase question more specifically
+- Ask for data source: "How did you calculate that?"
+- Cross-reference with manual reports
+- Report persistent issues to support
+</Accordion>
+
+## Technical Details
+
+**Query Processing:**
+- Average response time: 2-5 seconds (GPT-4)
+- Timeout: 30 seconds
+- Concurrent queries: Unlimited (rate-limited by OpenAI)
+
+**Context Window:**
+- Loads last 7 days of reservations
+- Top 100 VIP customers
+- Last 30 days of revenue data
+- Ensures fast responses with relevant data
+
+**Rate Limits:**
+- Follows OpenAI tier limits (usually 10,000 requests/day)
+- No Hiro-side limits
+- Automatically retries on transient errors

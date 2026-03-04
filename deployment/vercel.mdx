@@ -1,0 +1,482 @@
+---
+title: Deploy to Vercel
+description: Step-by-step guide to deploying Hiro CRM on Vercel
+icon: rocket
+---
+
+Vercel is the recommended platform for deploying Hiro CRM. This guide walks you through the complete deployment process.
+
+## Prerequisites
+
+<Check>
+  - GitHub account with your Hiro CRM repository
+  - Vercel account (free tier works)
+  - Supabase project set up ([see Database Setup](/deployment/database-setup))
+  - Environment variables ready ([see Environment Variables](/deployment/environment-variables))
+</Check>
+
+---
+
+## Deployment Steps
+
+<Steps>
+  <Step title="Import project to Vercel">
+    1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+    2. Click **Add New** → **Project**
+    3. Import your Git repository
+    4. Select the repository containing Hiro CRM
+    
+    <Tip>
+      If this is your first time, you'll need to authorize Vercel to access your GitHub repositories.
+    </Tip>
+  </Step>
+  
+  <Step title="Configure project settings">
+    In the import wizard, configure the following:
+    
+    **Framework Preset:** Next.js (auto-detected)
+    
+    **Root Directory:** `frontend`
+    
+    <Warning>
+      The root directory is critical! Hiro CRM's Next.js app is in the `frontend/` folder, not the repository root.
+    </Warning>
+    
+    **Build Command:** `npm run build` (default)
+    
+    **Output Directory:** `.next` (default)
+    
+    **Install Command:** `npm install` (default)
+  </Step>
+  
+  <Step title="Add environment variables">
+    Before deploying, add all required environment variables:
+    
+    1. In the Vercel import wizard, expand **Environment Variables**
+    2. Add each variable from your `.env.local` file
+    
+    <AccordionGroup>
+      <Accordion title="Required Variables" icon="key">
+        ```env
+        NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+        NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
+        SUPABASE_SERVICE_ROLE_KEY=eyJhbGci...
+        NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
+        ```
+      </Accordion>
+      
+      <Accordion title="Optional Variables" icon="sliders">
+        Add any optional integrations you need:
+        - `OPENAI_API_KEY` - AI Assistant
+        - `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, etc. - Email campaigns
+        - `SENTRY_DSN` - Error tracking
+        - `COVERMANAGER_API_KEY` or `REVO_ACCESS_TOKEN` - POS integration
+        
+        See [Environment Variables](/deployment/environment-variables) for the complete list.
+      </Accordion>
+    </AccordionGroup>
+    
+    <Info>
+      You can also add environment variables after deployment in **Project Settings** → **Environment Variables**.
+    </Info>
+  </Step>
+  
+  <Step title="Deploy">
+    Click **Deploy** and wait for the build to complete.
+    
+    Vercel will:
+    1. Clone your repository
+    2. Install dependencies (`npm install`)
+    3. Run the build (`npm run build`)
+    4. Deploy to a production URL
+    
+    First deployment typically takes 2-3 minutes.
+  </Step>
+  
+  <Step title="Verify deployment">
+    Once deployed, Vercel provides:
+    
+    - **Production URL**: `https://your-project.vercel.app`
+    - **Deployment logs**: Click on the deployment to view build logs
+    
+    Test your deployment:
+    1. Visit the production URL
+    2. Try logging in with a test account
+    3. Check that integrations are working (if configured)
+  </Step>
+</Steps>
+
+---
+
+## Custom Domain Setup
+
+Add your own domain to your Vercel deployment.
+
+<Steps>
+  <Step title="Add domain in Vercel">
+    1. Go to **Project Settings** → **Domains**
+    2. Click **Add**
+    3. Enter your domain (e.g., `crm.your-restaurant.com`)
+    4. Click **Add**
+  </Step>
+  
+  <Step title="Configure DNS">
+    Vercel will provide DNS configuration instructions:
+    
+    **Option A: CNAME (recommended for subdomains)**
+    ```
+    Type: CNAME
+    Name: crm
+    Value: cname.vercel-dns.com
+    ```
+    
+    **Option B: A Record (for apex domains)**
+    ```
+    Type: A
+    Name: @
+    Value: 76.76.21.21
+    ```
+    
+    Add these records in your domain registrar's DNS settings.
+  </Step>
+  
+  <Step title="Update NEXT_PUBLIC_APP_URL">
+    After domain is configured, update the environment variable:
+    
+    1. Go to **Project Settings** → **Environment Variables**
+    2. Edit `NEXT_PUBLIC_APP_URL`
+    3. Change to your custom domain: `https://crm.your-restaurant.com`
+    4. Redeploy for changes to take effect
+  </Step>
+  
+  <Step title="Wait for SSL provisioning">
+    Vercel automatically provisions SSL certificates via Let's Encrypt.
+    
+    This typically takes 1-5 minutes. Your domain will show a certificate status in the Domains settings.
+  </Step>
+</Steps>
+
+<Tip>
+  Vercel automatically redirects HTTP to HTTPS and handles SSL renewal.
+</Tip>
+
+---
+
+## Vercel Configuration Files
+
+Hiro CRM includes two Vercel configuration files:
+
+### Root vercel.json
+
+Configures cron jobs for automated tasks:
+
+```json vercel.json
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/calendar-notifications",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/calendar-reminders",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/ticket-notifications",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/ticket-reminders",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/automations",
+      "schedule": "*/30 * * * *",
+      "comment": "Runs active automations every 30 minutes"
+    }
+  ]
+}
+```
+
+**Cron Job Schedule:**
+- `sync` - Daily at 8:00 AM (UTC) - Syncs POS data
+- `calendar-notifications` - Daily at 9:00 AM - Sends calendar notifications
+- `calendar-reminders` - Daily at 8:00 AM - Sends calendar reminders
+- `ticket-notifications` - Daily at 10:00 AM - Sends ticket notifications
+- `ticket-reminders` - Daily at 8:00 AM - Sends ticket reminders
+- `automations` - Every 30 minutes - Runs marketing automations
+
+<Warning>
+  Cron jobs require a **Pro** plan or higher on Vercel. On the free tier, these will not run.
+</Warning>
+
+### Frontend vercel.json
+
+Configures the master cron job:
+
+```json frontend/vercel.json
+{
+  "crons": [
+    {
+      "path": "/api/cron/master",
+      "schedule": "0 8 * * *"
+    }
+  ]
+}
+```
+
+<Info>
+  The master cron job runs daily at 8:00 AM UTC and can trigger multiple background tasks.
+</Info>
+
+---
+
+## Next.js Configuration
+
+Key configurations in `next.config.ts`:
+
+### Standalone Output
+
+```typescript
+output: 'standalone'
+```
+
+Optimizes the build for serverless deployment on Vercel.
+
+### Security Headers
+
+Production-grade security headers are automatically configured:
+
+- **X-Frame-Options**: `DENY` - Prevents clickjacking
+- **X-Content-Type-Options**: `nosniff` - Prevents MIME sniffing
+- **Referrer-Policy**: `strict-origin-when-cross-origin`
+- **Permissions-Policy**: Restricts camera, microphone, geolocation
+- **Content-Security-Policy**: Comprehensive CSP for XSS protection
+- **HSTS**: Strict-Transport-Security (production only)
+
+### Image Optimization
+
+Configured domains for Next.js Image optimization:
+
+- `*.supabase.co` - Supabase Storage
+- `images.unsplash.com` - Demo images
+
+### Performance Optimizations
+
+- **Tree-shaking**: Optimized imports for `lucide-react`, `framer-motion`, `recharts`, `date-fns`
+- **Compression**: Gzip enabled
+- **Server External Packages**: `@supabase/supabase-js` for better performance
+
+---
+
+## CI/CD Workflow
+
+Vercel automatically deploys on Git push.
+
+### Automatic Deployments
+
+<Tabs>
+  <Tab title="Production">
+    **Trigger:** Push to `main` branch
+    
+    **URL:** Your production domain (e.g., `crm.your-restaurant.com`)
+    
+    **Environment:** Production environment variables
+    
+    **Cron Jobs:** Enabled (Pro plan only)
+  </Tab>
+  
+  <Tab title="Preview">
+    **Trigger:** Push to any other branch or Pull Request
+    
+    **URL:** Unique preview URL (e.g., `your-project-git-feature-branch.vercel.app`)
+    
+    **Environment:** Preview environment variables (defaults to production if not set)
+    
+    **Cron Jobs:** Disabled
+    
+    <Tip>
+      Perfect for testing features before merging to main!
+    </Tip>
+  </Tab>
+</Tabs>
+
+### Deployment Protection
+
+Enable deployment protection for production:
+
+1. Go to **Project Settings** → **Deployment Protection**
+2. Enable **Vercel Authentication** to require login to access deployments
+3. Add specific email addresses or enable SSO (Team plans)
+
+---
+
+## Monitoring & Debugging
+
+### View Logs
+
+1. Go to your project in Vercel Dashboard
+2. Click on a deployment
+3. View **Build Logs** and **Function Logs**
+
+### Real-time Logs
+
+Stream function logs in real-time:
+
+```bash
+vercel logs your-project.vercel.app --follow
+```
+
+### Analytics
+
+Vercel provides built-in analytics:
+
+- **Web Analytics**: Page views, visitors, top pages
+- **Speed Insights**: Real User Monitoring (RUM) performance data
+
+<Info>
+  Hiro CRM already includes Vercel Analytics and Speed Insights in the code. No additional setup needed.
+</Info>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Build fails with 'Module not found'" icon="triangle-exclamation">
+    **Cause:** Incorrect root directory setting.
+    
+    **Solution:**
+    1. Go to **Project Settings** → **General**
+    2. Set **Root Directory** to `frontend`
+    3. Redeploy
+  </Accordion>
+  
+  <Accordion title="Environment variables not working" icon="key">
+    **Cause:** Variables not properly set or not redeployed after changes.
+    
+    **Solution:**
+    1. Verify variables in **Project Settings** → **Environment Variables**
+    2. Make sure `NEXT_PUBLIC_` prefix is used for client-side variables
+    3. Redeploy after adding/changing variables
+  </Accordion>
+  
+  <Accordion title="Cron jobs not running" icon="clock">
+    **Cause:** Cron jobs require a Pro plan or higher.
+    
+    **Solution:**
+    - Upgrade to Vercel Pro, or
+    - Use an external cron service (e.g., cron-job.org) to call your API endpoints
+  </Accordion>
+  
+  <Accordion title="Images not loading" icon="image">
+    **Cause:** Domain not configured in `next.config.ts`.
+    
+    **Solution:**
+    Add the image domain to `remotePatterns` in `next.config.ts`:
+    ```typescript
+    images: {
+      remotePatterns: [
+        {
+          protocol: 'https',
+          hostname: 'your-domain.com',
+        },
+      ],
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="502 Bad Gateway on API routes" icon="server">
+    **Cause:** Function timeout (10s on Hobby, 60s on Pro).
+    
+    **Solution:**
+    - Optimize slow database queries
+    - Consider background jobs for long-running tasks
+    - Upgrade to Pro for 60s timeout
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Performance Optimization
+
+### Enable Edge Config (Pro/Enterprise)
+
+Store configuration that needs to be globally available with ultra-low latency:
+
+```bash
+vercel env add EDGE_CONFIG
+```
+
+### Enable Edge Middleware
+
+Hiro CRM's `middleware.ts` runs on Vercel Edge Network for:
+- Authentication checks
+- Redirects
+- International routing
+
+<Check>
+  Already configured and optimized!
+</Check>
+
+### Optimize Bundle Size
+
+Monitor your bundle size:
+
+```bash
+ANALYZE=true npm run build
+```
+
+This generates a bundle analyzer report.
+
+---
+
+## Security Checklist
+
+<Steps>
+  <Step title="Review environment variables">
+    Ensure no secrets are exposed in client-side variables (without `NEXT_PUBLIC_` prefix).
+  </Step>
+  
+  <Step title="Enable deployment protection">
+    Require authentication to access preview deployments.
+  </Step>
+  
+  <Step title="Configure CORS">
+    Restrict API access to your domain only.
+  </Step>
+  
+  <Step title="Enable Vercel Firewall (Enterprise)">
+    Add DDoS protection and rate limiting.
+  </Step>
+  
+  <Step title="Monitor Sentry">
+    Set up Sentry error tracking to catch issues in production.
+  </Step>
+</Steps>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Database Setup" icon="database" href="/deployment/database-setup">
+    Configure your Supabase database
+  </Card>
+  
+  <Card title="Seeding Data" icon="seedling" href="/deployment/seeding-data">
+    Add demo data to your database
+  </Card>
+  
+  <Card title="Environment Variables" icon="key" href="/deployment/environment-variables">
+    Complete environment variable reference
+  </Card>
+  
+  <Card title="Vercel Docs" icon="book" href="https://vercel.com/docs">
+    Official Vercel documentation
+  </Card>
+</CardGroup>

@@ -1,0 +1,550 @@
+---
+title: Database Schema
+description: Complete database structure and relationships in Hiro CRM
+---
+
+# Database Schema
+
+Hiro CRM uses **PostgreSQL** as its primary database, managed through Supabase. The schema is optimized for analytics, marketing automation, and real-time customer insights.
+
+## Core Entities
+
+The database follows a relational model with clear entity relationships:
+
+```
+Brands → Locations → Customers → Reservations → Transactions
+   ↓                      ↓            ↓
+Hotels              Behaviors    Product History
+```
+
+## Key Tables
+
+### 1. Customers
+
+The central table for customer data and CRM functionality.
+
+```sql
+CREATE TABLE customers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    -- Basic Information
+    first_name TEXT,
+    last_name TEXT,
+    email TEXT,
+    phone TEXT,
+    birth_date DATE,
+    language TEXT DEFAULT 'es',
+    
+    -- Address
+    address TEXT,
+    city TEXT,
+    postal_code TEXT,
+    country TEXT DEFAULT 'España',
+    
+    -- Business Info
+    company TEXT,
+    job_title TEXT,
+    
+    -- Calculated Metrics (updated by triggers)
+    total_visits INTEGER DEFAULT 0,
+    total_spend NUMERIC(12, 2) DEFAULT 0,
+    average_spend NUMERIC(10, 2) DEFAULT 0,
+    avg_ticket NUMERIC(10, 2) DEFAULT 0,
+    last_visit_at TIMESTAMPTZ,
+    first_visit_at TIMESTAMPTZ,
+    days_since_last_visit INTEGER,
+    
+    -- Loyalty Program
+    loyalty_tier TEXT DEFAULT 'Bronce',
+    loyalty_points INTEGER DEFAULT 0,
+    visits_last_year INTEGER DEFAULT 0,
+    spend_last_year NUMERIC(12, 2) DEFAULT 0,
+    is_vip BOOLEAN DEFAULT false,
+    is_founder BOOLEAN DEFAULT false,
+    
+    -- Preferences
+    dietary_restrictions TEXT[],
+    favorite_dishes TEXT[],
+    preferred_wines TEXT[],
+    seating_preferences TEXT,
+    preferred_table TEXT,
+    
+    -- Marketing
+    marketing_consent BOOLEAN DEFAULT false,
+    marketing_consent_date TIMESTAMPTZ,
+    newsletter_subscribed BOOLEAN DEFAULT false,
+    
+    -- Tags and Notes
+    tags TEXT[] DEFAULT '{}',
+    internal_notes TEXT,
+    sommelier_notes TEXT,
+    photo_url TEXT,
+    
+    -- Integration IDs
+    source TEXT DEFAULT 'manual',
+    external_id TEXT,
+    covermanager_id TEXT,
+    airtable_id TEXT,
+    last_synced_at TIMESTAMPTZ,
+    
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+**Key Indexes:**
+
+```sql
+-- Performance-critical indexes
+CREATE INDEX idx_customers_email ON customers(email);
+CREATE INDEX idx_customers_phone ON customers(phone);
+CREATE INDEX idx_customers_loyalty_tier ON customers(loyalty_tier);
+CREATE INDEX idx_customers_last_visit ON customers(last_visit_at);
+CREATE INDEX idx_customers_spend ON customers(total_spend DESC);
+
+-- Full-text search
+CREATE INDEX idx_customers_search ON customers USING GIN(
+    to_tsvector('spanish', 
+        COALESCE(first_name, '') || ' ' || 
+        COALESCE(last_name, '') || ' ' || 
+        COALESCE(email, '') || ' ' || 
+        COALESCE(phone, '')
+    )
+);
+```
+
+### 2. Locations
+
+Restaurants and venues within the hospitality group.
+
+```sql
+CREATE TABLE locations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    brand_id UUID REFERENCES brands(id) ON DELETE SET NULL,
+    
+    name TEXT NOT NULL,
+    slug TEXT NOT NULL UNIQUE,
+    address TEXT,
+    city TEXT,
+    postal_code TEXT,
+    country TEXT DEFAULT 'España',
+    phone TEXT,
+    email TEXT,
+    website TEXT,
+    
+    -- Configuration
+    timezone TEXT DEFAULT 'Europe/Madrid',
+    currency TEXT DEFAULT 'EUR',
+    settings JSONB DEFAULT '{}',
+    
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ
+);
+```
+
+**Purpose**: Organize customers and reservations by physical location.
+
+### 3. Reservations
+
+Tracking all customer bookings and their status.
+
+```sql
+CREATE TABLE reservations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
+    location_id UUID REFERENCES locations(id) ON DELETE SET NULL,
+    
+    -- Reservation Details
+    reservation_date DATE NOT NULL,
+    reservation_time TIME NOT NULL,
+    reservation_datetime TIMESTAMPTZ NOT NULL,
+    pax INTEGER NOT NULL DEFAULT 2,
+    status TEXT NOT NULL DEFAULT 'confirmed',
+    -- Status: confirmed, cancelled, no_show, completed
+    
+    -- Special Requirements
+    special_occasion TEXT,
+    special_requests TEXT,
+    table_preference TEXT,
+    dietary_notes TEXT,
+    
+    -- Integration
+    source TEXT DEFAULT 'manual',
+    covermanager_id TEXT,
+    external_id TEXT,
+    
+    -- Metrics
+    no_show_count INTEGER DEFAULT 0,
+    cancellation_count INTEGER DEFAULT 0,
+    
+    notes TEXT,
+    created_by UUID REFERENCES profiles(id),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    cancelled_at TIMESTAMPTZ,
+    cancellation_reason TEXT
+);
+```
+
+**Key Indexes:**
+
+```sql
+CREATE INDEX idx_reservations_customer ON reservations(customer_id);
+CREATE INDEX idx_reservations_location ON reservations(location_id);
+CREATE INDEX idx_reservations_datetime ON reservations(reservation_datetime);
+CREATE INDEX idx_reservations_status ON reservations(status);
+CREATE INDEX idx_reservations_behavior ON reservations(customer_id, reservation_datetime, status);
+```
+
+### 4. Transactions
+
+Financial transactions and customer spending.
+
+```sql
+CREATE TABLE transactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
+    reservation_id UUID REFERENCES reservations(id) ON DELETE SET NULL,
+    location_id UUID REFERENCES locations(id) ON DELETE SET NULL,
+    
+    -- Transaction Details
+    transaction_date DATE NOT NULL,
+    transaction_datetime TIMESTAMPTZ NOT NULL,
+    total_amount NUMERIC(12, 2) NOT NULL,
+    tax_amount NUMERIC(12, 2) DEFAULT 0,
+    tip_amount NUMERIC(12, 2) DEFAULT 0,
+    
+    -- Payment
+    payment_method TEXT,
+    -- payment_method: cash, card, transfer, other
+    
+    -- Integration
+    source TEXT DEFAULT 'manual',
+    revo_id TEXT,
+    external_id TEXT,
+    
+    notes TEXT,
+    created_by UUID REFERENCES profiles(id),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+**Purpose**: Track spending patterns and calculate customer lifetime value (CLV).
+
+### 5. Hotels
+
+Hotel partners and referral sources.
+
+```sql
+CREATE TABLE hotels (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    brand_id UUID REFERENCES brands(id) ON DELETE SET NULL,
+    
+    name TEXT NOT NULL,
+    slug TEXT NOT NULL UNIQUE,
+    address TEXT,
+    city TEXT,
+    phone TEXT,
+    email TEXT,
+    website TEXT,
+    stars INTEGER CHECK (stars >= 1 AND stars <= 5),
+    
+    settings JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ
+);
+```
+
+**Purpose**: Track hotel referrals and manage partnerships.
+
+### 6. Campaigns
+
+Marketing campaigns and customer outreach.
+
+```sql
+CREATE TABLE campaigns (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    name TEXT NOT NULL,
+    description TEXT,
+    campaign_type TEXT NOT NULL,
+    -- campaign_type: email, sms, push, in_app
+    
+    -- Targeting
+    segment_id UUID REFERENCES customer_segments(id),
+    target_criteria JSONB,
+    
+    -- Content
+    subject TEXT,
+    message TEXT,
+    template_id TEXT,
+    
+    -- Scheduling
+    scheduled_at TIMESTAMPTZ,
+    sent_at TIMESTAMPTZ,
+    status TEXT DEFAULT 'draft',
+    -- status: draft, scheduled, sending, sent, cancelled
+    
+    -- Metrics
+    recipients_count INTEGER DEFAULT 0,
+    sent_count INTEGER DEFAULT 0,
+    opened_count INTEGER DEFAULT 0,
+    clicked_count INTEGER DEFAULT 0,
+    converted_count INTEGER DEFAULT 0,
+    
+    created_by UUID REFERENCES profiles(id),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### 7. Loyalty Members
+
+Loyalty program membership and tier tracking.
+
+```sql
+CREATE TABLE loyalty_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id UUID REFERENCES customers(id) ON DELETE CASCADE UNIQUE,
+    
+    -- Program Membership
+    tier TEXT NOT NULL DEFAULT 'Bronce',
+    points INTEGER DEFAULT 0,
+    lifetime_points INTEGER DEFAULT 0,
+    
+    -- Status
+    status TEXT DEFAULT 'active',
+    enrolled_at TIMESTAMPTZ DEFAULT NOW(),
+    tier_updated_at TIMESTAMPTZ,
+    
+    -- Expiration
+    points_expire_at TIMESTAMPTZ,
+    
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+## Analytics Tables
+
+### Customer Behaviors
+
+Detected behavioral patterns from customer activity.
+
+```sql
+CREATE TABLE customer_behaviors (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+    
+    behavior_type TEXT NOT NULL,
+    -- Types: preferred_day, preferred_time, preferred_location,
+    --        birthday_month, no_visit_period, high_value_period
+    
+    behavior_data JSONB NOT NULL,
+    frequency INTEGER DEFAULT 1,
+    confidence_score NUMERIC(3, 2) DEFAULT 0.5,
+    last_observed_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### Customer Product History
+
+Detailed consumption tracking for personalization.
+
+```sql
+CREATE TABLE customer_product_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+    transaction_id UUID REFERENCES transactions(id),
+    
+    product_name TEXT NOT NULL,
+    product_category TEXT,
+    quantity INTEGER NOT NULL DEFAULT 1,
+    unit_price NUMERIC(10, 2) NOT NULL,
+    total_price NUMERIC(10, 2) NOT NULL,
+    
+    consumed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    consumed_date DATE NOT NULL,
+    
+    rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+    feedback TEXT,
+    
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+## Database Triggers
+
+Automatic calculations and data synchronization.
+
+### Update Customer Metrics
+
+```sql
+-- Trigger: Update customer metrics when a reservation is completed
+CREATE TRIGGER update_metrics_on_reservation
+AFTER INSERT OR UPDATE ON reservations
+FOR EACH ROW
+EXECUTE FUNCTION update_customer_metrics_on_reservation();
+
+-- Trigger: Update customer spend when a transaction is created
+CREATE TRIGGER update_metrics_on_transaction
+AFTER INSERT OR UPDATE ON transactions
+FOR EACH ROW
+EXECUTE FUNCTION update_customer_metrics_on_transaction();
+```
+
+### Loyalty Tier Calculation
+
+```sql
+-- Trigger: Recalculate loyalty tier when customer metrics change
+CREATE TRIGGER sync_loyalty_tier
+AFTER UPDATE ON customers
+FOR EACH ROW
+WHEN (OLD.total_spend IS DISTINCT FROM NEW.total_spend OR
+      OLD.total_visits IS DISTINCT FROM NEW.total_visits)
+EXECUTE FUNCTION sync_customer_loyalty_on_change();
+```
+
+## Row Level Security (RLS)
+
+Database-level access control policies.
+
+### Profile Access
+
+```sql
+-- Users can view all profiles but only update their own
+CREATE POLICY "profiles_select_all" 
+  ON profiles FOR SELECT 
+  USING (true);
+
+CREATE POLICY "profiles_update_own" 
+  ON profiles FOR UPDATE 
+  USING (id = auth.uid()) 
+  WITH CHECK (id = auth.uid());
+```
+
+### Customer Data Access
+
+```sql
+-- All authenticated users can access customer data
+CREATE POLICY "single_tenant_access" 
+  ON customers FOR ALL 
+  USING (auth.role() = 'authenticated');
+```
+
+## Vector Search (AI Ready)
+
+Semantic search capabilities with pgvector extension.
+
+```sql
+-- Enable vector extension
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Add embedding column to customers
+ALTER TABLE customers 
+  ADD COLUMN embedding vector(1536);
+
+-- Create vector index for similarity search
+CREATE INDEX idx_customers_embedding 
+  ON customers 
+  USING ivfflat (embedding vector_cosine_ops) 
+  WITH (lists = 100);
+```
+
+**Use Case**: Semantic search for "customers who love wine" or "high-value regulars".
+
+## Migration Management
+
+Database migrations are stored in `/supabase/migrations/` with numbered prefixes:
+
+```
+supabase/migrations/
+├── 000_MARKETING_HUB_GGP_COMPLETE_SCHEMA.sql
+├── 121_IRON_FOUNDATIONS.sql
+├── 122_DATA_ENRICHMENT_ARCHITECTURE.sql
+└── 126_UNIFY_HOTELS_AND_CONTACTS.sql
+```
+
+**Applying Migrations:**
+
+```bash
+# Apply all pending migrations
+supabase db push
+
+# Create a new migration
+supabase migration new add_customer_preferences
+```
+
+## Performance Optimization
+
+### Strategic Indexing
+
+- **B-tree indexes** for exact matches and range queries
+- **GIN indexes** for array columns (tags, preferences)
+- **Full-text indexes** for search functionality
+- **Vector indexes** for AI-powered semantic search
+
+### Query Optimization
+
+```sql
+-- Use materialized views for expensive analytics queries
+CREATE MATERIALIZED VIEW customer_analytics AS
+SELECT 
+  c.id,
+  c.email,
+  COUNT(r.id) as total_reservations,
+  SUM(t.total_amount) as lifetime_value,
+  MAX(r.reservation_datetime) as last_visit
+FROM customers c
+LEFT JOIN reservations r ON r.customer_id = c.id
+LEFT JOIN transactions t ON t.customer_id = c.id
+GROUP BY c.id;
+
+-- Refresh periodically
+REFRESH MATERIALIZED VIEW customer_analytics;
+```
+
+## Database Functions
+
+Reusable SQL functions for complex operations:
+
+```sql
+-- Get customer with calculated metrics
+CREATE FUNCTION get_customer_with_metrics(customer_uuid UUID)
+RETURNS TABLE (
+  customer_data JSONB,
+  total_reservations INTEGER,
+  total_spend NUMERIC,
+  average_ticket NUMERIC
+)
+AS $$
+  SELECT 
+    to_jsonb(c.*),
+    COUNT(DISTINCT r.id)::INTEGER,
+    COALESCE(SUM(t.total_amount), 0)::NUMERIC,
+    COALESCE(AVG(t.total_amount), 0)::NUMERIC
+  FROM customers c
+  LEFT JOIN reservations r ON r.customer_id = c.id
+  LEFT JOIN transactions t ON t.customer_id = c.id
+  WHERE c.id = customer_uuid
+  GROUP BY c.id;
+$$ LANGUAGE SQL STABLE;
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Frontend Structure" icon="react" href="/architecture/frontend-structure">
+    Learn how the frontend consumes this data
+  </Card>
+  <Card title="API Routes" icon="code" href="/architecture/api-routes">
+    Explore API endpoints for data access
+  </Card>
+</CardGroup>

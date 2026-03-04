@@ -1,0 +1,505 @@
+---
+title: 'Testing'
+description: 'How to write and run unit tests, integration tests, and E2E tests for Hiro CRM'
+---
+
+Hiro CRM uses a comprehensive testing strategy with Vitest for unit/integration tests and Playwright for end-to-end tests.
+
+## Testing Philosophy
+
+Our testing approach:
+
+- **Unit tests** — Test individual functions and components in isolation
+- **Integration tests** — Test how components work together
+- **E2E tests** — Test complete user workflows in a real browser
+- **Test coverage** — Aim for high coverage on critical business logic
+
+## Unit & Integration Tests (Vitest)
+
+### Overview
+
+We use [Vitest](https://vitest.dev/) for fast, modern JavaScript testing:
+
+- **Fast** — Powered by Vite's transformation pipeline
+- **ESM-first** — Native ES modules support
+- **TypeScript** — First-class TypeScript support
+- **React Testing Library** — For component testing
+
+### Configuration
+
+Vitest is configured in `vitest.config.ts`:
+
+```typescript
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./tests/setup.ts'],
+    include: ['tests/**/*.{test,spec}.{js,ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+    },
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './'),
+    },
+  },
+});
+```
+
+### Running Tests
+
+```bash
+# Run tests in watch mode
+npm run test
+
+# Run tests once
+npm run test:run
+
+# Run with coverage
+npm run test:coverage
+
+# Run with UI
+npm run test:ui
+```
+
+### Test Scripts Reference
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| `test` | `vitest` | Run tests in watch mode |
+| `test:run` | `vitest run` | Run tests once and exit |
+| `test:coverage` | `vitest run --coverage` | Generate coverage report |
+| `test:ui` | `vitest --ui` | Open Vitest UI dashboard |
+
+### Writing Unit Tests
+
+Test files should be placed in `tests/unit/` and named `*.test.ts` or `*.spec.ts`.
+
+#### Testing Utility Functions
+
+```typescript
+// tests/unit/utils/format-currency.test.ts
+import { describe, it, expect } from 'vitest';
+import { formatCurrency } from '@/lib/utils/format-currency';
+
+describe('formatCurrency', () => {
+  it('formats euros correctly', () => {
+    expect(formatCurrency(1000)).toBe('€1,000.00');
+  });
+  
+  it('handles zero', () => {
+    expect(formatCurrency(0)).toBe('€0.00');
+  });
+  
+  it('handles negative values', () => {
+    expect(formatCurrency(-500)).toBe('-€500.00');
+  });
+});
+```
+
+#### Testing React Components
+
+```typescript
+// tests/unit/components/customer-card.test.tsx
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { CustomerCard } from '@/components/customers/customer-card';
+import type { Customer } from '@/types/database';
+
+describe('CustomerCard', () => {
+  const mockCustomer: Customer = {
+    id: '1',
+    name: 'Juan Pérez',
+    email: 'juan@example.com',
+    phone: '+34 600 000 000',
+    loyalty_tier: 'gold',
+  };
+  
+  it('renders customer name', () => {
+    render(<CustomerCard customer={mockCustomer} />);
+    expect(screen.getByText('Juan Pérez')).toBeInTheDocument();
+  });
+  
+  it('displays loyalty tier badge', () => {
+    render(<CustomerCard customer={mockCustomer} />);
+    expect(screen.getByText('Gold')).toBeInTheDocument();
+  });
+  
+  it('shows email and phone', () => {
+    render(<CustomerCard customer={mockCustomer} />);
+    expect(screen.getByText('juan@example.com')).toBeInTheDocument();
+    expect(screen.getByText('+34 600 000 000')).toBeInTheDocument();
+  });
+});
+```
+
+#### Testing Hooks
+
+```typescript
+// tests/unit/hooks/use-customers.test.ts
+import { describe, it, expect, vi } from 'vitest';
+import { renderHook, waitFor } from '@testing-library/react';
+import { useCustomers } from '@/hooks/use-customers';
+
+describe('useCustomers', () => {
+  it('fetches customers on mount', async () => {
+    const { result } = renderHook(() => useCustomers('location-1'));
+    
+    expect(result.current.loading).toBe(true);
+    
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    
+    expect(result.current.customers).toHaveLength(3);
+  });
+});
+```
+
+### Test Setup
+
+The test setup file (`tests/setup.ts`) configures mocks for Next.js and Supabase:
+
+```typescript
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
+
+// Mock Next.js router
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+  }),
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+// Mock Supabase client
+vi.mock('@/lib/supabase/client', () => ({
+  createClient: () => ({
+    from: vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+    })),
+  }),
+}));
+```
+
+## End-to-End Tests (Playwright)
+
+### Overview
+
+We use [Playwright](https://playwright.dev/) for browser-based E2E testing:
+
+- **Multi-browser** — Test on Chromium and mobile Chrome
+- **Reliable** — Auto-waiting and web-first assertions
+- **Fast** — Parallel execution
+- **Debugging** — UI mode, trace viewer, screenshots
+
+### Configuration
+
+Playwright is configured in `playwright.config.ts`:
+
+```typescript
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e',
+  fullyParallel: true,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  
+  use: {
+    baseURL: 'http://localhost:3000',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+  },
+  
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'mobile-chrome',
+      use: { ...devices['Pixel 5'] },
+    },
+  ],
+  
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+  },
+});
+```
+
+### Running E2E Tests
+
+```bash
+# Run E2E tests
+npm run test:e2e
+
+# Run with UI mode (interactive)
+npm run test:e2e:ui
+
+# Run in headed mode (see browser)
+npm run test:e2e:headed
+
+# View test report
+npm run test:e2e:report
+```
+
+### E2E Test Scripts Reference
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| `test:e2e` | `playwright test` | Run E2E tests headless |
+| `test:e2e:ui` | `playwright test --ui` | Interactive UI mode |
+| `test:e2e:headed` | `playwright test --headed` | Run with visible browser |
+| `test:e2e:report` | `playwright show-report` | View HTML test report |
+
+### Writing E2E Tests
+
+E2E test files go in `e2e/` directory:
+
+```typescript
+// e2e/auth.spec.ts
+import { test, expect } from '@playwright/test';
+
+test.describe('Authentication', () => {
+  test('user can log in', async ({ page }) => {
+    await page.goto('/login');
+    
+    // Fill in credentials
+    await page.fill('input[name="email"]', 'test@example.com');
+    await page.fill('input[name="password"]', 'password123');
+    
+    // Submit form
+    await page.click('button[type="submit"]');
+    
+    // Should redirect to dashboard
+    await expect(page).toHaveURL('/dashboard');
+    
+    // Should show user menu
+    await expect(page.locator('[data-testid="user-menu"]')).toBeVisible();
+  });
+  
+  test('shows error for invalid credentials', async ({ page }) => {
+    await page.goto('/login');
+    
+    await page.fill('input[name="email"]', 'wrong@example.com');
+    await page.fill('input[name="password"]', 'wrongpassword');
+    await page.click('button[type="submit"]');
+    
+    // Should show error message
+    await expect(page.locator('text=Invalid credentials')).toBeVisible();
+  });
+});
+```
+
+### E2E Testing Patterns
+
+<AccordionGroup>
+  <Accordion title="Page Object Model">
+    Organize selectors and actions into page objects:
+    
+    ```typescript
+    // e2e/pages/login-page.ts
+    export class LoginPage {
+      constructor(private page: Page) {}
+      
+      async goto() {
+        await this.page.goto('/login');
+      }
+      
+      async login(email: string, password: string) {
+        await this.page.fill('input[name="email"]', email);
+        await this.page.fill('input[name="password"]', password);
+        await this.page.click('button[type="submit"]');
+      }
+    }
+    
+    // Use in tests
+    test('login flow', async ({ page }) => {
+      const loginPage = new LoginPage(page);
+      await loginPage.goto();
+      await loginPage.login('user@example.com', 'password');
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="Test Data Management">
+    Use fixtures for consistent test data:
+    
+    ```typescript
+    import { test as base } from '@playwright/test';
+    
+    type Fixtures = {
+      authenticatedPage: Page;
+    };
+    
+    const test = base.extend<Fixtures>({
+      authenticatedPage: async ({ page }, use) => {
+        // Login before each test
+        await page.goto('/login');
+        await page.fill('[name="email"]', 'test@example.com');
+        await page.fill('[name="password"]', 'password');
+        await page.click('button[type="submit"]');
+        await page.waitForURL('/dashboard');
+        
+        await use(page);
+      },
+    });
+    
+    test('create customer', async ({ authenticatedPage }) => {
+      // Already logged in
+      await authenticatedPage.goto('/customers/new');
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="Visual Testing">
+    Take screenshots for visual regression testing:
+    
+    ```typescript
+    test('customer list appearance', async ({ page }) => {
+      await page.goto('/customers');
+      await expect(page).toHaveScreenshot('customer-list.png');
+    });
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Testing Best Practices
+
+### General Guidelines
+
+- **Test behavior, not implementation** — Focus on what users see and do
+- **Use descriptive test names** — Clearly state what is being tested
+- **Arrange-Act-Assert** — Structure tests clearly
+- **Avoid testing implementation details** — Don't test internal state
+- **Keep tests independent** — Each test should run in isolation
+
+### What to Test
+
+<AccordionGroup>
+  <Accordion title="Critical User Flows">
+    - User authentication (login, logout, registration)
+    - Customer creation and editing
+    - Campaign creation and sending
+    - Reservation import and sync
+    - Loyalty tier upgrades
+  </Accordion>
+  
+  <Accordion title="Business Logic">
+    - RFM score calculation
+    - Loyalty points calculation
+    - Revenue analytics
+    - Customer segmentation
+    - Campaign audience filtering
+  </Accordion>
+  
+  <Accordion title="Edge Cases">
+    - Empty states (no customers, no campaigns)
+    - Error handling (network failures, invalid data)
+    - Permission boundaries (RLS policies)
+    - Data validation
+  </Accordion>
+</AccordionGroup>
+
+### What NOT to Test
+
+- Third-party libraries (React, Next.js internals)
+- Trivial getters/setters
+- External API integrations (mock these)
+- Styling details (use visual regression sparingly)
+
+## Coverage Reports
+
+Generate and view coverage reports:
+
+```bash
+# Generate coverage
+npm run test:coverage
+
+# Open HTML report
+open coverage/index.html
+```
+
+Coverage goals:
+
+- **Business logic** — 80%+ coverage
+- **UI components** — 60%+ coverage
+- **Utility functions** — 90%+ coverage
+
+## Continuous Integration
+
+Tests run automatically on CI for every pull request:
+
+```yaml
+# Example GitHub Actions workflow
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npm run type-check
+      - run: npm run test:run
+      - run: npm run test:e2e
+```
+
+## Debugging Tests
+
+### Vitest Debugging
+
+```bash
+# Run tests with UI
+npm run test:ui
+
+# Run specific test file
+npm run test -- customer-card.test.tsx
+
+# Run tests matching pattern
+npm run test -- --grep="loyalty"
+```
+
+### Playwright Debugging
+
+```bash
+# Debug mode (pauses on failure)
+npx playwright test --debug
+
+# UI mode (interactive)
+npm run test:e2e:ui
+
+# View trace for failed test
+npx playwright show-trace trace.zip
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Code Standards" icon="code" href="/contributing/code-standards">
+    Review coding conventions
+  </Card>
+  <Card title="Development Setup" icon="laptop-code" href="/contributing/setup">
+    Set up your environment
+  </Card>
+</CardGroup>

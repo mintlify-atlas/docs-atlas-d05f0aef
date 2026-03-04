@@ -1,0 +1,346 @@
+---
+title: 'Code Standards'
+description: 'Coding conventions, TypeScript requirements, and commit message format for Hiro CRM'
+---
+
+Follow these standards to maintain code quality and consistency across Hiro CRM.
+
+## TypeScript Requirements
+
+All new code must be written in **TypeScript** with proper types.
+
+### TypeScript Configuration
+
+Hiro CRM uses strict TypeScript settings:
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "moduleResolution": "bundler"
+  }
+}
+```
+
+### Type Safety Guidelines
+
+<AccordionGroup>
+  <Accordion title="Always define types for props and state">
+    ```typescript
+    // Good
+    interface CustomerCardProps {
+      customer: Customer;
+      onSelect: (id: string) => void;
+    }
+    
+    export function CustomerCard({ customer, onSelect }: CustomerCardProps) {
+      // ...
+    }
+    
+    // Bad
+    export function CustomerCard({ customer, onSelect }: any) {
+      // ...
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Use existing types from types/">
+    Import types from the shared type definitions:
+    
+    ```typescript
+    import type { Customer, Location, Campaign } from '@/types/database';
+    import type { ApiResponse } from '@/types/api';
+    ```
+  </Accordion>
+  
+  <Accordion title="Avoid 'any' type">
+    Use `unknown` for truly dynamic data, then narrow the type:
+    
+    ```typescript
+    // Good
+    function processData(data: unknown) {
+      if (typeof data === 'object' && data !== null) {
+        // Type narrowing
+      }
+    }
+    
+    // Avoid
+    function processData(data: any) {
+      // No type safety
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Type Supabase queries">
+    Use the generated Supabase types:
+    
+    ```typescript
+    import { Database } from '@/types/supabase';
+    import { createClient } from '@/lib/supabase/client';
+    
+    const supabase = createClient<Database>();
+    const { data } = await supabase
+      .from('customers')
+      .select('*');
+    // data is properly typed as Customer[]
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## React Component Standards
+
+### Component Structure
+
+Use functional components with hooks:
+
+```typescript
+import { useState, useEffect } from 'react';
+import type { Customer } from '@/types/database';
+
+interface CustomerListProps {
+  locationId: string;
+}
+
+export function CustomerList({ locationId }: CustomerListProps) {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    // Fetch customers
+  }, [locationId]);
+  
+  if (loading) return <LoadingSpinner />;
+  
+  return (
+    <div className="space-y-4">
+      {customers.map(customer => (
+        <CustomerCard key={customer.id} customer={customer} />
+      ))}
+    </div>
+  );
+}
+```
+
+### Component Guidelines
+
+- **Functional components only** — No class components
+- **Hooks for state** — Use `useState`, `useEffect`, custom hooks
+- **Small, focused components** — Each component should have a single responsibility
+- **Export named components** — Avoid default exports for components
+- **Co-locate related code** — Keep components, styles, and tests together
+
+## Styling Standards
+
+### Tailwind CSS
+
+Use **Tailwind CSS** utility classes for all styling:
+
+```tsx
+// Good
+<div className="rounded-lg border bg-white p-6 shadow-sm">
+  <h2 className="text-lg font-semibold text-gray-900">
+    Customer Details
+  </h2>
+</div>
+
+// Avoid inline styles
+<div style={{ padding: '24px', borderRadius: '8px' }}>
+  ...
+</div>
+```
+
+### Responsive Design
+
+Use Tailwind's responsive prefixes:
+
+```tsx
+<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+  {/* Mobile: 1 column, Tablet: 2 columns, Desktop: 3 columns */}
+</div>
+```
+
+### Dark Mode
+
+Support dark mode with `dark:` prefix:
+
+```tsx
+<div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+  Content
+</div>
+```
+
+## Database & Data Fetching
+
+### Supabase Queries
+
+All database queries must:
+
+- Use the Supabase client from `@/lib/supabase/client` or `@/lib/supabase/server`
+- Respect Row Level Security (RLS) policies
+- Handle errors gracefully
+
+```typescript
+import { createClient } from '@/lib/supabase/client';
+
+export async function fetchCustomers(locationId: string) {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase
+    .from('customers')
+    .select('*')
+    .eq('location_id', locationId)
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching customers:', error);
+    throw error;
+  }
+  
+  return data;
+}
+```
+
+### Server Actions
+
+Use Next.js Server Actions for data mutations:
+
+```typescript
+'use server';
+
+import { createClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
+
+export async function updateCustomer(customerId: string, data: Partial<Customer>) {
+  const supabase = await createClient();
+  
+  const { error } = await supabase
+    .from('customers')
+    .update(data)
+    .eq('id', customerId);
+  
+  if (error) throw error;
+  
+  revalidatePath('/customers');
+}
+```
+
+## ESLint Configuration
+
+Our ESLint setup extends Next.js defaults:
+
+```javascript
+// eslint.config.mjs
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+export default [
+  ...nextVitals,
+  ...nextTs,
+  {
+    rules: {
+      // Custom rules are mostly disabled for flexibility
+      // Focus on TypeScript type-checking instead
+    }
+  }
+];
+```
+
+### Running the Linter
+
+```bash
+# Check for linting errors
+npm run lint
+
+# TypeScript type checking (more important)
+npm run type-check
+```
+
+## Commit Message Format
+
+We follow [Conventional Commits](https://www.conventionalcommits.org/) for clear, semantic commit history.
+
+### Format
+
+```
+<type>: <description>
+
+[optional body]
+
+[optional footer]
+```
+
+### Types
+
+| Type | Description | Example |
+|------|-------------|----------|
+| `feat` | New feature | `feat: add loyalty tier upgrade notifications` |
+| `fix` | Bug fix | `fix: resolve reservation sync error` |
+| `docs` | Documentation changes | `docs: update API integration guide` |
+| `refactor` | Code refactoring | `refactor: simplify customer query logic` |
+| `test` | Test additions/changes | `test: add unit tests for RFM calculation` |
+| `chore` | Maintenance tasks | `chore: update dependencies` |
+| `style` | Code style changes | `style: format with Prettier` |
+| `perf` | Performance improvements | `perf: optimize campaign query` |
+
+### Examples
+
+```bash
+# Feature
+git commit -m "feat: add email template preview"
+
+# Bug fix
+git commit -m "fix: prevent duplicate reservation imports"
+
+# Documentation
+git commit -m "docs: add Brevo integration guide"
+
+# Refactoring
+git commit -m "refactor: extract loyalty points calculation to utility"
+
+# With body
+git commit -m "feat: add SMS campaign scheduling
+
+Allows users to schedule SMS campaigns for future delivery.
+Integrates with Brevo API scheduling endpoint."
+```
+
+### Commit Best Practices
+
+- **Use imperative mood** — "add feature" not "added feature"
+- **Be specific** — Describe what changed and why
+- **Keep it concise** — First line under 72 characters
+- **Reference issues** — Include issue numbers: `fix: resolve #123`
+
+## Code Review Guidelines
+
+When reviewing pull requests:
+
+- **Type safety** — Ensure proper TypeScript usage
+- **Test coverage** — New features should have tests
+- **Documentation** — Update docs for new features
+- **Performance** — Watch for unnecessary re-renders, N+1 queries
+- **Accessibility** — Check for keyboard navigation, ARIA labels
+- **Security** — Verify RLS policies, input validation
+
+## File Naming Conventions
+
+- **Components** — PascalCase: `CustomerCard.tsx`
+- **Utilities** — camelCase: `formatCurrency.ts`
+- **Hooks** — camelCase with `use` prefix: `useCustomers.ts`
+- **Types** — PascalCase: `Customer.ts`
+- **Server Actions** — camelCase: `updateCustomer.ts`
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Testing Guide" icon="flask" href="/contributing/testing">
+    Learn how to write and run tests
+  </Card>
+  <Card title="Development Setup" icon="laptop-code" href="/contributing/setup">
+    Set up your development environment
+  </Card>
+</CardGroup>

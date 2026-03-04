@@ -1,0 +1,534 @@
+---
+title: 'Marketing Campaigns'
+description: 'Create, launch, and track targeted marketing campaigns with automated workflows and audience segmentation'
+icon: 'megaphone'
+---
+
+## Overview
+
+Hiro's Marketing Hub combines campaign management, audience segmentation, and marketing automation into a unified platform. Built for hospitality businesses, it helps you re-engage inactive customers, reward loyalty, and drive revenue through targeted communication.
+
+<Note>
+**Perfect for:** Restaurant groups and hotels running regular promotional campaigns, loyalty programs, and customer re-engagement initiatives.
+</Note>
+
+## Marketing Hub Dashboard
+
+The Marketing Hub has four main sections:
+
+<Tabs>
+  <Tab title="Strategy Dashboard">
+    Executive overview of marketing performance:
+    - Total campaigns (active and completed)
+    - Active automations count
+    - Campaign performance metrics
+    - ROI and revenue attribution
+    - Recent activity feed
+  </Tab>
+  <Tab title="Campaigns">
+    Campaign creation and management:
+    - Active, scheduled, and draft campaigns
+    - Performance metrics per campaign
+    - Templates and presets
+    - Multi-channel support
+  </Tab>
+  <Tab title="Audiences">
+    Smart segmentation tools:
+    - Pre-built RFM segments
+    - Custom segment builder
+    - Kanban-style segment visualization
+    - Segment analytics
+  </Tab>
+  <Tab title="Automations">
+    Marketing automation workflows:
+    - Trigger-based campaigns
+    - Behavioral automations
+    - Performance tracking
+    - Pre-configured workflows
+  </Tab>
+</Tabs>
+
+## Creating Campaigns
+
+### Campaign Creation Wizard
+
+Launch campaigns in 5 steps:
+
+<Steps>
+  <Step title="Select Audience">
+    Choose from:
+    - Pre-built segments (VIP, At Risk, Champions)
+    - Custom segment from Advanced Filter
+    - Manually selected customers
+    - Import from CSV
+  </Step>
+  <Step title="Choose Channel">
+    Select communication method:
+    - **Email Premium**: Rich HTML templates
+    - **SMS Directo**: High open rate, 160 chars
+    - **WhatsApp**: Personal engagement
+  </Step>
+  <Step title="Design Message">
+    Craft your message:
+    - Use pre-built templates or start from scratch
+    - Personalization tokens (name, tier, location)
+    - AI Copywriter suggestions
+    - Preview on device mockups
+  </Step>
+  <Step title="Configure">
+    Set campaign parameters:
+    - Name and description
+    - Send time/schedule
+    - Tracking parameters
+    - A/B test variants (optional)
+  </Step>
+  <Step title="Launch">
+    Review and launch:
+    - Audience count confirmation
+    - Cost estimate (SMS/WhatsApp)
+    - Preview sample recipients
+    - Schedule or send immediately
+  </Step>
+</Steps>
+
+### Campaign Templates
+
+Pre-designed templates for common scenarios:
+
+<CardGroup cols={2}>
+  <Card title="Re-engagement" icon="rotate-ccw">
+    "We Miss You" campaign for inactive customers
+    - 30/60/90 day versions
+    - Incentive variants
+  </Card>
+  <Card title="Birthday Club" icon="cake">
+    Automated birthday greetings with special offer
+    - Personalized message
+    - Free dessert/drink offer
+  </Card>
+  <Card title="VIP Exclusive" icon="crown">
+    Special offers for high-value customers
+    - Early access to events
+    - Private tastings
+  </Card>
+  <Card title="New Menu Launch" icon="utensils">
+    Announce new dishes or seasonal menus
+    - Food photography
+    - Reservation CTA
+  </Card>
+  <Card title="Event Invitation" icon="calendar">
+    Invite customers to special events
+    - Wine dinners
+    - Chef's table
+  </Card>
+  <Card title="Feedback Request" icon="star">
+    Ask for reviews after positive experiences
+    - NPS survey link
+    - Google/TripAdvisor links
+  </Card>
+</CardGroup>
+
+### Personalization Tokens
+
+Insert dynamic content into messages:
+
+```
+Hola {nombre},
+
+Como miembro {loyalty_tier} de {ubicacion_favorita},
+tienes acceso exclusivo a nuestra nueva carta de otoño.
+
+Reserva tu mesa preferida ({mesa_preferida}) antes del {fecha}.
+
+¡Te esperamos!
+```
+
+**Available Tokens:**
+- `{nombre}` - First name
+- `{apellido}` - Last name
+- `{loyalty_tier}` - Tier (VIP, Oro, etc.)
+- `{ubicacion_favorita}` - Most visited location
+- `{mesa_preferida}` - Preferred table
+- `{ultima_visita}` - Last visit date
+- `{total_visitas}` - Total visit count
+- `{fecha}` - Current date
+- Custom fields (configurable)
+
+## Audience Segmentation
+
+### Smart Segments (RFM-Based)
+
+Pre-built segments automatically updated:
+
+<Accordion title="Champions">
+**Definition:** High frequency + high spend + recent visit
+
+**Characteristics:**
+- Visited in last 30 days
+- 5+ visits in last 6 months
+- Top 20% in spending
+
+**Campaign Ideas:**
+- VIP event invitations
+- Early access to new offerings
+- Referral program enrollment
+- Thank you campaigns
+</Accordion>
+
+<Accordion title="Loyal Customers">
+**Definition:** Regular visitors with consistent spend
+
+**Characteristics:**
+- Visit every 4-6 weeks
+- 3+ visits in last 6 months
+- Above-average ticket
+
+**Campaign Ideas:**
+- Loyalty program upgrades
+- Birthday club enrollment
+- Seasonal menu previews
+</Accordion>
+
+<Accordion title="At Risk">
+**Definition:** Previously valuable, now inactive
+
+**Characteristics:**
+- Haven't visited in 60-90 days
+- Were frequent visitors (5+ total visits)
+- High historical spend
+
+**Campaign Ideas:**
+- "We miss you" with 20% discount
+- Personal call from manager
+- New menu announcement
+- Survey: Why haven't you returned?
+</Accordion>
+
+<Accordion title="Lost">
+**Definition:** Inactive for 3+ months
+
+**Characteristics:**
+- No visit in 90+ days
+- Previously regular customer
+- No response to re-engagement attempts
+
+**Campaign Ideas:**
+- High-value offer (50% off, free bottle)
+- Complete menu refresh announcement
+- Major renovation/concept change
+- Last-chance re-engagement
+</Accordion>
+
+<Accordion title="New Customers">
+**Definition:** First visit or recent sign-up
+
+**Characteristics:**
+- First visit within last 30 days
+- 0-1 total visits
+- Not yet in loyalty program
+
+**Campaign Ideas:**
+- Welcome series (3 emails)
+- Second visit incentive
+- Loyalty program enrollment
+- Menu recommendations
+</Accordion>
+
+### Custom Segments
+
+Build precise audiences with Advanced Filter Builder:
+
+**Example: High-Value Wine Lovers**
+```
+Conditions (ALL must be true):
+- Total Spend > €1000
+- Tags contains "Wine Lover"
+- Last Visit < 45 days ago
+- Average Rating >= 8
+```
+
+**Example: Brunch Campaign - Barcelona Only**
+```
+Conditions:
+- Favorite Location = "Barcelona Centro"
+- Previous visits on Saturday/Sunday
+- Visit Count >= 3
+```
+
+### Kanban Segments View
+
+Visual board showing customer segments:
+
+- **Columns**: Each segment (Champions, Loyal, At Risk, etc.)
+- **Cards**: Sample customers from each segment
+- **Drag & Drop**: Move customers between segments
+- **Quick Actions**: Create campaign for segment
+- **Analytics**: Count, avg spend, potential revenue
+
+## Marketing Automation
+
+### Automated Workflows
+
+Set up trigger-based campaigns that run automatically:
+
+<CardGroup cols={2}>
+  <Card title="Behavioral Triggers" icon="activity">
+    - First visit completed
+    - Milestone visits (5th, 10th, 25th)
+    - Spending threshold reached
+    - No visit in X days
+    - Reservation completed
+  </Card>
+  <Card title="Temporal Triggers" icon="clock">
+    - Birthday (X days before)
+    - Anniversary of first visit
+    - End of month
+    - Seasonal dates
+  </Card>
+  <Card title="RFM Triggers" icon="target">
+    - Customer enters "At Risk" segment
+    - Tier upgrade (Bronze → Silver)
+    - Tier downgrade
+    - Becomes "Champion"
+  </Card>
+  <Card title="Feedback Triggers" icon="star">
+    - NPS score < 7 (detractor)
+    - NPS score >= 9 (promoter)
+    - First review received
+    - No feedback after 3 visits
+  </Card>
+</CardGroup>
+
+### Pre-configured Workflows
+
+Ready-to-activate automation templates:
+
+<Tabs>
+  <Tab title="Birthday Campaign">
+    **Trigger:** 7 days before birthday
+    
+    **Action:** Send email with:
+    - Personalized greeting
+    - Free dessert or drink offer
+    - Reservation link
+    - Valid for birthday month
+    
+    **Performance:** ~40% redemption rate
+  </Tab>
+  <Tab title="Win-Back VIPs">
+    **Trigger:** VIP hasn't visited in 60 days
+    
+    **Action:** 
+    1. Internal alert to manager
+    2. Personal email with exclusive offer
+    3. Follow-up SMS if no response in 7 days
+    
+    **Performance:** ~25% return rate
+  </Tab>
+  <Tab title="First Visit Follow-up">
+    **Trigger:** 3 days after first visit
+    
+    **Action:** Send email with:
+    - Thank you message
+    - 10% off next visit
+    - Loyalty program invitation
+    - Menu recommendations
+    
+    **Performance:** ~30% second visit conversion
+  </Tab>
+  <Tab title="Detractor Recovery">
+    **Trigger:** NPS score ≤ 6
+    
+    **Action:**
+    1. Immediate alert to operations
+    2. Manager outreach (phone call)
+    3. Apology email if warranted
+    4. Recovery offer (50% discount)
+    
+    **Performance:** ~60% recovery rate
+  </Tab>
+</Tabs>
+
+### Automation Builder
+
+Create custom workflows:
+
+1. **Select Trigger**
+   - Choose from 20+ trigger types
+   - Set conditions (e.g., "No visit > 45 days AND Total Spend > €500")
+   
+2. **Define Action**
+   - Send campaign from template
+   - Create internal alert
+   - Move to different segment
+   - Update customer tag
+   
+3. **Set Frequency**
+   - One-time per customer
+   - Recurring (monthly, etc.)
+   - Limit per customer per year
+   
+4. **Activate**
+   - Test with sample customers
+   - Activate for all matching
+   - Monitor performance
+
+<Note type="warning">
+**Best Practice:** Start automations with small audiences to test messaging and offers before scaling to full segments.
+</Note>
+
+## Campaign Performance
+
+### Real-time Metrics
+
+Track campaign success:
+
+<CardGroup cols={3}>
+  <Card title="Delivery" icon="send">
+    - Sent count
+    - Delivered rate
+    - Bounce rate
+    - Failed sends
+  </Card>
+  <Card title="Engagement" icon="mouse-pointer">
+    - Open rate
+    - Click rate
+    - Time to open
+    - Device breakdown
+  </Card>
+  <Card title="Revenue" icon="euro">
+    - Attributed revenue
+    - Conversion rate
+    - ROI percentage
+    - Revenue per recipient
+  </Card>
+</CardGroup>
+
+### Attribution Tracking
+
+Hiro tracks revenue from campaigns:
+
+- **Direct Attribution**: Customer uses campaign code/link
+- **Time-based**: Visit within 30 days of campaign
+- **First Touch**: Campaign was first interaction
+- **Last Touch**: Campaign was last interaction before visit
+
+### Benchmarks (Industry Averages)
+
+| Metric | Email | SMS | WhatsApp |
+|--------|-------|-----|----------|
+| Open Rate | 22% | 98% | 95% |
+| Click Rate | 2.5% | 8% | 15% |
+| Conversion | 0.8% | 3% | 5% |
+| Cost per Send | €0.02 | €0.08 | €0.05 |
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Timing Matters" icon="clock">
+    - Email: Send Tue-Thu, 10am-2pm for lunch, 4pm-6pm for dinner
+    - SMS: Avoid early morning (&lt;10am) and late night (&gt;10pm)
+    - WhatsApp: During business hours only
+  </Card>
+  <Card title="Test Everything" icon="flask">
+    - A/B test subject lines
+    - Test offer amounts (15% vs 20%)
+    - Test personalization depth
+    - Always have control group
+  </Card>
+  <Card title="Segment Precisely" icon="target">
+    - Smaller, targeted segments outperform large blasts
+    - Use location data for local offers
+    - Consider visit history and preferences
+  </Card>
+  <Card title="Respect Frequency" icon="pause">
+    - Max 1 campaign per customer per week
+    - Exclude recent visitors from re-engagement
+    - Honor unsubscribe immediately
+  </Card>
+</CardGroup>
+
+## Compliance & Privacy
+
+### GDPR Compliance
+
+- **Opt-in Required**: Double opt-in for email/SMS
+- **Easy Unsubscribe**: One-click unsubscribe in all messages
+- **Data Portability**: Customers can download their data
+- **Right to Erasure**: Delete customer data on request
+
+### Best Practices
+
+- Include physical address in all emails (legal requirement)
+- Provide preference center (email vs SMS)
+- Segment by consent type
+- Clean lists every 6 months (remove inactive)
+
+<Note>
+**Legal Tip:** Keep records of opt-in consent with timestamp and source. Required for GDPR compliance audits.
+</Note>
+
+## Campaign Examples
+
+### Example 1: VIP Re-engagement
+
+**Audience:** VIP customers, no visit in 45-75 days
+
+**Channel:** Email + SMS follow-up
+
+**Subject:** "[Name], your VIP table is waiting"
+
+**Message:**
+```
+Hola [nombre],
+
+Te echamos de menos en [ubicacion_favorita].
+
+Como miembro VIP, hemos reservado una sorpresa especial
+para tu próxima visita. Solo tienes que mencionarnos
+este email al reservar.
+
+Tu mesa favorita ([mesa_preferida]) te espera.
+
+Reserva aquí: [link]
+
+—El equipo de [restaurante]
+```
+
+**Results:** 28% open, 6% click, 3.2% conversion
+
+### Example 2: New Menu Launch
+
+**Audience:** All active customers (visited last 90 days)
+
+**Channel:** Email with photos
+
+**Subject:** "Nueva Carta de Otoño 🍂"
+
+**Message:** Rich HTML email with:
+- Hero image of signature dish
+- 3-4 menu highlights with photos
+- Chef's note
+- Reservation CTA
+
+**Results:** 35% open, 8% click, 12% booked within 2 weeks
+
+## Technical Details
+
+**Email Delivery:**
+- SendGrid/AWS SES integration
+- SPF/DKIM/DMARC configured
+- Bounce handling automatic
+- Unsubscribe honored immediately
+
+**SMS Delivery:**
+- Twilio integration
+- Spanish long code
+- Unicode support (emojis)
+- Delivery receipts tracked
+
+**WhatsApp:**
+- WhatsApp Business API
+- Template pre-approval required
+- Rich media support
+- Two-way conversations

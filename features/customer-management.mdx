@@ -1,0 +1,338 @@
+---
+title: 'Customer Management'
+description: 'Centralize and manage all customer data with advanced segmentation, RFM analysis, and intelligent insights'
+icon: 'users'
+---
+
+## Overview
+
+Hiro CRM's Customer Management system provides hospitality businesses with a comprehensive 360° view of every customer. Built specifically for restaurants and hotels in Spain, it combines traditional CRM capabilities with hospitality-specific features like loyalty tiers, VIP management, and advanced behavioral segmentation.
+
+<Note>
+**Perfect for:** Multi-location restaurant groups, hotel chains, and hospitality businesses that need to track customer behavior across multiple properties.
+</Note>
+
+## Key Features
+
+### Unified Customer Database
+
+All customer information is centralized in a single, searchable database that syncs across all your locations:
+
+- **Complete Profiles**: Names, contact information, preferences, dietary restrictions
+- **Visit History**: Full timeline of reservations across all properties
+- **Spending Analytics**: Total spend, average ticket, lifetime value
+- **Feedback Tracking**: NPS scores, reviews, satisfaction levels
+- **Integration Data**: CoverManager IDs, external system references
+
+<CardGroup cols={2}>
+  <Card title="Search & Filter" icon="search">
+    Find customers instantly with semantic AI search, advanced filters, and saved segments
+  </Card>
+  <Card title="Import/Export" icon="file-arrow-down">
+    Bulk import from Excel/CSV, export filtered lists for campaigns
+  </Card>
+</CardGroup>
+
+### RFM Segmentation
+
+Hiro automatically segments customers using Recency, Frequency, and Monetary (RFM) analysis:
+
+**Customer Segments:**
+- **Champions**: High frequency, high spend, recent visits
+- **Loyal Customers**: Regular visitors with consistent spend
+- **At Risk**: Previously valuable customers who haven't visited recently
+- **Lost**: Haven't visited in 3+ months
+- **New Customers**: First-time or recent sign-ups
+
+<Accordion title="How RFM Scoring Works">
+Hiro scores customers on three dimensions:
+
+1. **Recency**: Days since last visit (weighted 35%)
+2. **Frequency**: Total visits in calculation period (weighted 30%)
+3. **Monetary**: Total lifetime spend (weighted 35%)
+
+Scores are automatically recalculated daily and customers are moved between segments automatically.
+</Accordion>
+
+### Loyalty Program Integration
+
+The system includes a configurable loyalty program with multiple tiers:
+
+**Default Tiers:**
+- **Founders**: Exclusive VIP tier with custom benefits
+- **VIP**: High-value repeat customers
+- **Oro (Gold)**: Frequent visitors
+- **Plata (Silver)**: Regular customers
+- **Bronce (Bronze)**: Occasional visitors
+- **Nuevo**: First-time customers
+
+<Tabs>
+  <Tab title="Visual Indicators">
+    Customers are displayed with color-coded badges:
+    - **Founders**: Gold gradient with crown icon
+    - **VIP**: Gold with star icon
+    - **Oro**: Gold tone
+    - **Plata**: Silver tone
+    - **Bronce**: Bronze tone
+  </Tab>
+  <Tab title="Auto-Calculation">
+    Tiers are assigned based on:
+    - Total visits (lifetime or period-based)
+    - Total spend (lifetime or period-based)
+    - Visits in last year
+    - Spend in last year
+    - Average ticket size
+  </Tab>
+</Tabs>
+
+### Advanced Filtering & Search
+
+<CardGroup cols={2}>
+  <Card title="Smart Filters" icon="filter">
+    - Status (active, inactive, at-risk)
+    - Tier level (VIP, Oro, etc.)
+    - Spending ranges
+    - Visit frequency
+    - Last visit date
+    - Source location
+    - Tags and labels
+  </Card>
+  <Card title="AI Semantic Search" icon="sparkles">
+    Use natural language to find customers:
+    - "VIP customers who haven't visited in 3 months"
+    - "High spenders with low NPS scores"
+    - "Founders tier from Barcelona location"
+  </Card>
+</CardGroup>
+
+### Alert System
+
+Hiro automatically flags customers requiring attention:
+
+- **Churn Risk**: VIPs who haven't visited recently
+- **No-Show History**: Customers with multiple no-shows
+- **Negative Feedback**: Low NPS scores or bad reviews
+- **Recovery Needed**: Detractors who need re-engagement
+
+<Note type="warning">
+Customers with active alerts display a red warning badge on their profile and in lists.
+</Note>
+
+## User Workflows
+
+### Daily Operations
+
+1. **Morning Review**
+   - Check "Today's VIPs" widget on dashboard
+   - Review customers with active alerts
+   - Prepare for high-value reservations
+
+2. **Customer Lookup**
+   - Search by name, phone, or email
+   - View complete history before seating
+   - Check preferences and dietary restrictions
+
+3. **Post-Service Follow-up**
+   - Tag customers for follow-up
+   - Log notes from conversation
+   - Update preferences if mentioned
+
+### Marketing Campaigns
+
+1. **Segment Selection**
+   - Use pre-built segments (At Risk, Champions, etc.)
+   - Or build custom segments with Advanced Filter Builder
+   - Save segments for reuse
+
+2. **Export & Campaign**
+   - Export segment to CSV
+   - Use with email marketing tools
+   - Track campaign attribution
+
+<Accordion title="Creating Custom Segments">
+**Example: Re-engagement Campaign**
+
+1. Open Advanced Filter Builder
+2. Add conditions:
+   - Last visit > 60 days ago
+   - Total spend > €500
+   - Loyalty tier = "Oro" or "VIP"
+3. Apply filters and review customer list
+4. Export for email campaign
+5. Save segment as "High-Value Inactive"
+</Accordion>
+
+### VIP Management
+
+**Identifying VIPs:**
+- Automatic tier assignment based on spend/visits
+- Manual VIP flag for special cases
+- Visual indicators throughout the system
+
+**VIP Benefits Tracking:**
+- Custom notes for preferences
+- Preferred table assignments
+- Special requests history
+- Birthday tracking with reminders
+
+## Customer Profile View
+
+Click any customer to see their complete profile:
+
+<Tabs>
+  <Tab title="Overview">
+    - Contact information
+    - Loyalty tier badge
+    - Quick stats (visits, spend, NPS)
+    - Alert indicators
+    - Tags and labels
+  </Tab>
+  <Tab title="History">
+    - Complete reservation timeline
+    - Spend per visit
+    - Location breakdown
+    - Table preferences
+    - No-show history
+  </Tab>
+  <Tab title="Feedback">
+    - All NPS surveys
+    - Review ratings
+    - Comments and notes
+    - Satisfaction trend graph
+  </Tab>
+  <Tab title="Marketing">
+    - Segment membership
+    - Campaign participation
+    - Email engagement
+    - Opt-in status
+  </Tab>
+</Tabs>
+
+## Mobile Experience
+
+The customer list is optimized for mobile devices:
+
+- **Swipe Actions**: 
+  - Swipe right to call customer
+  - Swipe left to send email
+- **Touch-friendly**: Larger tap targets for filters
+- **Quick Actions**: Call/email buttons on cards
+- **Fast Search**: Type-ahead search with instant results
+
+## Data Management
+
+### Import Customers
+
+<Steps>
+  <Step title="Prepare File">
+    Use the provided Excel/CSV template with columns:
+    - First Name, Last Name
+    - Email, Phone
+    - Source (optional)
+    - Tags (optional)
+  </Step>
+  <Step title="Upload">
+    Navigate to Customers → Import
+    Upload your file
+  </Step>
+  <Step title="Map Fields">
+    Match your columns to Hiro fields
+    Preview data before import
+  </Step>
+  <Step title="Import">
+    Click "Import All"
+    Duplicate detection runs automatically
+  </Step>
+</Steps>
+
+### Merge Duplicates
+
+Hiro automatically detects potential duplicate customers:
+
+- Based on email, phone, or name similarity
+- Review suggested merges
+- Merge profiles with one click
+- History is preserved from both profiles
+
+### Export Data
+
+**Export Options:**
+- **Standard CSV**: All visible fields
+- **Advanced CSV**: Custom field selection
+- **Semantic Export**: Include AI similarity scores
+
+## Analytics & Insights
+
+### Customer Stats Widget (Dashboard)
+
+- Total active customers
+- New customers this month
+- VIP count and growth
+- Average customer lifetime value
+- Top spending customers
+
+### Segment Analytics
+
+For each saved segment, view:
+- Customer count
+- Average spend
+- Average visits
+- Engagement rate
+- Potential revenue
+
+<Note type="tip">
+**Pro Tip:** Set up automated campaigns for specific segments. For example, send a "We miss you" email automatically to customers in the "At Risk" segment after 45 days of inactivity.
+</Note>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Keep Profiles Updated" icon="refresh">
+    Train staff to update preferences and dietary restrictions after each visit. This personalization drives loyalty.
+  </Card>
+  <Card title="Monitor At-Risk VIPs" icon="alert-triangle">
+    Check the "At Risk" segment weekly and reach out personally to high-value customers who haven't visited recently.
+  </Card>
+  <Card title="Use Tags Consistently" icon="tag">
+    Create a standard set of tags (Wine Lover, Vegetarian, Birthday Club) and use them consistently across all locations.
+  </Card>
+  <Card title="Review Detractors Daily" icon="trending-down">
+    Customers with NPS ≤ 6 need immediate attention. Assign recovery tasks and follow up within 24 hours.
+  </Card>
+</CardGroup>
+
+## Integration Features
+
+### CoverManager Sync
+
+Customers created in CoverManager automatically sync to Hiro:
+- Preserves CoverManager ID for cross-reference
+- Syncs contact information
+- Links reservations automatically
+- Updates on schedule (configurable interval)
+
+### Duplicate Prevention
+
+When importing or syncing:
+- Email is primary match key
+- Phone number is secondary match
+- Name similarity detection
+- Manual review before auto-merge
+
+## Technical Details
+
+**Data Storage:**
+- All customer data encrypted at rest
+- GDPR-compliant retention policies
+- Automatic backups every 6 hours
+
+**Performance:**
+- Customer list loads 1000+ records instantly
+- Search results in &lt;100ms
+- Export handles 50,000+ customers
+
+**Customization:**
+- Custom fields (contact admin)
+- Custom tier names and criteria
+- Custom segment definitions
+- Configurable alert thresholds

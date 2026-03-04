@@ -1,0 +1,82 @@
+---
+title: API Overview
+description: Overview of Hiro CRM's REST API for managing hospitality operations
+---
+
+# API Overview
+
+Hiro CRM provides a REST API for managing reservations, customers, loyalty programs, and AI-powered operations. All endpoints use JSON for request and response payloads.
+
+## Base URL
+
+```
+https://your-domain.com/api
+```
+
+## API Sections
+
+<CardGroup cols={2}>
+  <Card title="Admin" icon="shield-halved" href="/api/admin/debug-reservations">
+    Administrative endpoints for debugging, importing data, and seeding locations
+  </Card>
+  <Card title="AI Chat" icon="brain" href="/api/ai/chat">
+    OpenAI-powered conversational AI assistant for restaurant operations
+  </Card>
+  <Card title="Automations" icon="robot" href="/api/automations/run">
+    Execute marketing automations manually or via scheduled cron jobs
+  </Card>
+  <Card title="Loyalty" icon="award" href="/api/loyalty/config">
+    Manage loyalty tiers, rules, and benefits configuration
+  </Card>
+  <Card title="Organization" icon="building" href="/api/organization/context">
+    Retrieve active organization context for multi-tenant operations
+  </Card>
+  <Card title="Sync" icon="arrows-rotate" href="/api/sync">
+    Synchronize reservations with external PMS systems
+  </Card>
+  <Card title="Cron Jobs" icon="clock" href="/api/cron/overview">
+    Scheduled tasks for syncing, notifications, and automations
+  </Card>
+</CardGroup>
+
+## Authentication
+
+All API endpoints require authentication using Supabase Auth. See [Authentication](/api/authentication) for details.
+
+## Common Response Formats
+
+### Success Response
+
+```json
+{
+  "success": true,
+  "data": { /* response data */ }
+}
+```
+
+### Error Response
+
+```json
+{
+  "error": "Error message",
+  "status": 500
+}
+```
+
+## Rate Limits
+
+API rate limits depend on your hosting configuration. The following endpoints have extended timeouts:
+
+- `/api/cron/*` endpoints: 60-300 seconds
+- `/api/ai/chat`: Standard timeout
+- `/api/automations/*/run`: 300 seconds (5 minutes)
+
+## HTTP Status Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| 200 | Request successful |
+| 400 | Bad request - invalid parameters |
+| 401 | Unauthorized - authentication required |
+| 403 | Forbidden - insufficient permissions |
+| 500 | Internal server error |

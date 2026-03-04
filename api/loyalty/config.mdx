@@ -1,0 +1,290 @@
+---
+title: Loyalty Config
+api: GET /api/loyalty/config
+description: Retrieve loyalty program configuration including tiers, rules, and benefits
+---
+
+# Loyalty Config
+
+Retrieve complete loyalty program configuration for the authenticated user's organization, including tiers, rules, benefits, and statistics.
+
+## Endpoint
+
+```
+GET /api/loyalty/config
+```
+
+## Authentication
+
+Requires authenticated user session.
+
+## Response
+
+<ResponseField name="tiers" type="array">
+  Array of loyalty tiers (global, sorted by rank)
+  
+  <Expandable title="Tier Object">
+    <ResponseField name="id" type="string">
+      Tier UUID
+    </ResponseField>
+    
+    <ResponseField name="name" type="string">
+      Tier name (e.g., "Bronce", "Plata", "Oro", "VIP")
+    </ResponseField>
+    
+    <ResponseField name="rank" type="number">
+      Tier ranking (1 = lowest, 4 = highest)
+    </ResponseField>
+    
+    <ResponseField name="color" type="string">
+      Tier color (hex code)
+    </ResponseField>
+    
+    <ResponseField name="icon" type="string">
+      Tier icon identifier
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="rules" type="array">
+  Loyalty rules for the organization's locations
+  
+  <Expandable title="Rule Object">
+    <ResponseField name="id" type="string">
+      Rule UUID
+    </ResponseField>
+    
+    <ResponseField name="location_id" type="string">
+      Location UUID
+    </ResponseField>
+    
+    <ResponseField name="tier_id" type="string">
+      Tier UUID
+    </ResponseField>
+    
+    <ResponseField name="min_spend" type="number">
+      Minimum spend required (in euros)
+    </ResponseField>
+    
+    <ResponseField name="min_visits" type="number">
+      Minimum visits required
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="benefits" type="array">
+  Active loyalty benefits
+  
+  <Expandable title="Benefit Object">
+    <ResponseField name="id" type="string">
+      Benefit UUID
+    </ResponseField>
+    
+    <ResponseField name="tier_id" type="string">
+      Associated tier UUID
+    </ResponseField>
+    
+    <ResponseField name="title" type="string">
+      Benefit title
+    </ResponseField>
+    
+    <ResponseField name="description" type="string">
+      Benefit description
+    </ResponseField>
+    
+    <ResponseField name="is_active" type="boolean">
+      Whether benefit is currently active
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="locations" type="array">
+  Organization's locations
+  
+  <Expandable title="Location Object">
+    <ResponseField name="id" type="string">
+      Location UUID
+    </ResponseField>
+    
+    <ResponseField name="name" type="string">
+      Location name
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="stats" type="object">
+  Customer statistics for the organization
+  
+  <Expandable title="Stats Properties">
+    <ResponseField name="total" type="number">
+      Total number of customers
+    </ResponseField>
+    
+    <ResponseField name="byTier" type="object">
+      Customer count by tier (e.g., `{ "bronce": 150, "plata": 75, "oro": 30, "vip": 10 }`)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Request
+
+```bash
+curl -X GET https://your-domain.com/api/loyalty/config \
+  -H "Cookie: your-session-cookie"
+```
+
+## Example Response
+
+```json
+{
+  "tiers": [
+    {
+      "id": "tier-bronce-uuid",
+      "name": "Bronce",
+      "rank": 1,
+      "color": "#CD7F32",
+      "icon": "bronze-medal"
+    },
+    {
+      "id": "tier-plata-uuid",
+      "name": "Plata",
+      "rank": 2,
+      "color": "#C0C0C0",
+      "icon": "silver-medal"
+    },
+    {
+      "id": "tier-oro-uuid",
+      "name": "Oro",
+      "rank": 3,
+      "color": "#FFD700",
+      "icon": "gold-medal"
+    },
+    {
+      "id": "tier-vip-uuid",
+      "name": "VIP",
+      "rank": 4,
+      "color": "#9333EA",
+      "icon": "crown"
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule-uuid-1",
+      "location_id": "location-madrid-centro",
+      "tier_id": "tier-plata-uuid",
+      "min_spend": 500,
+      "min_visits": 5
+    },
+    {
+      "id": "rule-uuid-2",
+      "location_id": "location-madrid-centro",
+      "tier_id": "tier-oro-uuid",
+      "min_spend": 1500,
+      "min_visits": 12
+    }
+  ],
+  "benefits": [
+    {
+      "id": "benefit-uuid-1",
+      "tier_id": "tier-vip-uuid",
+      "title": "10% de descuento",
+      "description": "En todas las consumiciones",
+      "is_active": true
+    }
+  ],
+  "locations": [
+    {
+      "id": "location-madrid-centro",
+      "name": "La Tasca Madrid · Centro"
+    },
+    {
+      "id": "location-madrid-salamanca",
+      "name": "La Tasca Madrid · Salamanca"
+    }
+  ],
+  "stats": {
+    "total": 265,
+    "byTier": {
+      "bronce": 150,
+      "plata": 75,
+      "oro": 30,
+      "vip": 10
+    }
+  }
+}
+```
+
+## Error Responses
+
+### 401 Unauthorized
+
+```json
+{
+  "error": "No autorizado"
+}
+```
+
+### 400 Bad Request
+
+```json
+{
+  "error": "Sin organización"
+}
+```
+
+### 500 Internal Server Error
+
+```json
+{
+  "error": "Database error message"
+}
+```
+
+## Implementation Details
+
+### Data Scoping
+
+The endpoint automatically scopes data to the user's organization:
+
+1. **Get User Profile** - Retrieve `organization_id` from authenticated user
+2. **Fetch Tiers** - Global tiers (not organization-specific)
+3. **Fetch Locations** - Filtered by `organization_id`
+4. **Fetch Rules** - Filtered by location IDs from step 3
+5. **Fetch Benefits** - Global active benefits
+6. **Calculate Stats** - Customer counts grouped by tier
+
+### Source Code Reference
+
+```typescript app/api/loyalty/config/route.ts
+import { createClient } from "@/lib/supabase/server";
+
+export async function GET() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+        return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', user.id)
+        .single();
+
+    // Fetch tiers, rules, benefits, locations, and stats
+    // ...
+}
+```
+
+## Use Cases
+
+- Display loyalty program configuration in admin dashboard
+- Build loyalty tier UI components
+- Configure location-specific tier requirements
+- Show customer distribution across tiers
+- Validate loyalty rules before updates
+
+<Note>
+  Tiers and benefits are **global** (shared across all organizations), while rules are **location-specific**.
+</Note>

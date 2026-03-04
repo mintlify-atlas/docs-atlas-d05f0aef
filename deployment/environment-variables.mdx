@@ -1,0 +1,374 @@
+---
+title: Environment Variables
+description: Complete guide to configuring environment variables for Hiro CRM
+icon: key
+---
+
+Hiro CRM uses environment variables to configure integrations, API keys, and service connections. This guide documents all available environment variables.
+
+## Quick Setup
+
+<Steps>
+  <Step title="Copy the example file">
+    ```bash
+    cd frontend
+    cp .env.example .env.local
+    ```
+  </Step>
+  
+  <Step title="Configure required variables">
+    At minimum, you need to configure Supabase credentials:
+    ```env
+    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+    SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+    NEXT_PUBLIC_APP_URL=https://your-domain.com
+    ```
+  </Step>
+  
+  <Step title="Add optional integrations">
+    Configure additional services based on your needs (see sections below).
+  </Step>
+</Steps>
+
+---
+
+## Required Variables
+
+These variables are essential for Hiro CRM to function.
+
+### Supabase Configuration
+
+<ParamField path="NEXT_PUBLIC_SUPABASE_URL" type="string" required>
+  Your Supabase project URL.
+  
+  **Example:** `https://xyzcompany.supabase.co`
+  
+  **Where to find:** Supabase Dashboard → Project Settings → API → Project URL
+</ParamField>
+
+<ParamField path="NEXT_PUBLIC_SUPABASE_ANON_KEY" type="string" required>
+  Supabase anonymous (public) key for client-side authentication.
+  
+  **Where to find:** Supabase Dashboard → Project Settings → API → Project API keys → `anon` `public`
+  
+  <Warning>
+    This key is safe to expose in your frontend code. It's protected by Row Level Security (RLS) policies.
+  </Warning>
+</ParamField>
+
+<ParamField path="SUPABASE_SERVICE_ROLE_KEY" type="string" required>
+  Supabase service role key for server-side operations.
+  
+  **Where to find:** Supabase Dashboard → Project Settings → API → Project API keys → `service_role` `secret`
+  
+  <Warning>
+    Keep this secret! Never expose this key in client-side code. It bypasses Row Level Security.
+  </Warning>
+</ParamField>
+
+### Application URL
+
+<ParamField path="NEXT_PUBLIC_APP_URL" type="string" required>
+  The public URL where your Hiro CRM instance is deployed.
+  
+  **Development:** `http://localhost:3000`
+  
+  **Production:** `https://your-domain.com`
+  
+  Used for generating absolute URLs in emails, redirects, and OAuth callbacks.
+</ParamField>
+
+---
+
+## Optional Integrations
+
+These variables enable additional features and integrations.
+
+### OpenAI (AI Assistant)
+
+Enable the AI-powered Concierge assistant for natural language queries.
+
+<ParamField path="OPENAI_API_KEY" type="string">
+  Your OpenAI API key for GPT-4 access.
+  
+  **Example:** `sk-proj-...`
+  
+  **Where to get:** [OpenAI Platform](https://platform.openai.com/api-keys)
+  
+  **Features enabled:**
+  - Natural language customer queries
+  - Smart data insights
+  - Automated report generation
+  
+  <Info>
+    Without this key, the AI Assistant features will be disabled but all other CRM functionality works normally.
+  </Info>
+</ParamField>
+
+### Brevo (Email & SMS Campaigns)
+
+Configure Brevo (formerly Sendinblue) for marketing campaigns.
+
+<ParamField path="BREVO_API_KEY" type="string">
+  Your Brevo API key.
+  
+  **Where to get:** Brevo Dashboard → SMTP & API → API Keys
+  
+  **Features enabled:**
+  - Email campaigns
+  - SMS campaigns  
+  - Transactional emails
+  - Campaign analytics
+</ParamField>
+
+<ParamField path="BREVO_SENDER_EMAIL" type="string">
+  Default sender email address for campaigns.
+  
+  **Example:** `noreply@your-restaurant.com`
+  
+  Must be a verified sender in your Brevo account.
+</ParamField>
+
+<ParamField path="BREVO_SENDER_NAME" type="string">
+  Default sender name displayed in emails.
+  
+  **Example:** `Hiro CRM` or `Your Restaurant Name`
+</ParamField>
+
+<ParamField path="BREVO_SMS_SENDER" type="string">
+  Sender name for SMS campaigns (max 11 characters).
+  
+  **Example:** `HiroCRM`
+  
+  <Note>
+    SMS sender names are subject to carrier restrictions. Keep it short and alphanumeric.
+  </Note>
+</ParamField>
+
+### POS Integrations
+
+Integrate with restaurant POS systems for automatic data sync.
+
+#### CoverManager
+
+<ParamField path="COVERMANAGER_API_KEY" type="string">
+  API key for CoverManager POS integration.
+  
+  **Where to get:** Contact CoverManager support
+  
+  **Features enabled:**
+  - Automatic reservation sync
+  - Customer data import
+  - Revenue tracking
+  - Table management sync
+</ParamField>
+
+#### Revo POS
+
+<ParamField path="REVO_ACCESS_TOKEN" type="string">
+  Access token for Revo POS integration.
+  
+  **Where to get:** Revo XEF → Settings → Integrations → API Access
+  
+  **Features enabled:**
+  - Sales data sync
+  - Product catalog sync
+  - Customer purchase history
+</ParamField>
+
+### Background Jobs (Inngest)
+
+Configure Inngest for background workflows and automations.
+
+<ParamField path="INNGEST_EVENT_KEY" type="string">
+  Inngest event key for sending events.
+  
+  **Where to get:** [Inngest Dashboard](https://app.inngest.com) → Your App → Keys
+  
+  **Used for:**
+  - Automated marketing workflows
+  - Scheduled tasks
+  - Async data processing
+</ParamField>
+
+<ParamField path="INNGEST_SIGNING_KEY" type="string">
+  Inngest signing key for webhook verification.
+  
+  **Where to get:** Inngest Dashboard → Your App → Keys → Signing Key
+  
+  <Warning>
+    Required in production to verify webhook authenticity.
+  </Warning>
+</ParamField>
+
+### Google Drive Integration
+
+Enable document library features with Google Drive.
+
+<ParamField path="GOOGLE_DRIVE_CLIENT_ID" type="string">
+  Google OAuth 2.0 client ID.
+  
+  **Where to get:** [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials
+</ParamField>
+
+<ParamField path="GOOGLE_DRIVE_CLIENT_SECRET" type="string">
+  Google OAuth 2.0 client secret.
+  
+  **Where to get:** Google Cloud Console → Your OAuth 2.0 Client → Client Secret
+</ParamField>
+
+<ParamField path="GOOGLE_DRIVE_REFRESH_TOKEN" type="string">
+  Google Drive refresh token for server-side access.
+  
+  **How to generate:** Use the OAuth 2.0 Playground or run the setup script:
+  ```bash
+  npm run setup:google-drive
+  ```
+</ParamField>
+
+### Error Tracking (Sentry)
+
+Monitor errors and performance with Sentry.
+
+<ParamField path="SENTRY_DSN" type="string">
+  Sentry Data Source Name for server-side error tracking.
+  
+  **Example:** `https://abc123@o123.ingest.sentry.io/456`
+  
+  **Where to get:** [Sentry Dashboard](https://sentry.io) → Project Settings → Client Keys (DSN)
+</ParamField>
+
+<ParamField path="NEXT_PUBLIC_SENTRY_DSN" type="string">
+  Sentry DSN for client-side error tracking.
+  
+  Typically the same as `SENTRY_DSN`.
+</ParamField>
+
+<ParamField path="SENTRY_ORG" type="string">
+  Your Sentry organization slug (for source map uploads).
+  
+  **Example:** `my-company`
+</ParamField>
+
+<ParamField path="SENTRY_PROJECT" type="string">
+  Your Sentry project slug (for source map uploads).
+  
+  **Example:** `hiro-crm`
+</ParamField>
+
+<ParamField path="SENTRY_AUTH_TOKEN" type="string">
+  Sentry auth token for uploading source maps during build.
+  
+  **Where to get:** Sentry → Settings → Auth Tokens → Create New Token
+  
+  <Info>
+    Only needed in CI/CD environments for production builds.
+  </Info>
+</ParamField>
+
+---
+
+## Environment-Specific Configuration
+
+### Development (.env.local)
+
+Minimal configuration for local development:
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# App URL
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Optional: AI features
+OPENAI_API_KEY=sk-proj-...
+```
+
+### Production (Vercel)
+
+All required variables plus optional integrations:
+
+```env
+# Core
+NEXT_PUBLIC_SUPABASE_URL=https://prod.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+NEXT_PUBLIC_APP_URL=https://crm.your-restaurant.com
+
+# Monitoring
+SENTRY_DSN=https://...@sentry.io/...
+NEXT_PUBLIC_SENTRY_DSN=https://...@sentry.io/...
+
+# AI & Marketing
+OPENAI_API_KEY=sk-proj-...
+BREVO_API_KEY=xkeysib-...
+BREVO_SENDER_EMAIL=noreply@your-restaurant.com
+BREVO_SENDER_NAME=Your Restaurant
+
+# POS Integration (if applicable)
+COVERMANAGER_API_KEY=cm_...
+# or
+REVO_ACCESS_TOKEN=revo_...
+
+# Background Jobs
+INNGEST_EVENT_KEY=...
+INNGEST_SIGNING_KEY=signkey-prod-...
+```
+
+---
+
+## Validation
+
+Hiro CRM validates environment variables at build time using Zod schemas. Check `lib/env.ts` for the validation logic.
+
+### Test Your Configuration
+
+```bash
+npm run build
+```
+
+If any required variables are missing or invalid, the build will fail with a descriptive error message.
+
+---
+
+## Security Best Practices
+
+<Warning>
+  Never commit `.env.local` or `.env.production` files to version control.
+</Warning>
+
+<AccordionGroup>
+  <Accordion title="Rotate keys regularly">
+    Rotate sensitive keys (service role, API keys) every 90 days.
+  </Accordion>
+  
+  <Accordion title="Use different keys per environment">
+    Never share production keys with development or staging environments.
+  </Accordion>
+  
+  <Accordion title="Limit key permissions">
+    Use API keys with the minimum required permissions (e.g., read-only for analytics).
+  </Accordion>
+  
+  <Accordion title="Monitor key usage">
+    Set up alerts for unusual API key usage patterns in your service dashboards.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Vercel Deployment" icon="rocket" href="/deployment/vercel">
+    Deploy Hiro CRM to Vercel
+  </Card>
+  
+  <Card title="Database Setup" icon="database" href="/deployment/database-setup">
+    Set up your Supabase database
+  </Card>
+</CardGroup>

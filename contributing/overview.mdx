@@ -1,0 +1,139 @@
+---
+title: 'Contributing Overview'
+description: 'How to contribute to Hiro CRM - reporting bugs, suggesting features, and submitting pull requests'
+---
+
+Thank you for your interest in contributing to Hiro CRM! This guide will help you get started with contributing to the project.
+
+## Ways to Contribute
+
+### Reporting Bugs
+
+If you find a bug in Hiro CRM, please help us fix it:
+
+<Steps>
+  <Step title="Search existing issues">
+    Check the [GitHub Issues](https://github.com/your-org/hiro-crm/issues) to see if the bug has already been reported.
+  </Step>
+  
+  <Step title="Open a new issue">
+    If the bug hasn't been reported, create a new issue with a clear title and description.
+  </Step>
+  
+  <Step title="Provide details">
+    Include:
+    - Steps to reproduce the bug
+    - Expected behavior
+    - Actual behavior
+    - Screenshots or error messages (if applicable)
+    - Your environment (browser, OS, Node version)
+  </Step>
+</Steps>
+
+### Suggesting Features
+
+We welcome feature suggestions that improve Hiro CRM for hospitality businesses:
+
+<Steps>
+  <Step title="Open an enhancement issue">
+    Create a new issue with the `enhancement` label.
+  </Step>
+  
+  <Step title="Describe the feature">
+    Explain:
+    - What problem does this feature solve?
+    - How would it work from a user's perspective?
+    - Why is this valuable for hospitality businesses?
+  </Step>
+  
+  <Step title="Include mockups">
+    If possible, add mockups, wireframes, or examples from other tools.
+  </Step>
+</Steps>
+
+### Submitting Pull Requests
+
+Ready to contribute code? Here's the workflow:
+
+<Steps>
+  <Step title="Fork the repository">
+    Fork [hiro-crm](https://github.com/your-org/hiro-crm) to your GitHub account.
+  </Step>
+  
+  <Step title="Create a feature branch">
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
+    
+    Use descriptive branch names:
+    - `feature/loyalty-tier-upgrade`
+    - `fix/reservation-sync-error`
+    - `docs/update-api-guide`
+  </Step>
+  
+  <Step title="Make your changes">
+    Follow the [code standards](/contributing/code-standards) and write tests for new functionality.
+  </Step>
+  
+  <Step title="Verify the build">
+    ```bash
+    cd frontend
+    npm run type-check
+    npm run test:run
+    ```
+  </Step>
+  
+  <Step title="Commit with a clear message">
+    ```bash
+    git commit -m "feat: add loyalty tier upgrade notifications"
+    ```
+    
+    See [commit message format](/contributing/code-standards#commit-messages) for guidelines.
+  </Step>
+  
+  <Step title="Push and open a PR">
+    ```bash
+    git push origin feature/your-feature-name
+    ```
+    
+    Open a Pull Request on GitHub with:
+    - A clear title and description
+    - Screenshots or videos for UI changes
+    - Reference to any related issues
+  </Step>
+</Steps>
+
+## Code of Conduct
+
+We are committed to providing a welcoming and inclusive environment:
+
+- Be respectful and considerate
+- Focus on constructive feedback
+- Welcome newcomers and help them get started
+- Assume good intentions
+
+## Questions?
+
+If you have questions about contributing:
+
+- Open a [GitHub Discussion](https://github.com/your-org/hiro-crm/discussions)
+- Ask in the Issues section
+- Check existing documentation and issues first
+
+## License
+
+By contributing to Hiro CRM, you agree that your contributions will be licensed under the [MIT License](https://opensource.org/licenses/MIT).
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Development Setup" icon="laptop-code" href="/contributing/setup">
+    Set up your local development environment
+  </Card>
+  <Card title="Code Standards" icon="code" href="/contributing/code-standards">
+    Learn our coding conventions and commit format
+  </Card>
+  <Card title="Testing" icon="flask" href="/contributing/testing">
+    Write and run tests for your contributions
+  </Card>
+</CardGroup>
