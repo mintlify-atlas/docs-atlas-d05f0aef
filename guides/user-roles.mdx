@@ -310,7 +310,7 @@ Menu items are hidden based on role:
 ```typescript
 // Example: Marketing menu only visible to marketing role
 {hasPermission(role, 'canAccessMarketing') && (
-  <NavLink href="/marketing">
+  <NavLink href="/features/marketing-campaigns">
     Marketing
   </NavLink>
 )}
@@ -502,11 +502,11 @@ All other roles follow permission-based access:
     Set up automated workflows based on user roles
   </Card>
 
-  <Card title="API Authentication" icon="key" href="/api-reference/authentication">
+  <Card title="API Authentication" icon="key" href="/api/authentication">
     Learn how to authenticate API requests with roles
   </Card>
 
-  <Card title="Security Best Practices" icon="lock" href="/security">
-    Understand Hiro's security model and compliance
+  <Card title="Architecture Overview" icon="sitemap" href="/architecture/overview">
+    Understand Hiro's architecture and security model
   </Card>
 </CardGroup>
